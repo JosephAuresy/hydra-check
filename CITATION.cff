@@ -1,0 +1,26 @@
+cff-version: 1.2.0
+message: "If you use this tool, please cite the associated manuscript (in preparation)."
+title: "Hydro-Model Diagnostic Assistant"
+type: software
+authors:
+  - family-names: Serrano
+    given-names: David
+    affiliation: "Texas Tech University"
+  - family-names: Park
+    given-names: Seonggyu
+    affiliation: "Texas Tech University"
+date-released: "2026-07-10"
+license: MIT
+repository-code: "https://github.com/JosephAuresy/hydro-diagnostic-assistant"
+preferred-citation:
+  type: article
+  title: "A Cross-Model Taxonomy of Implementation Failures in Hydrological Modeling Frameworks: Empirical Foundations for a Knowledge-Grounded Diagnostic Assistant"
+  authors:
+    - family-names: Serrano
+      given-names: David
+      affiliation: "Texas Tech University"
+    - family-names: Park
+      given-names: Seonggyu
+      affiliation: "Texas Tech University"
+  status: in-preparation
+  year: 2026
