@@ -1,0 +1,1893 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydro-Model Diagnostic Assistant — SWAT / SWAT+ / SWAT-MODFLOW / MODFLOW</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
+<style>
+  :root {
+    --bg:#f7f7f5; --surface:#ffffff; --surface-1:#f2f1ec; --text:#1a1a18;
+    --muted:#6b6b66; --faint:#8f8f89; --accent:#2f6fed; --accent-bg:#eaf1fe; --accent-text:#1a4fc4;
+    --green:#1a7f4e; --green-bg:#e6f6ee; --amber:#966a10; --amber-bg:#fdf3df;
+    --red:#c23434; --red-bg:#fdeaea; --border:#e6e5df; --border-strong:#d4d3cb;
+  }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+         background:var(--bg); color:var(--text); line-height:1.55; }
+  .wrap { max-width:760px; margin:0 auto; padding:40px 20px 90px; }
+  header.top { text-align:center; margin-bottom:28px; }
+  h1 { font-size:24px; font-weight:500; margin:0 0 8px; }
+  .sub { color:var(--muted); font-size:15px; margin:0 0 16px; }
+  .privacy { display:inline-flex; align-items:center; gap:7px; background:var(--green-bg);
+             color:var(--green); font-size:13px; padding:6px 14px; border-radius:999px; }
+  .privacy i { font-size:15px; }
+
+  .picker-grid { display:grid; grid-template-columns:1fr 1fr 1fr; gap:12px; margin-bottom:22px; }
+  .picker-card { background:var(--surface); border:0.5px solid var(--border); border-radius:12px;
+                 padding:20px; cursor:pointer; text-align:left; transition:border-color .12s; }
+  .picker-card:hover { border-color:var(--accent); }
+  .picker-card.active { border:2px solid var(--accent); padding:19px; }
+  .picker-card i.picon { font-size:22px; color:var(--accent); display:block; margin-bottom:10px; }
+  .picker-card .pt { font-weight:500; font-size:15px; margin:0 0 4px; }
+  .picker-card .pd { font-size:13px; color:var(--muted); margin:0; }
+  @media (max-width:560px){ .picker-grid { grid-template-columns:1fr; } }
+
+  .card { background:var(--surface); border:0.5px solid var(--border); border-radius:12px;
+          padding:20px 22px; margin-bottom:14px; }
+  .card h2 { font-size:15px; font-weight:500; margin:0 0 12px; color:var(--text); }
+  .card h2 .step { color:var(--faint); font-weight:400; }
+  .card p { font-size:14px; margin:0 0 12px; color:var(--text); }
+
+  .drop { border:1.5px dashed var(--border-strong); border-radius:10px; padding:30px;
+          text-align:center; color:var(--muted); cursor:pointer; transition:all .15s; }
+  .drop.over { border-color:var(--accent); background:var(--accent-bg); color:var(--text); }
+  .drop input { display:none; }
+  .drop i { font-size:26px; color:var(--faint); display:block; margin-bottom:8px; }
+
+  select, textarea, button.action {
+    background:var(--surface); color:var(--text); border:0.5px solid var(--border-strong);
+    border-radius:9px; padding:9px 13px; font-size:14px; font-family:inherit; }
+  select:hover, textarea:hover { border-color:var(--faint); }
+  textarea { width:100%; resize:vertical; }
+  button.action { cursor:pointer; }
+  button.action:hover { background:var(--surface-1); }
+  button.action.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
+  button.action.primary:hover { background:var(--accent-text); }
+
+  .finding { border-left:3px solid var(--faint); background:var(--surface-1);
+             border-radius:0 9px 9px 0; padding:13px 15px; margin:9px 0; }
+  .finding.error { border-left-color:var(--red); background:var(--red-bg); }
+  .finding.warning { border-left-color:var(--amber); background:var(--amber-bg); }
+  .finding.ok { border-left-color:var(--green); background:var(--green-bg); }
+  .finding .head { font-weight:500; font-size:14px; }
+  .finding .where { font-family:ui-monospace,Consolas,monospace; font-size:12.5px;
+                    color:var(--accent-text); margin:4px 0; }
+  .finding .fix { margin-top:7px; font-size:13.5px; }
+  .finding .fix b { color:var(--green); }
+  .finding .attr { margin-top:6px; font-size:11.5px; color:var(--muted); font-style:italic; }
+  .badge { display:inline-block; font-size:10.5px; font-weight:500; padding:2px 8px;
+           border-radius:10px; margin-left:8px; vertical-align:middle; }
+  .badge.error { background:var(--red); color:#fff; }
+  .badge.warning { background:var(--amber); color:#fff; }
+  .badge.ok { background:var(--green); color:#fff; }
+
+  .filelist { font-family:ui-monospace,Consolas,monospace; font-size:12px;
+              color:var(--muted); max-height:100px; overflow:auto; margin-top:10px; }
+  .muted { color:var(--muted); font-size:13px; }
+  .frontier { background:var(--accent-bg); border:0.5px solid var(--border); border-radius:10px;
+              padding:13px 16px; margin:10px 0; font-size:13.5px; color:var(--text); }
+  .frontier i { color:var(--accent); margin-right:4px; }
+  footer.site-footer { color:var(--faint); font-size:12px; margin-top:32px;
+              border-top:0.5px solid var(--border); padding-top:14px; text-align:center; }
+  code { background:var(--surface-1); padding:1px 6px; border-radius:5px; font-size:12.5px; }
+
+  ol.steps { padding-left:20px; margin:0; }
+  ol.steps li { margin:0 0 11px; font-size:14px; line-height:1.6; }
+  ol.steps li b { color:var(--text); }
+
+  .viewbtn { background:none; border:0.5px solid var(--accent); color:var(--accent-text);
+             padding:6px 12px; border-radius:7px; font-size:12px; cursor:pointer; margin-top:8px; }
+  .viewbtn:hover { background:var(--accent-bg); }
+  .viewer-wrap { margin-top:10px; }
+  .viewer { background:var(--surface-1); border:0.5px solid var(--border); border-radius:8px;
+            font-family:ui-monospace,Consolas,monospace; font-size:12px;
+            max-height:320px; overflow:auto; }
+  .vline { display:flex; padding:1px 0; }
+  .vline.hit { background:var(--red-bg); border-left:3px solid var(--red); }
+  .vno { flex:0 0 42px; text-align:right; padding-right:10px; color:var(--faint); user-select:none; }
+  .vtxt { white-space:pre; color:var(--text); }
+  .vline.hit .vtxt { color:var(--red); font-weight:500; }
+  .file-chip { background:var(--surface); border:0.5px solid var(--border-strong); color:var(--text);
+               padding:5px 11px; border-radius:8px; font-size:12px; cursor:pointer;
+               font-family:ui-monospace,Consolas,monospace; }
+  .file-chip:hover { border-color:var(--accent); }
+  .file-chip.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  .gallery { display:flex; flex-wrap:wrap; gap:8px; }
+  .chip { background:var(--surface); border:0.5px solid var(--border-strong); color:var(--text);
+          border-radius:8px; padding:7px 11px; cursor:pointer; text-align:left;
+          font-size:12.5px; max-width:230px; flex:1 1 190px; }
+  .chip:hover { border-color:var(--accent); }
+  .chip .fw { display:block; font-size:10px; font-weight:500; letter-spacing:.3px;
+              color:var(--accent-text); margin-bottom:3px; text-transform:uppercase; }
+  .chip .et { font-weight:500; font-size:13px; }
+
+  .rgrid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:12px; }
+  .rgrid label, .rfull { display:flex; flex-direction:column; gap:5px; font-size:12.5px;
+                          color:var(--muted); margin-bottom:12px; }
+  .rgrid input, .rgrid select, .rfull input, .rfull textarea {
+    background:var(--surface); color:var(--text); border:0.5px solid var(--border-strong);
+    border-radius:8px; padding:9px 11px; font-size:13.5px; font-family:inherit; }
+  @media (max-width:560px){ .rgrid { grid-template-columns:1fr; } }
+
+  .solset { margin-top:14px; }
+  .solset-head { font-size:14px; font-weight:500; margin:0 0 2px; }
+  .solset-sub { font-size:12px; color:var(--faint); margin:0 0 12px; }
+  .sol { border:0.5px solid var(--border); border-radius:10px; padding:12px 14px; margin:8px 0;
+         background:var(--surface); }
+  .sol-top { display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+  .sol-icon { font-size:18px; color:var(--accent); flex-shrink:0; }
+  .sol-label { font-weight:500; font-size:14px; flex:1; min-width:140px; }
+  .sol-stats { font-size:12px; color:var(--muted); white-space:nowrap; }
+  .sol-bar { height:5px; background:var(--surface-1); border-radius:4px; margin:8px 0 6px; overflow:hidden; }
+  .sol-bar > span { display:block; height:100%; background:var(--accent); }
+  .sol-ex { font-size:12.5px; color:var(--text); font-style:italic; margin:2px 0 8px; }
+  .sol-act { background:none; border:0.5px solid var(--border-strong); color:var(--text);
+             font-size:12.5px; padding:6px 12px; border-radius:8px; cursor:pointer; }
+  .sol-act:hover { border-color:var(--accent); color:var(--accent-text); }
+  .sol-act.verify { border-color:var(--accent); color:var(--accent-text); }
+
+  /* file-check reference table (Check my files mode) */
+  .fchk-table { width:100%; border-collapse:collapse; font-size:13px; }
+  .fchk-table th { text-align:left; font-weight:500; color:var(--faint); font-size:11px;
+                   text-transform:uppercase; letter-spacing:.3px; padding:0 10px 8px 0; }
+  .fchk-table td { padding:9px 10px 9px 0; border-top:0.5px solid var(--border); vertical-align:top; }
+  .fchk-file { font-family:ui-monospace,Consolas,monospace; font-size:12.5px; color:var(--accent-text);
+               white-space:nowrap; }
+  .fchk-cat  { font-size:11px; color:var(--faint); white-space:nowrap; }
+
+  /* coverage map (What gets resolved here) */
+  .cov-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:4px; }
+  .cov-table th { text-align:left; font-weight:500; color:var(--faint); font-size:11px;
+                  text-transform:uppercase; letter-spacing:.3px; padding:0 10px 8px 0; }
+  .cov-table td { padding:8px 10px 8px 0; border-top:0.5px solid var(--border); }
+  .cov-verdict { display:inline-flex; align-items:center; gap:5px; font-size:12px; font-weight:500;
+                 padding:3px 10px; border-radius:999px; white-space:nowrap; }
+  .cov-verdict.resolved { background:var(--green-bg); color:var(--green); }
+  .cov-verdict.mixed    { background:var(--amber-bg); color:var(--amber); }
+  .cov-verdict.frontier { background:var(--accent-bg); color:var(--accent-text); }
+  .cov-n { color:var(--muted); font-size:12px; white-space:nowrap; }
+  .cov-fw-tabs { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+  .cov-fw-tabs button { background:var(--surface); border:0.5px solid var(--border-strong);
+                        color:var(--text); font-size:12.5px; padding:6px 13px; border-radius:8px;
+                        cursor:pointer; }
+  .cov-fw-tabs button.active { background:var(--accent); border-color:var(--accent); color:#fff; }
+
+  /* roadmap / tiers card */
+  .tier { display:flex; gap:14px; padding:14px 0; border-top:0.5px solid var(--border); }
+  .tier:first-child { border-top:none; padding-top:4px; }
+  .tier-badge { flex-shrink:0; width:26px; height:26px; border-radius:50%; display:flex;
+                align-items:center; justify-content:center; font-size:12px; font-weight:500;
+                background:var(--accent-bg); color:var(--accent-text); }
+  .tier-badge.done { background:var(--green-bg); color:var(--green); }
+  .tier-title { font-weight:500; font-size:14px; margin:0 0 3px; }
+  .tier-sub { font-size:13px; color:var(--text); margin:0; }
+  .compare-table { width:100%; border-collapse:collapse; font-size:13px; margin-top:8px; }
+  .compare-table th { text-align:left; font-weight:500; padding:8px 10px; font-size:12px;
+                      color:var(--faint); border-bottom:0.5px solid var(--border); }
+  .compare-table td { padding:8px 10px; border-bottom:0.5px solid var(--border); vertical-align:top; }
+  .compare-table td:first-child { color:var(--faint); font-size:12px; white-space:nowrap; }
+
+  /* RAG "ask the docs" */
+  .bar { height:8px; background:var(--surface-1); border-radius:5px; overflow:hidden; }
+  .bar-fill { height:100%; background:var(--accent); width:0%; transition:width .15s; }
+  .doc-row { display:flex; align-items:center; gap:10px; padding:9px 0; border-top:0.5px solid var(--border); }
+  .doc-row:first-child { border-top:none; }
+  .doc-row i.dr-icon { font-size:16px; color:var(--accent); flex-shrink:0; }
+  .doc-row .dr-body { flex:1; min-width:0; }
+  .doc-row .dr-name { font-size:13px; font-weight:500; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .doc-row .dr-meta { font-size:11.5px; color:var(--faint); margin-top:1px; }
+  .doc-row .dr-status { font-size:11px; padding:2px 9px; border-radius:999px; flex-shrink:0; white-space:nowrap; }
+  .doc-row .dr-status.reading  { background:var(--accent-bg); color:var(--accent-text); }
+  .doc-row .dr-status.indexing { background:var(--amber-bg); color:var(--amber); }
+  .doc-row .dr-status.done     { background:var(--green-bg); color:var(--green); }
+  .doc-row .dr-status.error    { background:var(--red-bg); color:var(--red); }
+  .manuals-group { margin-bottom:14px; }
+  .manuals-group:last-child { margin-bottom:0; }
+  .manuals-fw { font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--faint);
+                font-weight:500; margin-bottom:6px; }
+  .manual-link { display:flex; align-items:flex-start; gap:9px; padding:8px 0;
+                 border-top:0.5px solid var(--border); text-decoration:none; color:var(--text); }
+  .manuals-group .manual-link:first-of-type { border-top:none; }
+  .manual-link i { color:var(--accent); font-size:16px; margin-top:1px; flex-shrink:0; }
+  .manual-link:hover .ml-title { color:var(--accent-text); text-decoration:underline; }
+  .ml-title { font-size:13px; font-weight:500; }
+  .ml-src { font-size:11.5px; color:var(--faint); margin-top:1px; }
+  .rag-passage { border-left:3px solid var(--accent); background:var(--surface-1);
+                 border-radius:0 9px 9px 0; padding:11px 14px; margin:8px 0; }
+  .rag-cite { font-family:ui-monospace,Consolas,monospace; font-size:11.5px; color:var(--accent-text);
+              margin-bottom:4px; }
+  .rag-passage .txt { font-size:13px; color:var(--text); line-height:1.55; }
+  .rag-gen { background:var(--green-bg); border-radius:10px; padding:14px 16px; margin-bottom:12px;
+             font-size:14px; line-height:1.6; white-space:pre-wrap; }
+  .rag-gen .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--green);
+                  font-weight:500; margin-bottom:6px; }
+  .kb-toggle { background:none; border:none; color:var(--accent-text); font-size:12.5px;
+               cursor:pointer; padding:6px 0; text-decoration:underline; }
+  .kb-cov-table { width:100%; border-collapse:collapse; font-size:12.5px; margin-top:6px; }
+  .kb-cov-table th { text-align:left; font-weight:500; color:var(--faint); font-size:10.5px;
+                     text-transform:uppercase; letter-spacing:.3px; padding:0 8px 6px 0; }
+  .kb-cov-table td { padding:6px 8px 6px 0; border-top:0.5px solid var(--border); }
+  .kb-cov-table tr.not-used td { color:var(--faint); }
+  .kb-used { color:var(--green); font-size:14px; }
+  .kb-notused { color:var(--faint); font-size:14px; }
+  .suggested-paper { background:var(--accent-bg); border-radius:10px; padding:12px 15px;
+                     margin:10px 0; font-size:13px; line-height:1.55; }
+  .suggested-paper .lbl { font-size:11px; text-transform:uppercase; letter-spacing:.3px;
+                          color:var(--accent-text); font-weight:500; margin-bottom:4px; }
+  .method-links { display:flex; gap:16px; justify-content:center; margin:6px 0 26px; }
+  .method-links button.tab-link { background:none; border:none; color:var(--accent-text);
+              font-size:13px; cursor:pointer; padding:4px 0; }
+  .method-links button.tab-link:hover { text-decoration:underline; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Hydro-model diagnostic assistant</h1>
+    <p class="sub">For <b>SWAT2012 · SWAT+ · SWAT-MODFLOW · MODFLOW</b> — built from a taxonomy of
+    ~9,100 community-reported issues (2009–2026).</p>
+    <span class="privacy"><i class="ti ti-lock" aria-hidden="true"></i> Runs in your browser — your files never leave your computer.</span>
+  </header>
+
+  <div class="picker-grid">
+    <button class="picker-card tab active" data-mode="error" type="button">
+      <i class="ti ti-message-2 picon" aria-hidden="true"></i>
+      <p class="pt">Paste an error message</p>
+      <p class="pd">Match it against known causes and fixes.</p>
+    </button>
+    <button class="picker-card tab" data-mode="files" type="button">
+      <i class="ti ti-folder picon" aria-hidden="true"></i>
+      <p class="pt">Check my model files</p>
+      <p class="pd">Scan your TxtInOut folder for known issues.</p>
+    </button>
+    <button class="picker-card tab" data-mode="docs" type="button">
+      <i class="ti ti-book picon" aria-hidden="true"></i>
+      <p class="pt">Ask the docs <span style="font-size:10px;font-weight:500;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:8px;vertical-align:middle;">beta</span></p>
+      <p class="pd">Search your manuals + community knowledge.</p>
+    </button>
+  </div>
+
+  <!-- ── MODE: ERROR MESSAGE ─────────────────────────────────────── -->
+  <div id="mode-error">
+    <div class="card">
+      <h2>Not sure what to paste? Try a common one</h2>
+      <div id="exampleGallery" class="gallery"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">Step 1 ·</span> Paste your own error message</h2>
+      <textarea id="errText" rows="4" placeholder="e.g.  forrtl: severe (157): Program Exception - access violation"></textarea>
+      <div style="margin-top:10px;"><button class="action primary" id="diagnoseBtn">Diagnose</button></div>
+    </div>
+    <div class="card">
+      <h2>Diagnosis</h2>
+      <div id="errResults"><span class="muted">Paste an error above and press Diagnose.</span></div>
+    </div>
+
+    <div class="card" id="reportCard" style="display:none;">
+      <h2>Still stuck? Build a ready-to-post report</h2>
+      <p class="muted">Filled in the format the SWAT+ team's 2026 report template already asks for.
+      A well-formed post like this typically gets answered in one round instead of three.</p>
+      <div class="rgrid">
+        <label>Framework<select id="rFramework">
+          <option value="SWAT+">SWAT+</option>
+          <option value="SWAT2012">SWAT2012</option>
+          <option value="SWAT-MODFLOW">SWAT-MODFLOW</option>
+          <option value="MODFLOW">MODFLOW</option>
+        </select></label>
+        <label>Version<input id="rVersion" placeholder="e.g. SWAT+ 61.0 / Editor 3.0.4"></label>
+        <label>Operating system<input id="rOS" placeholder="e.g. Windows 11"></label>
+        <label>When it happens<input id="rWhen" placeholder="e.g. immediately on run / after N years"></label>
+      </div>
+      <label class="rfull">Simulation period<input id="rPeriod" placeholder="e.g. 2005-2015, warm-up 3 yr"></label>
+      <label class="rfull">Exact error text<textarea id="rError" rows="2" placeholder="Paste the exact error/log line"></textarea></label>
+      <label class="rfull">What you already tried<textarea id="rTried" rows="2" placeholder="e.g. checked soils.sol for nulls, re-wrote inputs — this tool found no known signature"></textarea></label>
+      <label class="rfull">Relevant input files involved<input id="rFiles" placeholder="e.g. soils.sol, time.sim, gwflow.input"></label>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="action primary" id="genReportBtn">Generate report text</button>
+        <button class="action" id="copyReportBtn" style="display:none;">Copy to clipboard</button>
+      </div>
+      <textarea id="reportOut" rows="10" style="display:none; margin-top:12px; font-family:ui-monospace,Consolas,monospace; font-size:13px;" readonly></textarea>
+    </div>
+  </div>
+
+  <!-- ── MODE: FILES ─────────────────────────────────────────────── -->
+  <div id="mode-files" style="display:none;">
+    <div class="card">
+      <h2>Not ready to share your files? Load a demo model</h2>
+      <p class="muted">A small synthetic model folder with a few known issues planted in it —
+      see exactly how the scan works, with zero risk.</p>
+      <div id="demoGallery" class="gallery"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">Step 1 ·</span> Which framework?</h2>
+      <select id="fwSelect">
+        <option value="auto">Auto-detect from files</option>
+        <option value="swat_plus">SWAT+</option>
+        <option value="swat2012">SWAT2012</option>
+        <option value="swat_mf">SWAT-MODFLOW</option>
+        <option value="modflow">MODFLOW</option>
+      </select>
+    </div>
+    <div class="card">
+      <h2>Exactly what we check, file by file</h2>
+      <p class="muted" style="margin-bottom:10px;">No guessing — here is the full, specific list of files this
+      tool inspects for your selected framework, and the real error class each check targets.</p>
+      <div id="fileCheckTable"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step">Step 2 ·</span> Drop your model folder (e.g. TxtInOut)</h2>
+      <label class="drop" id="dropZone">
+        <i class="ti ti-folder-plus" aria-hidden="true"></i>
+        <div>Drag and drop your model folder here, or click to select it</div>
+        <div class="muted" style="margin-top:6px;">Text inputs are scanned (.cio, .sim, .sol, .mfn, .dis, .nam, .lst, .pcp, …). Large binaries are skipped.</div>
+        <input type="file" id="fileInput" webkitdirectory multiple>
+      </label>
+      <div class="filelist" id="fileList"></div>
+    </div>
+    <div class="card" id="fileBrowserCard" style="display:none;">
+      <h2>Files scanned — click one to see its raw content</h2>
+      <div class="gallery" id="fileBrowser"></div>
+      <div id="fileView" style="margin-top:12px;"></div>
+    </div>
+    <div class="card">
+      <h2><span class="step">Step 3 ·</span> Results</h2>
+      <div id="results"><span class="muted">No files scanned yet — load a demo above or drop your own folder.</span></div>
+    </div>
+  </div>
+
+  <div class="method-links">
+    <button class="tab tab-link" data-mode="method" type="button">How this works &amp; trust</button>
+  </div>
+
+  <!-- ── MODE: METHODOLOGY ───────────────────────────────────────── -->
+  <div id="mode-method" style="display:none;">
+
+    <div class="card">
+      <h2>What this is (and what it is not)</h2>
+      <p>This tool does <b>not replace</b> the official Google Groups — it is a structured,
+      instant, private front-end to the knowledge those communities have already produced.
+      The groups remain the source of truth and the place for genuinely hard questions.
+      What this tool does is take the <i>documentable majority</i> of problems — the same
+      procedural and configuration errors that get asked hundreds of times — and answer them
+      in seconds, offline, while routing everything else back to the community with a
+      better-formed question.</p>
+      <div class="frontier"><i class="ti ti-compass" aria-hidden="true"></i><b>Design principle: never manufacture false confidence.</b>
+      When a problem falls at a framework's <i>complexity frontier</i> (boundary-condition
+      conceptualization, SW–GW exchange behavior, joint-calibration judgment), the correct
+      behavior is to scope the question and defer to a human expert — not to guess.</div>
+    </div>
+
+    <div class="card">
+      <h2>What gets resolved here — and what doesn't</h2>
+      <p class="muted" style="margin-bottom:10px;">Every category below is classified by its
+      <b>nature</b> — the same procedural/theoretical axis the underlying taxonomy uses — with the
+      real number of coded threads and, where extracted, the real community resolution rate
+      alongside it as supporting evidence.</p>
+      <div class="cov-fw-tabs" id="covFwTabs"></div>
+      <div id="covTable"></div>
+    </div>
+
+    <div class="card">
+      <h2>Why you can trust a free tool</h2>
+      <div class="finding ok"><span class="head">Your files never leave your computer</span>
+        <div class="fix">Everything is analyzed in your browser with JavaScript. Nothing is
+        uploaded — safe for proprietary or client basin models.</div></div>
+      <div class="finding ok"><span class="head">Every finding is traceable</span>
+        <div class="fix">Each rule maps to a taxonomy category derived from real, coded community
+        threads — not a black-box guess. You can see <i>why</i> a finding fired and which
+        community it comes from.</div></div>
+      <div class="finding ok"><span class="head">Community knowledge is attributed, never copied</span>
+        <div class="fix">Recurring solutions are re-expressed in the authors' own words and
+        attributed at the community level (e.g. "as commonly advised in the SWAT-MODFLOW group").
+        No verbatim posts are reproduced — contributors are acknowledged, not appropriated.</div></div>
+      <div class="finding ok"><span class="head">It admits what it doesn't know</span>
+        <div class="fix">Frontier questions are flagged for expert review instead of answered
+        with confident-sounding but unreliable advice.</div></div>
+    </div>
+
+    <div class="card">
+      <h2>Where this is going — and why it will beat a generic AI notebook</h2>
+      <p class="muted" style="margin-bottom:4px;">This diagnostic tool is <b>Tier 1</b> of a
+      two-tier design. Tier 2 adds a retrieval-grounded assistant on top, without weakening what
+      Tier 1 already guarantees.</p>
+
+      <div class="tier">
+        <div class="tier-badge done"><i class="ti ti-check" aria-hidden="true"></i></div>
+        <div>
+          <p class="tier-title">Tier 1 — deterministic rules (live today)</p>
+          <p class="tier-sub">File/error signatures extracted from the high-frequency
+          procedural &amp; configuration categories of the taxonomy. Zero hallucination risk —
+          every rule is a fixed pattern match, and every finding names the exact file/line that
+          triggered it.</p>
+        </div>
+      </div>
+      <div class="tier">
+        <div class="tier-badge"><i class="ti ti-clock" aria-hidden="true"></i></div>
+        <div>
+          <p class="tier-title">Tier 2 — grounded assistant (planned)</p>
+          <p class="tier-sub">A retrieval-augmented layer over (a) official documentation and
+          manuals (SWAT+, MODFLOW 6/USGS PDFs) and (b) the synthesized, attributed experiential
+          knowledge mined from these same communities — for the long tail of questions Tier 1's
+          fixed rules don't cover. It answers from that grounded knowledge base only, cites its
+          source, and explicitly defers when a question falls at the complexity frontier instead
+          of improvising an answer.</p>
+        </div>
+      </div>
+
+      <p style="margin:16px 0 8px; font-weight:500; font-size:14px;">Why that will be more useful
+      than pointing a general tool (e.g. NotebookLM) at the same PDFs and forum exports:</p>
+      <table class="compare-table">
+        <tr><th>Dimension</th><th>Generic AI notebook over the same documents</th><th>This project's Tier 2</th></tr>
+        <tr><td>Scope of what it will answer</td>
+            <td>Answers anything asked, with similar-sounding confidence regardless of whether
+            the source material actually settles the question.</td>
+            <td>Routes each question through the taxonomy first; procedural/config questions get
+            a grounded answer, frontier questions get an explicit deferral — the
+            complexity-frontier boundary is a first-class part of the design, not an
+            afterthought.</td></tr>
+        <tr><td>What "grounded" means</td>
+            <td>Summarizes and paraphrases whatever text is in the notebook, including one-off or
+            unverified forum posts, with no notion of how often a claim recurs across the
+            community.</td>
+            <td>Every community-sourced claim is backed by a real support count — how many
+            independent threads proposed it and how often it correlated with a resolved
+            problem — visible right in the answer, the same evidence shown in this tool's
+            solution-set panels today.</td></tr>
+        <tr><td>Attribution &amp; ethics</td>
+            <td>Typically reproduces or closely paraphrases source passages without a policy on
+            verbatim reuse.</td>
+            <td>Community solutions are synthesized and attributed at the community level by
+            design (Section 3.1 of the underlying study) — never reproduced verbatim.</td></tr>
+        <tr><td>Auditability</td>
+            <td>A black-box summary — hard to tell which source claim it came from.</td>
+            <td>Every answer traces back to a taxonomy category with a known nature, frequency,
+            and (for Tier 1) an inspectable rule — consistent with how this tool already shows
+            its work.</td></tr>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>Methodology — how the knowledge base was built</h2>
+      <ol class="steps">
+        <li><b>Corpus.</b> ~9,100 user-reported threads from the four official communities
+          (SWAT-user, SWAT+ groups, SWAT-MODFLOW, MODFLOW users), 2009–2026. De-duplicated;
+          announcements and pure acknowledgements removed. Automated retrieval respects each
+          platform's terms of service.</li>
+        <li><b>Grounded-theory coding (3 passes).</b> <i>Open coding</i> tags recurring problem
+          statements; <i>axial coding</i> groups them into higher-level categories; <i>selective
+          coding</i> consolidates a stable, model-agnostic taxonomy (<b>T-CAT</b>: 12 categories
+          across 6 domains).</li>
+        <li><b>Four-way nature classification.</b> Each thread is labelled
+          <b>Procedural</b> (a documented fix exists), <b>Theoretical</b> (needs hydrological
+          reasoning, no single answer), <b>Configuration</b> (environment/version/paths), or
+          <b>Software&nbsp;bug</b> — using explicit, auditable decision rules. The
+          procedural↔theoretical axis is the one that decides whether documentation <i>can</i>
+          resolve a problem.</li>
+        <li><b>Reliability.</b> A stratified gold-standard sample is coded by hand and used to
+          measure inter-/intra-coder agreement (Cohen's κ) and the accuracy of the automated
+          classifier — reliability is treated as a result, not an afterthought.</li>
+        <li><b>Taxonomy → rules.</b> The high-frequency <i>procedural/configuration</i> categories
+          have deterministic <b>error signatures</b> — file patterns (null soil fields, low
+          file-unit numbers, period mismatches) and log strings (error 65, forrtl 157, non-convergence).
+          These signatures became the rules in this tool. The high-<i>theoretical</i> frontier
+          categories are deliberately <b>excluded</b> from automation.</li>
+      </ol>
+    </div>
+
+    <div class="card">
+      <h2>Reproduce this for another model community</h2>
+      <p>The pipeline is open and model-agnostic. To apply it to any technical forum
+      (HEC-HMS, ParFlow, a private tool's issue tracker…):</p>
+      <ol class="steps">
+        <li>Scrape thread metadata + first post (<code>scraper/scrape_groups.py</code>).</li>
+        <li>Keyword open-coding + axial voting (<code>scripts/02_code.py</code>).</li>
+        <li>LLM fallback for the hard remainder, with few-shot examples and independent nature
+          judgment (<code>scripts/03_llm_code.py</code>).</li>
+        <li>Build a stratified gold sample and validate (<code>scripts/06…08</code>); report κ
+          and accuracy.</li>
+        <li>Extract error signatures for the procedural/config majority; keep frontier categories
+          as deferral, not automation.</li>
+      </ol>
+      <p class="muted">Full coding scheme, decision rules and taxonomy definitions are released so
+      the scheme can be re-applied and audited. Part of the <i>SWAT Issue Atlas</i> — an open,
+      reproducible pipeline for longitudinal community-health monitoring.</p>
+    </div>
+
+    <div class="card">
+      <h2>Limits (read before relying on it)</h2>
+      <div class="finding warning"><span class="head">Reported difficulty ≠ total difficulty</span>
+        <div class="fix">Forums over-represent problems users couldn't solve alone. Silent,
+        self-resolved issues are under-represented.</div></div>
+      <div class="finding warning"><span class="head">Signatures cover the documentable majority, not everything</span>
+        <div class="fix">A clean result here means no <i>known</i> signature fired — not a guarantee
+        your model is correct.</div></div>
+      <div class="finding warning"><span class="head">Active platforms drift</span>
+        <div class="fix">Issue profiles shift as software matures (e.g. SWAT+). The pipeline is
+        designed to be periodically re-run so the knowledge base stays current.</div></div>
+    </div>
+
+  </div>
+
+  <!-- ── MODE: ASK THE DOCS (Tier 2 RAG, client-side retrieval + local generation) ── -->
+  <div id="mode-docs" style="display:none;">
+    <div class="card">
+      <h2>Ask your documentation — grounded, private, on your machine</h2>
+      <p class="muted">Retrieval runs entirely in your browser: your PDFs are read and searched
+      locally and never uploaded. A written answer is generated only if a local model (Ollama)
+      is detected; otherwise you get the exact cited passages to read yourself. Every answer also
+      draws on the <b>community knowledge base</b> — real solutions from ~9,100 coded forum
+      threads, each shown with its real support count, alongside your manuals.</p>
+      <div id="ragStatus" class="frontier" style="margin-top:6px;">
+        <i class="ti ti-info-circle" aria-hidden="true"></i> Checking environment…
+      </div>
+      <div id="ragModelPicker" style="display:none; margin-top:10px;">
+        <label class="muted" style="display:block; margin-bottom:4px;">Model for written answers</label>
+        <select id="ragModelSelect"></select>
+      </div>
+      <div id="ragManualModel" style="display:none; margin-top:10px;">
+        <label class="muted" style="display:block; margin-bottom:4px;">Couldn't list your models automatically —
+        type the exact name of one you have installed (e.g. <code>llama3:latest</code>):</label>
+        <div style="display:flex; gap:8px; flex-wrap:wrap;">
+          <input id="ragManualModelInput" placeholder="model:tag" style="flex:1; min-width:160px;">
+          <button class="action" id="ragManualModelBtn">Use this model</button>
+        </div>
+      </div>
+      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+        <button class="action" id="ragRetryBtn"><i class="ti ti-refresh" aria-hidden="true"></i> Retry detection</button>
+        <button class="action" id="exportNotesBtn" style="display:none;">
+          <i class="ti ti-download" aria-hidden="true"></i> Export my notes
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Start here — the official manuals</h2>
+      <p class="muted" style="margin-bottom:10px;">The minimum documentation set to answer most questions,
+      linked directly from each framework's official source. Browsers block sites from fetching PDFs across
+      domains automatically, so: click to open/download from the publisher, then drag the downloaded file
+      into the box below to index it locally. Nothing is uploaded — the click only reaches the official
+      site, never this tool.</p>
+      <div id="manualsList"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">Step 1 ·</span> Add your documents (PDF manuals)</h2>
+      <label class="drop" id="ragDrop">
+        <i class="ti ti-file-text" aria-hidden="true"></i>
+        <div>Drag and drop PDF manuals here (SWAT+, MODFLOW 6, USGS…), or click to select</div>
+        <div class="muted" style="margin-top:6px;">First use downloads a small embedding model (~25 MB, cached afterwards). Text is extracted and indexed locally.</div>
+        <input type="file" id="ragInput" accept="application/pdf" multiple>
+      </label>
+      <div id="ragProgressWrap" style="display:none; margin-top:12px;">
+        <div class="bar"><div class="bar-fill" id="ragProgressFill"></div></div>
+        <div class="muted" style="margin-top:6px;" id="ragProgressText"></div>
+      </div>
+      <div id="ragDocList" style="margin-top:10px;"></div>
+    </div>
+
+    <div class="card">
+      <h2><span class="step">Step 2 ·</span> Ask a question</h2>
+      <textarea id="ragQuery" rows="3" placeholder="e.g. How is groundwater recharge computed in SWAT+ gwflow?"></textarea>
+      <div style="margin-top:10px;"><button class="action primary" id="ragAskBtn" disabled>Add documents first</button></div>
+    </div>
+
+    <div class="card">
+      <h2>Answer</h2>
+      <div id="ragAnswer"><span class="muted">Add a manual and ask a question. Frontier questions are flagged before any answer.</span></div>
+    </div>
+  </div>
+
+  <footer class="site-footer">
+    Solutions are synthesized from recurring community guidance and official documentation; they are
+    attributed at the community level and never reproduce verbatim posts. Frontier-level questions
+    (boundary-condition conceptualization, SW–GW exchange behavior, joint-calibration judgment)
+    are flagged for expert consultation rather than answered automatically.<br>
+    Part of the <i>SWAT Issue Atlas</i> project — D. Serrano &amp; S. Park, Texas Tech University.
+  </footer>
+</div>
+
+<script>
+"use strict";
+/* ═════════════════════ helpers ═════════════════════ */
+const $ = id => document.getElementById(id);
+const TEXT_EXT = /\.(cio|sim|prt|sol|hru|sub|bsn|gw|mgt|rte|swq|wwq|wus|chm|pcp|tmp|slr|hmd|wnd|cli|sdc|con|txt|csv|ini|mfn|nam|dis|bas|lpf|upw|npf|ic|pcg|nwt|ims|sms|oc|rch|riv|ghb|chd|drn|wel|sfr|lak|evt|lst|list|out|dat|ref|cal|plt|def|fig|cod|std)$/i;
+const looksTexty = name => TEXT_EXT.test(name) || !/\./.test(name.split("/").pop());
+
+function esc(s){ return String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function finding(sev, title, where, detail, fix, attr, fileHint, hlPattern){
+  return {sev, title, where, detail, fix, attr, fileHint: fileHint||null, hlPattern: hlPattern||null};
+}
+
+/* Render a file's content with line numbers, highlighting lines matching a pattern. */
+function fileSnippetHTML(fileKey, patternSrc){
+  const content = FILES[fileKey];
+  if(content==null) return '<div class="muted">File not scanned (binary, too large, or not present).</div>';
+  const re = patternSrc ? new RegExp(patternSrc, "i") : null;
+  const lines = content.split(/\r?\n/);
+  let firstHit = -1;
+  const rows = lines.map((line,i)=>{
+    const isHit = re ? re.test(line) : false;
+    if(isHit && firstHit===-1) firstHit = i;
+    return `<div class="vline ${isHit?'hit':''}" ${isHit?'data-firsthit="1"':''}><span class="vno">${i+1}</span><span class="vtxt">${esc(line||" ")}</span></div>`;
+  }).join("");
+  return `<div class="viewer" id="viewer_${Math.random().toString(36).slice(2)}">${rows}</div>`;
+}
+
+let viewerCounter = 0;
+function renderFindings(list, el){
+  if(!list.length){
+    el.innerHTML = '<div class="finding ok"><span class="head">No known error signatures detected</span>'+
+      '<div class="fix">This checks the <i>documented majority</i> of failure patterns. If your model still fails, '+
+      'the issue may be at the <b>complexity frontier</b> for your framework — consider posting a well-formed question '+
+      '(version, exact error, input files, simulation period) to the community group.</div></div>';
+    return;
+  }
+  const order = {error:0, warning:1, ok:2};
+  list.sort((a,b)=>order[a.sev]-order[b.sev]);
+  el.innerHTML = list.map(f=>{
+    const vid = "vw_" + (viewerCounter++);
+    const canView = f.fileHint && FILES[f.fileHint]!=null;
+    return `
+    <div class="finding ${f.sev}">
+      <span class="head">${esc(f.title)}</span><span class="badge ${f.sev}">${f.sev.toUpperCase()}</span>
+      ${f.where ? `<div class="where">${esc(f.where)}</div>`:""}
+      <div>${f.detail}</div>
+      ${f.fix ? `<div class="fix"><b>Fix:</b> ${f.fix}</div>`:""}
+      ${f.attr ? `<div class="attr">${esc(f.attr)}</div>`:""}
+      ${canView ? `<button class="viewbtn" data-toggle="${vid}" data-file="${esc(f.fileHint)}" data-pat="${esc(f.hlPattern||'')}">Show me in the file</button>
+      <div class="viewer-wrap" id="${vid}" style="display:none;"></div>` : ""}
+    </div>`;
+  }).join("");
+}
+
+/* Delegated click handling for "Show me in the file" toggles (content is injected via innerHTML). */
+document.addEventListener("click", e=>{
+  const btn = e.target.closest(".viewbtn");
+  if(!btn) return;
+  const wrap = document.getElementById(btn.dataset.toggle);
+  if(!wrap) return;
+  const showing = wrap.style.display !== "none";
+  if(showing){ wrap.style.display = "none"; btn.textContent = "Show me in the file"; return; }
+  if(!wrap.dataset.built){
+    wrap.innerHTML = fileSnippetHTML(btn.dataset.file, btn.dataset.pat);
+    wrap.dataset.built = "1";
+  }
+  wrap.style.display = "";
+  btn.textContent = "Hide file";
+  const hit = wrap.querySelector('[data-firsthit="1"]');
+  if(hit) setTimeout(()=>hit.scrollIntoView({block:"center"}), 30);
+});
+
+/* ═════════════════════ mode switching (picker cards + method link) ═════════════════════ */
+const MODES = ["files","error","method","docs"];
+document.querySelectorAll(".tab").forEach(t=>{
+  t.onclick = ()=>{
+    document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
+    t.classList.add("active");
+    MODES.forEach(m=>{ $("mode-"+m).style.display = (t.dataset.mode===m) ? "" : "none"; });
+    if(t.dataset.mode!=="method"){
+      $("mode-"+t.dataset.mode).scrollIntoView({behavior:"smooth", block:"start"});
+    }
+  };
+});
+
+/* ═════════════════════ file intake ═════════════════════ */
+let FILES = {};          // lowercase relative name -> content (string)
+let FILENAMES = [];      // original names
+
+const dz = $("dropZone"), fi = $("fileInput");
+/* No dz.onclick handler needed — fi is nested inside the <label>, so native label
+   semantics already forward clicks to open the file picker. An extra fi.click() here
+   double-fires the dialog and breaks multi-file selection in some browsers. */
+dz.ondragover = e=>{ e.preventDefault(); dz.classList.add("over"); };
+dz.ondragleave = ()=>dz.classList.remove("over");
+dz.ondrop = e=>{ e.preventDefault(); dz.classList.remove("over"); intake([...e.dataTransfer.files]); };
+fi.onchange = ()=>intake([...fi.files]);
+
+function buildFileBrowser(){
+  const card = $("fileBrowserCard"), gal = $("fileBrowser"), view = $("fileView");
+  const keys = Object.keys(FILES);
+  if(!keys.length){ card.style.display = "none"; return; }
+  card.style.display = "";
+  view.innerHTML = "";
+  gal.innerHTML = "";
+  keys.forEach(k=>{
+    const chip = document.createElement("button");
+    chip.className = "file-chip";
+    chip.textContent = k + (FILES[k]==="" ? " (empty)" : "");
+    chip.onclick = ()=>{
+      gal.querySelectorAll(".file-chip").forEach(c=>c.classList.remove("active"));
+      chip.classList.add("active");
+      view.innerHTML = FILES[k]===""
+        ? '<div class="muted">This file is empty (0 bytes).</div>'
+        : fileSnippetHTML(k, null);
+    };
+    gal.appendChild(chip);
+  });
+}
+
+async function intake(fileArr){
+  FILES = {}; FILENAMES = [];
+  const MAX = 40*1024*1024;
+  for(const f of fileArr){
+    const rel = (f.webkitRelativePath || f.name);
+    FILENAMES.push(rel);
+    const base = rel.split("/").pop();
+    if(f.size===0){ FILES[base.toLowerCase()] = ""; continue; }
+    if(f.size>MAX || !looksTexty(base)) continue;
+    try{ FILES[base.toLowerCase()] = await f.text(); }catch(_){}
+  }
+  $("fileList").textContent = FILENAMES.length + " files received · " +
+      Object.keys(FILES).length + " scanned as text: " +
+      Object.keys(FILES).slice(0,40).join(", ") + (Object.keys(FILES).length>40?" …":"");
+  buildFileBrowser();
+  runChecks();
+}
+
+/* ═════════════════════ demo models (synthetic, no real data) ═══════════════ */
+const DEMO_MODELS = {
+  swat_plus: {
+    label: "SWAT+", desc: "Planted issues: null soil field, inverted simulation dates, missing climate file.",
+    files: {
+      "time.sim": "time.sim: simulation start/end\nheader line ignored\n0 2015 0 2010 0",
+      "print.prt": "print.prt: output control\nnpr 0 0 0",
+      "soils.sol": "name  nly  hyd  zmx  anion  crk  texture  ...\n" +
+        "loam1  1  A  1000  0.5  0.1  clay  1.30  null  0.20  0.10  15.0  0.05  1  1\n" +
+        "loam2  1  B  800   0.5  0.1  silt  1.35  0.42  0.22  0.11  12.0  0.05  1  1",
+      "weather-sta.cli": "weather-sta.cli\nheader\nSTA1 sta1.pcp sta1.tmp sta1.slr sta1.hmd sta1.wnd",
+      "sta1.tmp": "(present)",
+      "sta1.slr": "(present)",
+      "sta1.hmd": "(present)",
+      "sta1.wnd": "(present)",
+    }
+  },
+  swat2012: {
+    label: "SWAT2012", desc: "Planted issues: NBYR longer than the climate record, null soil values.",
+    files: {
+      "file.cio": "General input/output file\n10 | NBYR\n2010 | IYR\n1  | IDAF\n365 | IDAL",
+      "sub1.pcp": "Station  1\nLat  0.0\nLong 0.0\nElev 0\n2010010  1.2  0.0  3.4  0.0  5.6",
+      "usersoil.sol": "MUID  ...  SOL_BD  SOL_AWC  ...\nSOIL_A  null  0.18\nSOIL_B  1.32  0.21",
+    }
+  },
+  swat_mf: {
+    label: "SWAT-MODFLOW", desc: "Planted issues: low file-unit numbers in modflow.mfn, short MODFLOW period vs SWAT.",
+    files: {
+      "modflow.mfn": "# unit assignments\nBAS6  13  bas.bas\nDIS   29  model.dis\nOC    22  model.oc",
+      "model.dis": "# DIS\n1 100 100 12 1 4\n1 1000.0 1000.0 -1 1.0 1 1",
+      "file.cio": "General input/output file\n10 | NBYR\n2010 | IYR",
+    }
+  },
+  modflow: {
+    label: "MODFLOW", desc: "Planted issues: name-file reference to a missing package, solver non-convergence in the listing file.",
+    files: {
+      "model.nam": "LIST  2   model.lst\nDIS   11  model.dis\nRIV   18  model.riv\nWEL   19  model_missing.wel",
+      "model.dis": "# DIS\n1 50 50 1 1 4\n1 500.0 500.0 -1 1.0 1 1",
+      "model.lst": "MODFLOW 6 listing file\n...\nFAILED TO MEET SOLVER CONVERGENCE CRITERIA\nPERCENT DISCREPANCY = 3.42\n...",
+    }
+  }
+};
+
+function loadDemo(key){
+  const demo = DEMO_MODELS[key];
+  FILES = {}; FILENAMES = [];
+  Object.entries(demo.files).forEach(([name, content])=>{
+    FILES[name.toLowerCase()] = content;
+    FILENAMES.push(name);
+  });
+  $("fwSelect").value = key;
+  $("fileList").textContent = "Demo model loaded (" + demo.label + "): " +
+      FILENAMES.length + " synthetic files · " + demo.desc;
+  buildFileBrowser();
+  runChecks();
+  $("fileBrowserCard").scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+function buildDemoGallery(){
+  const el = $("demoGallery");
+  el.innerHTML = "";
+  Object.entries(DEMO_MODELS).forEach(([key, d])=>{
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.innerHTML = `<span class="fw">${esc(d.label)}</span><span class="et">Load demo model</span>`;
+    b.title = d.desc;
+    b.onclick = ()=>loadDemo(key);
+    el.appendChild(b);
+  });
+}
+
+function detectFramework(){
+  const names = Object.keys(FILES);
+  const has = re => names.some(n=>re.test(n));
+  if(has(/swatmf_link/) || has(/\.mfn$/) && has(/file\.cio/)) return "swat_mf";
+  if(has(/time\.sim/) || has(/\.sqlite/) || has(/rout_unit/)) return "swat_plus";
+  if(has(/file\.cio/)) return "swat2012";
+  if(has(/\.nam$/) || has(/\.dis$/)) return "modflow";
+  return "swat_plus";
+}
+
+/* ═════════════════════ rule engine ═════════════════════ */
+const ATTR = {
+  swatplus : "As commonly advised in the SWAT+ user community.",
+  swat     : "As commonly advised in the SWAT-user community.",
+  swatmf   : "As commonly advised in the SWAT-MODFLOW user group.",
+  modflow  : "As commonly advised in the MODFLOW users community.",
+  doc      : "From official documentation."
+};
+
+function grab(name){ return FILES[name] ?? null; }
+function findByExt(ext){ return Object.keys(FILES).filter(n=>n.endsWith(ext)); }
+function nums(line){ return (line.match(/-?\d+(\.\d+)?([eE][+-]?\d+)?/g)||[]).map(Number); }
+
+const RULES = {
+/* ─── SWAT+ ─────────────────────────────────────────── */
+swat_plus: [
+  function timeSim(out){
+    const t = grab("time.sim");
+    if(t===null){ out.push(finding("warning","time.sim not found","time.sim",
+      "SWAT+ requires <code>time.sim</code> to define the simulation period. If it is missing the run stops immediately.",
+      "Re-write input files from SWAT+ Editor, or restore time.sim.", ATTR.doc)); return; }
+    const lines = t.split(/\r?\n/).filter(l=>l.trim());
+    const v = nums(lines[lines.length-1]||"");
+    if(v.length>=4){
+      const [ds,ys,de,ye] = v;
+      if(ye<ys || (ye===ys && de<ds && de!==0))
+        out.push(finding("error","Simulation end date is before the start date","time.sim",
+          `Parsed: start day ${ds}, year ${ys} → end day ${de}, year ${ye}. The model will stop on day 1.`,
+          "Correct day_start / yrc_start / day_end / yrc_end so the end comes after the start.", ATTR.swatplus,
+          "time.sim", `${ds}\\s+${ys}\\s+${de}\\s+${ye}`));
+      if(ys<1900||ys>2100||ye<1900||ye>2100)
+        out.push(finding("warning","Suspicious simulation years","time.sim",
+          `Years parsed as ${ys}–${ye}. Check column order in time.sim.`,
+          "Open time.sim and verify the header/value alignment.", ATTR.doc,
+          "time.sim", null));
+    }
+  },
+  function printPrt(out){
+    if(grab("print.prt")===null)
+      out.push(finding("warning","print.prt not found","print.prt",
+        "Without print.prt, output control is undefined and some runs produce no usable outputs.",
+        "Re-write input files from SWAT+ Editor.", ATTR.doc));
+  },
+  function soilNulls(out){
+    const sol = grab("soils.sol");
+    if(!sol) return;
+    const lines = sol.split(/\r?\n/);
+    let hits = [];
+    lines.forEach((l,i)=>{
+      if(/(^|\s)(null|nan)(\s|$)/i.test(l)) hits.push(i+1);
+      // absurd values: bulk density 0 or negative in numeric fields
+    });
+    if(hits.length)
+      out.push(finding("error","Null/NaN fields inside soils.sol","soils.sol — lines "+hits.slice(0,8).join(", ")+(hits.length>8?" …":""),
+        "Null or NaN soil properties are the most common cause of the <code>floating invalid</code> (error 65) crash: the model computes with an undefined number and aborts.",
+        "Fill every soil property field with a physical value (check bulk density, awc, k, carbon). Re-import the soil table and rewrite inputs.", ATTR.swatplus,
+        "soils.sol", "(^|\\s)(null|nan)(\\s|$)"));
+    // zero thickness / zero bd quick scan on numeric rows
+    let zeroBD = 0;
+    lines.forEach(l=>{ const v = nums(l); if(v.length>8 && v[3]===0) zeroBD++; });
+    if(zeroBD>0)
+      out.push(finding("warning","Possible zero values in soil layer properties","soils.sol",
+        zeroBD+" data line(s) contain a zero in a property column (possible zero bulk density / thickness). Zero thickness or density produces NaN during initialization.",
+        "Verify layer depth and bulk density columns are positive for every layer.", ATTR.swatplus,
+        "soils.sol", null));
+  },
+  function gwflowChecks(out){
+    const g = Object.keys(FILES).find(n=>n.startsWith("gwflow"));
+    if(!g) return;
+    const t = grab(g)||"";
+    // zero aquifer thickness signature
+    if(/thickness/i.test(t)){
+      const zeros = (t.match(/(^|\s)0\.0(0+)?(\s|$)/g)||[]).length;
+      if(zeros>10)
+        out.push(finding("warning","gwflow: possible zero aquifer thickness cells", g,
+          "Cells with zero aquifer thickness produce NaN heads and can crash the groundwater balance at initialization.",
+          "Enforce a minimum thickness (e.g. 5–10 m) on all active cells before running.", ATTR.swatplus,
+          g, "^0\\.0(0+)?\\s"));
+    }
+    out.push(finding("ok","gwflow module detected — extra care", g,
+      "gwflow issues concentrate at the SWAT+ complexity frontier (SW–GW exchange). If heads drift or the water balance leaks, check cell–LSU ordering and initial head cycling before touching K or Sy.",
+      "", ATTR.swatplus, g, null));
+  },
+  function weatherRefs(out){
+    const cli = grab("weather-sta.cli");
+    if(!cli) return;
+    const missing = [];
+    cli.split(/\r?\n/).slice(2).forEach(l=>{
+      l.trim().split(/\s+/).forEach(tok=>{
+        if(/\.(pcp|tmp|slr|hmd|wnd)$/i.test(tok) && grab(tok.toLowerCase())===null) missing.push(tok);
+      });
+    });
+    if(missing.length)
+      out.push(finding("error","Weather files referenced but not found","weather-sta.cli → "+missing.slice(0,6).join(", "),
+        "The station file points to climate files that are not in the folder — the run aborts while reading weather.",
+        "Copy the missing files into TxtInOut or fix the names in weather-sta.cli.", ATTR.swatplus,
+        "weather-sta.cli", missing[0].replace(/\./g,"\\.")));
+  }
+],
+/* ─── SWAT2012 ──────────────────────────────────────── */
+swat2012: [
+  function fileCio(out){
+    const c = grab("file.cio");
+    if(c===null){ out.push(finding("error","file.cio not found","file.cio",
+      "SWAT2012 cannot run without file.cio (master control file).",
+      "Re-write inputs from ArcSWAT/QSWAT, or restore the file.", ATTR.doc)); return; }
+    const m = c.match(/^\s*(\d+)\s*\|\s*NBYR/m);
+    const y = c.match(/^\s*(\d+)\s*\|\s*IYR/m);
+    if(m && y){
+      const nbyr = +m[1], iyr = +y[1];
+      if(nbyr<=0 || nbyr>150)
+        out.push(finding("error","NBYR (years simulated) looks invalid","file.cio",
+          `NBYR = ${nbyr}. Must be a positive, sensible number of years.`,
+          "Fix NBYR in file.cio.", ATTR.doc, "file.cio", "NBYR"));
+      // pcp consistency
+      const pcps = findByExt(".pcp");
+      for(const p of pcps.slice(0,3)){
+        const txt = grab(p)||"";
+        const years = new Set();
+        txt.split(/\r?\n/).slice(4).forEach(l=>{ const yy = l.slice(0,4); if(/^\d{4}$/.test(yy)) years.add(+yy); });
+        if(years.size && (!years.has(iyr) || years.size < nbyr))
+          out.push(finding("warning","Climate file may not cover the simulation period", p,
+            `file.cio asks for ${nbyr} year(s) starting ${iyr}; ${p} contains ${years.size} year(s) [${Math.min(...years)}–${Math.max(...years)}]. A shorter climate record makes SWAT stop or fill with generator data.`,
+            "Extend the climate record or adjust IYR/NBYR to the available data.", ATTR.swat,
+            p, `^${iyr}`));
+      }
+    }
+  },
+  function solNulls(out){
+    let hits = 0, files = [];
+    findByExt(".sol").forEach(n=>{
+      if(/(^|\s)(null|nan)(\s|$)/i.test(grab(n)||"")){ hits++; files.push(n); }
+    });
+    if(hits)
+      out.push(finding("error","Null values in soil (.sol) files", files.slice(0,5).join(", ")+(files.length>5?" …":""),
+        "Null soil properties are a classic cause of runtime crashes and of implausible water-balance output.",
+        "Repair the usersoil database entries and re-create the .sol files.", ATTR.swat,
+        files[0], "(^|\\s)(null|nan)(\\s|$)"));
+  }
+],
+/* ─── SWAT-MODFLOW ──────────────────────────────────── */
+swat_mf: [
+  function mfnIndices(out){
+    const mfn = Object.keys(FILES).find(n=>n.endsWith(".mfn"));
+    if(!mfn) { out.push(finding("warning","modflow.mfn not found","*.mfn",
+      "The MODFLOW name file (.mfn) was not detected — coupling cannot start without it.",
+      "Make sure the .mfn is in the folder QSWATMOD points to.", ATTR.swatmf)); return; }
+    const bad = [];
+    (grab(mfn)||"").split(/\r?\n/).forEach((l,i)=>{
+      const p = l.trim().split(/\s+/);
+      if(p.length>=3 && /^\d+$/.test(p[1])){
+        const unit = +p[1];
+        if(unit>0 && unit<200 && unit!==0 && unit<5000 && !/^#/.test(l) && /\.\w+$/.test(p[2]||"")) bad.push(`${p[0]} → unit ${unit} (line ${i+1})`);
+      }
+    });
+    if(bad.length)
+      out.push(finding("warning","Low file-unit numbers in "+mfn, bad.slice(0,6).join(" · "),
+        "SWAT-MODFLOW reserves low Fortran unit numbers; conflicts cause silent crashes at startup (period 1, day 1).",
+        "Renumber the units in the .mfn to values &gt; 5000.", ATTR.swatmf,
+        mfn, null));
+  },
+  function periodAlign(out){
+    const dis = Object.keys(FILES).find(n=>n.endsWith(".dis"));
+    const cio = grab("file.cio");
+    if(!dis || !cio) return;
+    const m = cio.match(/^\s*(\d+)\s*\|\s*NBYR/m);
+    const txt = grab(dis)||"";
+    const line2 = txt.split(/\r?\n/).find(l=>nums(l).length>=4 && !l.trim().startsWith("#"));
+    if(m && line2){
+      const nper = nums(line2)[3];
+      const swatDays = (+m[1])*365;
+      if(nper && nper < swatDays)
+        out.push(finding("error","MODFLOW period shorter than SWAT period", dis,
+          `MODFLOW defines ${nper} stress periods but SWAT simulates ≈${swatDays} days. When MODFLOW runs out of stress periods the coupled model crashes or hangs.`,
+          "Extend the MODFLOW DIS stress periods so MODFLOW covers ≥ the SWAT simulation (community practice: SWAT period + ~100 days).", ATTR.swatmf,
+          dis, line2.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+    }
+  },
+  function linkFile(out){
+    if(!Object.keys(FILES).some(n=>n.includes("swatmf_link")))
+      out.push(finding("warning","swatmf_link.txt not found","swatmf_link.txt",
+        "The link file controls coupling outputs and options; without it the exchange is not configured.",
+        "Re-run the linking step in QSWATMOD to regenerate it.", ATTR.swatmf));
+  }
+],
+/* ─── MODFLOW ───────────────────────────────────────── */
+modflow: [
+  function namRefs(out){
+    const nam = Object.keys(FILES).find(n=>n.endsWith(".nam"));
+    if(!nam) return;
+    const missing = [];
+    (grab(nam)||"").split(/\r?\n/).forEach(l=>{
+      if(/^#|^\s*$/.test(l)) return;
+      const p = l.trim().split(/\s+/);
+      const f = (p[2]||p[1]||"").toLowerCase().split(/[\\\/]/).pop();
+      if(f && /\.\w+$/.test(f) && grab(f)===null && !/\.(hds|cbb|cbc|bud|grb)$/.test(f)) missing.push(f);
+    });
+    if(missing.length)
+      out.push(finding("error","Name file references files that are not in the folder", nam+" → "+missing.slice(0,8).join(", "),
+        "MODFLOW aborts immediately when a package file listed in the name file cannot be opened.",
+        "Copy the missing files next to the name file or fix the paths (avoid long paths and spaces).", ATTR.modflow,
+        nam, missing[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+  },
+  function lstDiagnostics(out){
+    const lst = Object.keys(FILES).find(n=>/\.(lst|list)$/.test(n));
+    if(!lst) return;
+    const t = grab(lst)||"";
+    if(/FAILED TO MEET SOLVER CONVERGENCE|DID NOT CONVERGE|FAILED TO CONVERGE/i.test(t))
+      out.push(finding("error","Solver failed to converge", lst,
+        "The listing file records convergence failure. Common drivers: extreme hydraulic-conductivity contrasts between neighboring cells, dry-cell oscillation, or an over-tight closure criterion.",
+        "Try MODFLOW-NWT / MF6 with the IMS 'MODERATE' or 'COMPLEX' preset; smooth extreme K transitions; review starting heads. Interpreting <i>why</i> a specific conceptualization diverges is frontier-level — worth a well-formed community post.", ATTR.modflow,
+        lst, "FAILED TO MEET SOLVER CONVERGENCE|DID NOT CONVERGE|FAILED TO CONVERGE"));
+    const discs = [...t.matchAll(/PERCENT DISCREPANCY\s*=\s*(-?\d+(\.\d+)?)/gi)].map(m=>Math.abs(+m[1]));
+    const worst = discs.length? Math.max(...discs) : 0;
+    if(worst>1)
+      out.push(finding("warning","Water-budget discrepancy above 1%", lst,
+        `Worst PERCENT DISCREPANCY found: ${worst}%. Budgets above ~1% mean the solution is not mass-conservative and results should not be trusted.`,
+        "Tighten solver closure gradually, check boundary-condition conductances and dry cells, then re-check the budget.", ATTR.modflow,
+        lst, "PERCENT DISCREPANCY"));
+    if(/CELL GOES DRY|CONVERTED TO DRY/i.test(t))
+      out.push(finding("warning","Dry cells detected during the run", lst,
+        "Cells drying and rewetting cause oscillation and non-convergence, especially in water-table aquifers.",
+        "Consider MODFLOW-NWT (upstream weighting) or MF6 Newton formulation, which handle drying robustly.", ATTR.modflow,
+        lst, "CELL GOES DRY|CONVERTED TO DRY"));
+  },
+  function chdEverywhere(out){
+    const chd = Object.keys(FILES).find(n=>n.endsWith(".chd"));
+    const dis = Object.keys(FILES).find(n=>n.endsWith(".dis"));
+    if(!chd || !dis) return;
+    const nChd = ((grab(chd)||"").match(/^\s*\d+\s+\d+\s+\d+/gm)||[]).length;
+    const dnums = nums((grab(dis)||"").split(/\r?\n/).find(l=>nums(l).length>=3)||"");
+    const cells = (dnums[0]||0)*(dnums[1]||0)*(dnums[2]||0);
+    if(cells>0 && nChd > cells*0.5)
+      out.push(finding("warning","Very large fraction of constant-head (CHD) cells", chd,
+        `≈${nChd} CHD entries vs ≈${cells} model cells. Over-constraining the domain with specified heads forces the solution and commonly yields heads identical to starting values.`,
+        "Keep specified heads only on true boundaries; let the interior be solved.", ATTR.modflow,
+        chd, null));
+  }
+],
+/* ─── generic (all frameworks) ─────────────────────── */
+generic: [
+  function emptyFiles(out){
+    const empt = Object.keys(FILES).filter(n=>FILES[n]==="");
+    if(empt.length)
+      out.push(finding("warning","Empty (0-byte) files detected", empt.slice(0,8).join(", ")+(empt.length>8?" …":""),
+        "Zero-byte input files usually mean an interrupted write by the GUI/editor and cause end-of-file crashes.",
+        "Re-write the affected inputs from the interface.", ATTR.doc));
+  },
+  function pathHygiene(out){
+    const bad = FILENAMES.filter(n=>/[áéíóúñü]|\s\s|[,;]/i.test(n));
+    if(bad.length)
+      out.push(finding("warning","Problematic characters in file/folder names", bad.slice(0,5).join(", "),
+        "Accented characters and unusual symbols in paths break Fortran file handling on Windows.",
+        "Use short ASCII paths without accents (e.g. C:\\models\\myproj).", ATTR.doc));
+  }
+]
+};
+
+function runChecks(){
+  const el = $("results");
+  if(!Object.keys(FILES).length){ el.innerHTML='<span class="muted">No readable text files found.</span>'; return; }
+  let fw = $("fwSelect").value;
+  if(fw==="auto") fw = detectFramework();
+  const out = [];
+  (RULES[fw]||[]).forEach(r=>{ try{ r(out); }catch(_){} });
+  RULES.generic.forEach(r=>{ try{ r(out); }catch(_){} });
+  const label = {swat_plus:"SWAT+",swat2012:"SWAT2012",swat_mf:"SWAT-MODFLOW",modflow:"MODFLOW"}[fw];
+  el.innerHTML = `<div class="muted" style="margin-bottom:8px;">Framework: <b>${label}</b> · ${Object.keys(FILES).length} files scanned · ${(RULES[fw]||[]).length + RULES.generic.length} rule groups applied</div>`;
+  const div = document.createElement("div");
+  renderFindings(out, div);
+  el.appendChild(div);
+}
+function renderFileCheckTable(){
+  const el = $("fileCheckTable");
+  let fw = $("fwSelect").value;
+  if(fw==="auto") fw = detectFramework();
+  const cov = COVERAGE_DATA[fw];
+  const rows = (cov && cov.file_checks) || [];
+  if(!rows.length){ el.innerHTML = '<span class="muted">No file checks documented for this framework yet.</span>'; return; }
+  el.innerHTML = `<table class="fchk-table"><tr><th>File</th><th>Category</th><th>What we look for</th></tr>` +
+    rows.map(r=>`<tr>
+        <td class="fchk-file">${esc(r.file)}</td>
+        <td class="fchk-cat">${esc(r.cat)}</td>
+        <td>${esc(r.checks)}</td>
+      </tr>`).join("") + `</table>`;
+}
+$("fwSelect").onchange = ()=>{ runChecks(); renderFileCheckTable(); };
+
+/* ═════════════════════ coverage map ("what gets resolved here") ═════════════════════ */
+let covActiveFw = null;
+function buildCoverageTabs(){
+  const el = $("covFwTabs");
+  const fws = Object.keys(COVERAGE_DATA);
+  if(!fws.length) return;
+  covActiveFw = fws[0];
+  el.innerHTML = "";
+  fws.forEach(fw=>{
+    const b = document.createElement("button");
+    b.textContent = COVERAGE_DATA[fw].label || fw;
+    if(fw===covActiveFw) b.classList.add("active");
+    b.onclick = ()=>{
+      covActiveFw = fw;
+      el.querySelectorAll("button").forEach(x=>x.classList.remove("active"));
+      b.classList.add("active");
+      renderCoverageTable();
+    };
+    el.appendChild(b);
+  });
+  renderCoverageTable();
+}
+const VERDICT_ICON = { resolved:"ti-check", mixed:"ti-minus", frontier:"ti-compass" };
+function renderCoverageTable(){
+  const el = $("covTable");
+  const cov = COVERAGE_DATA[covActiveFw];
+  if(!cov){ el.innerHTML = ""; return; }
+  el.innerHTML = `<table class="cov-table"><tr><th>Category</th><th>Nature</th><th>Threads</th><th>Resolution</th><th>Verdict</th></tr>` +
+    cov.categories.map(c=>{
+      const icon = VERDICT_ICON[c.verdict] || "ti-minus";
+      const res = (c.resolution_pct==null) ? "—" : c.resolution_pct + "%";
+      return `<tr>
+        <td>${esc(c.name)}</td>
+        <td class="cov-n">${esc(c.nature)}</td>
+        <td class="cov-n">${c.n_threads}</td>
+        <td class="cov-n">${res}</td>
+        <td><span class="cov-verdict ${c.verdict}"><i class="ti ${icon}" aria-hidden="true"></i>${esc(VERDICT_LABEL_JS[c.verdict])}</span></td>
+      </tr>`;
+    }).join("") + `</table>`;
+}
+const VERDICT_LABEL_JS = {
+  resolved: "Resolved here",
+  mixed: "Partially",
+  frontier: "Frontier",
+};
+
+/* ═════════════════════ error-message signatures ═════════════════════ */
+/* Real community solution-set data, injected by scripts/14_build_diagnostic_data.py */
+const SOLUTION_DATA = {"swat2012":{"CAT-03":{"category":"Runtime Errors & Crashes","n_threads":566,"resolution_pct":15,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":162,"resolved_pct":25,"example":"Modify reservoir table in prescribed format"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":97,"resolved_pct":22,"example":"Ensure same duration/period for observed"},{"type":"WORKAROUND","label":"Non-standard workaround","support":19,"resolved_pct":16,"example":"Send current txtinout directory in compressed"},{"type":"FILE_MISSING","label":"Add or restore a missing file/reference","support":19,"resolved_pct":11,"example":"Add soil information to SSUR"}]},"CAT-05":{"category":"Output Interpretation & Water Balance","n_threads":503,"resolution_pct":12,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":110,"resolved_pct":26,"example":"Check HRU subroutines for area subtraction"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":68,"resolved_pct":12,"example":"Manual typo confirmed, model code calculates m^3/sec"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":50,"resolved_pct":16,"example":"Increase parameter range and number of parameters"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":20,"resolved_pct":25,"example":"Check error message instructions"}]},"CAT-04":{"category":"Calibration & Sensitivity Analysis","n_threads":483,"resolution_pct":11,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":115,"resolved_pct":24,"example":"Provided link to executable for Rev 696/SWAT."},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":80,"resolved_pct":14,"example":"Try input parameters"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":76,"resolved_pct":9,"example":"Default parameters may not match local conditions."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":22,"resolved_pct":27,"example":"Try downloading previous versions or activate this version."}]},"CAT-01":{"category":"Watershed Setup & HRU Delineation","n_threads":340,"resolution_pct":21,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":115,"resolved_pct":36,"example":"Match WSNO field in stream shapefile to PolygonId field in watershed file using QGIS."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":40,"resolved_pct":12,"example":"Biomass is standing crop at a point"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":33,"resolved_pct":30,"example":"version, path, OS, or installation fix"},{"type":"WORKAROUND","label":"Non-standard workaround","support":23,"resolved_pct":9,"example":"Use FAO website raster file and QGIS"}]},"CAT-06":{"category":"Management & Land Use","n_threads":270,"resolution_pct":17,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":87,"resolved_pct":28,"example":"Provide documentation for extracting data from World Data Grids"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":31,"resolved_pct":23,"example":"Use transfer functionality in swat with manual adjustments"},{"type":"WORKAROUND","label":"Non-standard workaround","support":17,"resolved_pct":12,"example":"Adjust streams and watershed"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":16,"resolved_pct":38,"example":"Apply amount to HRU area, not whole basin"}]},"CAT-02":{"category":"Weather & Climate Data Formatting","n_threads":266,"resolution_pct":24,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":88,"resolved_pct":31,"example":"Change SWAT input file to accommodate 6-hour rainfall data"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":32,"resolved_pct":28,"example":"Sub-daily simulation concept explained"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":22,"resolved_pct":14,"example":"Use projected climate data with bias-correction"},{"type":"WORKAROUND","label":"Non-standard workaround","support":18,"resolved_pct":22,"example":"Download data until 2019 from https://www.uoguelph.ca/watershed/w3s/"}]},"CAT-07":{"category":"GUI & ArcSWAT / QSWAT Bugs","n_threads":111,"resolution_pct":28,"candidates":[{"type":"CONFIG_ENV","label":"Version / path / install fix","support":29,"resolved_pct":69,"example":"Check .NET Framework version compatibility with SWAT Editor."},{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":19,"resolved_pct":37,"example":"Supply a lookup table to relate map values to landuse codes or soil names."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":5,"resolved_pct":20,"example":"Switched to ArcMap due to compatibility issues with ArcGIS Pro."},{"type":"FILE_MISSING","label":"Add or restore a missing file/reference","support":4,"resolved_pct":75,"example":"Download example dataset from QSWAT repository at https://github.com/swat-model/QSWAT/tree/master/QSWAT3"}]},"CAT-08":{"category":"Sediment & Nutrient Processes","n_threads":99,"resolution_pct":14,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":28,"resolved_pct":29,"example":"Check \"Extend Management Operations\" box to fix error."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":25,"resolved_pct":4,"example":"Conceptual explanation or guidance provided in documentation"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":12,"resolved_pct":17,"example":"Change Heat Units (HUS"},{"type":"WORKAROUND","label":"Non-standard workaround","support":10,"resolved_pct":10,"example":"Check if filter strip is effective or big enough to change outputs."}]}},"swat_plus":{"CAT-01":{"category":"Watershed Setup & HRU Delineation","n_threads":211,"resolution_pct":12,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":61,"resolved_pct":21,"example":"Send file contents or specific file for analysis"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":20,"resolved_pct":10,"example":"Pathogens not operational in SWAT+, to-do list for future development."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":18,"resolved_pct":28,"example":"Version/path/OS fix (no specific details"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":11,"resolved_pct":36,"example":"Change model parameters through SWAT+ Editor's Hard Calibration interface."}]},"CAT-02":{"category":"Runtime Errors & Model Crashes","n_threads":180,"resolution_pct":9,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":52,"resolved_pct":21,"example":"Send contents of txtinout folder for analysis"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":14,"resolved_pct":29,"example":"Version or installation fix needed (unc"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":8,"resolved_pct":25,"example":"Change model parameter to use Green-Ampt method with daily precipitation inputs."},{"type":"REFER_OUT","label":"Refer to developers / post files / manual","support":8,"resolved_pct":12,"example":"Send current txtinout"}]},"CAT-03":{"category":"Calibration & Sensitivity Analysis","n_threads":163,"resolution_pct":18,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":36,"resolved_pct":31,"example":"Confirm warm-up years in file.cio"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":22,"resolved_pct":27,"example":"Change sol_K (Ksat) to increase percolation"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":21,"resolved_pct":38,"example":"Re-calibrate the model after updating to newer revisions."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":19,"resolved_pct":16,"example":"SWAT+ does not require a warm-up period."}]},"CAT-05":{"category":"Soil, Climate & Input Data Errors","n_threads":54,"resolution_pct":17,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":14,"resolved_pct":29,"example":"Make simulation with debug executable"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":5,"resolved_pct":40,"example":"Send current txtinout directory in compressed format for"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":3,"resolved_pct":33,"example":"Temperature is important for crop growth and ET; recommend adding temperature data even from global weather so"},{"type":"FILE_MISSING","label":"Add or restore a missing file/reference","support":3,"resolved_pct":67,"example":"Use 'Use csv file' option for landuse and soil lookup tables"}]},"CAT-04":{"category":"Management Schedules & Decision Tables","n_threads":52,"resolution_pct":10,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":11,"resolved_pct":18,"example":"Define irrigation source as channel, reservoir, aquifer, or unlimited/deep aquifer."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":6,"resolved_pct":0,"example":"specify aquifer ID to irrigate from a specific aquifer"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":6,"resolved_pct":33,"example":"Tell RNGE to use decision table instead of applying it directly."},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":3,"resolved_pct":33,"example":"Adjust irrigation amount in decision table to 15mm"}]},"CAT-07":{"category":"SWAT+ Editor / Toolbox / QSWAT+ GUI Bugs","n_threads":40,"resolution_pct":28,"candidates":[{"type":"CONFIG_ENV","label":"Version / path / install fix","support":10,"resolved_pct":40,"example":"Check plugin availability in QGIS plugins list"},{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":7,"resolved_pct":71,"example":"Delete old inlet/outlet files to resolve error."},{"type":"FILE_MISSING","label":"Add or restore a missing file/reference","support":2,"resolved_pct":50,"example":"Add weather generators to resolve error"}]},"CAT-09":{"category":"Advanced: gwflow, Nutrients, Pathogens, Sediment","n_threads":30,"resolution_pct":0,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":8,"resolved_pct":0,"example":"Correctly break up TN and TP into Organic and Mineral Phosphorus"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":2,"resolved_pct":0,"example":"Check gwflow routines in version rev60.5.4 for updates"}]},"CAT-06":{"category":"Output Interpretation & Water Balance","n_threads":28,"resolution_pct":7,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":5,"resolved_pct":0,"example":"Check if Hargreaves method is correctly set in the input file"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":5,"resolved_pct":20,"example":"Edit channel properties with respect to terrace properties"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":2,"resolved_pct":0,"example":"SWAT+ model currently uses only one method; options for other methods"}]},"CAT-08":{"category":"Reservoirs, Wetlands & Water Bodies","n_threads":12,"resolution_pct":17,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":5,"resolved_pct":20,"example":"Consult local expert for expected value of bm_init"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":4,"resolved_pct":25,"example":"Different parameters (bm_ini and"},{"type":"WORKAROUND","label":"Non-standard workaround","support":2,"resolved_pct":0,"example":"Use default routing method with GUI (SW"}]}},"swat_mf":{"CAT-01":{"category":"Model Linking & Coupling Setup","n_threads":85,"resolution_pct":18,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":30,"resolved_pct":30,"example":"Fix raster file loading"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":10,"resolved_pct":30,"example":"Speed up linking process"},{"type":"REFER_OUT","label":"Refer to developers / post files / manual","support":7,"resolved_pct":29,"example":""},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":6,"resolved_pct":33,"example":"Create well package in MODFLOW model for dynamic irrigation."}]},"CAT-06":{"category":"QSWATMOD2 GUI & Plugin Errors","n_threads":35,"resolution_pct":26,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":14,"resolved_pct":36,"example":"Check if the river grid"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":5,"resolved_pct":40,"example":"Upgrade to QSWATMOD version 2.7.2 using GitHub link."},{"type":"WORKAROUND","label":"Non-standard workaround","support":3,"resolved_pct":33,"example":"Use compatible file.cio with QSWAT"}]},"CAT-03":{"category":"Simulation Crashes & Runtime Errors","n_threads":34,"resolution_pct":6,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":15,"resolved_pct":13,"example":"Check SWAT-MODFLOW link.txt file for errors or inconsistencies."},{"type":"REFER_OUT","label":"Refer to developers / post files / manual","support":3,"resolved_pct":0,"example":""},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":2,"resolved_pct":0,"example":"Version or path issue (not"}]},"CAT-05":{"category":"Calibration & Parameter Sensitivity","n_threads":17,"resolution_pct":6,"candidates":[{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":3,"resolved_pct":0,"example":"Pumping well not included in"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":2,"resolved_pct":0,"example":"Changed SS, SY of bottom layer to improve results"},{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":2,"resolved_pct":0,"example":"Replace groundwater module (.gw) with MODFLOW model"}]},"CAT-07":{"category":"Temporal & Spatial Discretisation Mismatch","n_threads":16,"resolution_pct":25,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":7,"resolved_pct":29,"example":"Fix MODFLOW output file to recognize stress time"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":3,"resolved_pct":33,"example":"Set different time steps for each model using SWAT-MODFLOW."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":2,"resolved_pct":50,"example":"MODFLOW start date is flexible, SWAT-MODFLOW run ends early"}]},"CAT-04":{"category":"Recharge & SW-GW Exchange Outputs","n_threads":14,"resolution_pct":0,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":3,"resolved_pct":0,"example":"Extract recharge from SWAT's output.hru file"},{"type":"WORKAROUND","label":"Non-standard workaround","support":3,"resolved_pct":0,"example":"Use percolation (PER"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":2,"resolved_pct":0,"example":"Recharge value derived from SWAT percolation process"}]},"CAT-02":{"category":"MODFLOW Convergence Failures","n_threads":7,"resolution_pct":0,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":3,"resolved_pct":0,"example":"Check MODFLOW input file for errors"}]}},"modflow":{"CAT-05":{"category":"Runtime Errors & File Configuration","n_threads":397,"resolution_pct":13,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":87,"resolved_pct":26,"example":"Check unit number for +5 instead of -5."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":49,"resolved_pct":37,"example":"Learn PEST family tools quickly"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":33,"resolved_pct":15,"example":"Parallel simulations not practical for small problems"},{"type":"WORKAROUND","label":"Non-standard workaround","support":18,"resolved_pct":28,"example":"Ignore model discretization and load shape"}]},"CAT-04":{"category":"Parameter Estimation & Calibration","n_threads":339,"resolution_pct":11,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":86,"resolved_pct":24,"example":"Watch PEST tutorial videos"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":53,"resolved_pct":28,"example":"Use \"/r\" parameter to re-start PEST run"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":43,"resolved_pct":12,"example":"Parameters are difficult to measure directly, so sensitivity analysis focuses on these variables."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":18,"resolved_pct":0,"example":"Run MODFLOW and MT3DMS separately or use SEAWAT for"}]},"CAT-03":{"category":"Boundary Condition Conceptualisation","n_threads":202,"resolution_pct":15,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":59,"resolved_pct":31,"example":"Represent artificial recharge values in respective areas"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":49,"resolved_pct":14,"example":"Show recharging structures as a map"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":25,"resolved_pct":24,"example":"Set IBOUND value to 1 for GHB cells"},{"type":"WORKAROUND","label":"Non-standard workaround","support":11,"resolved_pct":55,"example":"Use list of tuples for time series data with 4 entries per tuple."}]},"CAT-06":{"category":"Output Interpretation & Mass Balance","n_threads":182,"resolution_pct":13,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":35,"resolved_pct":26,"example":"Use flopy to export 3D head or water table data directly"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":30,"resolved_pct":17,"example":"Clarified understanding with colleague fixed issue"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":24,"resolved_pct":33,"example":"Use \"isosurface volume\" option in Grid to calculate freshwater volume"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":11,"resolved_pct":27,"example":"Use correct version of zonebudget with MODFLOW 6."}]},"CAT-02":{"category":"Solver Convergence & Numerical Stability","n_threads":174,"resolution_pct":14,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":29,"resolved_pct":31,"example":"Set IPHDRY to a positive number in UPW package options."},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":27,"resolved_pct":44,"example":"Reduce hydraulic conductivity and increase specific yield values to improve convergence."},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":21,"resolved_pct":33,"example":"Check initial heads are not"},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":7,"resolved_pct":14,"example":"Check ibound conversion in mf5to6.exe"}]},"CAT-01":{"category":"Model Setup & Grid Discretisation","n_threads":113,"resolution_pct":21,"candidates":[{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":44,"resolved_pct":39,"example":"Check layer elevation assignment method"},{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":12,"resolved_pct":25,"example":"conceptual explanation or guidance (no single fix)"},{"type":"PARAM_CHANGE","label":"Change a parameter or solver setting","support":9,"resolved_pct":44,"example":"Set inactive cells using IBOUND in Visual MODFLOW Flex."},{"type":"WORKAROUND","label":"Non-standard workaround","support":5,"resolved_pct":0,"example":"Use interpolation method or"}]},"CAT-07":{"category":"GUI & FloPy / ModelMuse Bugs","n_threads":63,"resolution_pct":16,"candidates":[{"type":"CONCEPT","label":"Conceptual guidance (no single fix)","support":14,"resolved_pct":14,"example":"MODFLOW river package only considers flux between surface water and groundwater across bed."},{"type":"FILE_EDIT","label":"Fix a value/field in an input file","support":14,"resolved_pct":57,"example":"Edit at least one value in the table to show script tab."},{"type":"CONFIG_ENV","label":"Version / path / install fix","support":5,"resolved_pct":20,"example":"Activate MODPATH in imported model"},{"type":"WORKAROUND","label":"Non-standard workaround","support":3,"resolved_pct":33,"example":"Select \"Data!Data Visualization\" to display"}]}}}; /* __SOLUTION_DATA__ */
+/* Per-category coverage (nature-based verdict + real n/resolution%) and file-check reference. */
+const COVERAGE_DATA = {"swat2012":{"label":"SWAT2012","categories":[{"cat":"CAT-03","name":"Runtime Errors & Crashes","nature":"Procedural","n_threads":1154,"resolution_pct":15,"verdict":"resolved"},{"cat":"CAT-05","name":"Output Interpretation & Water Balance","nature":"Theoretical","n_threads":1038,"resolution_pct":12,"verdict":"frontier"},{"cat":"CAT-04","name":"Calibration & Sensitivity Analysis","nature":"Theoretical","n_threads":1029,"resolution_pct":11,"verdict":"frontier"},{"cat":"CAT-01","name":"Watershed Setup & HRU Delineation","nature":"Procedural","n_threads":704,"resolution_pct":21,"verdict":"resolved"},{"cat":"CAT-06","name":"Management & Land Use","nature":"Theoretical","n_threads":576,"resolution_pct":17,"verdict":"frontier"},{"cat":"CAT-02","name":"Weather & Climate Data Formatting","nature":"Config","n_threads":510,"resolution_pct":24,"verdict":"resolved"},{"cat":"CAT-07","name":"GUI & ArcSWAT / QSWAT Bugs","nature":"Bug","n_threads":243,"resolution_pct":28,"verdict":"resolved"},{"cat":"CAT-08","name":"Sediment & Nutrient Processes","nature":"Theoretical","n_threads":206,"resolution_pct":14,"verdict":"frontier"}],"file_checks":[{"file":"file.cio","cat":"CAT-02","checks":"NBYR (years simulated) sanity, and whether it exceeds the actual climate record length."},{"file":"*.pcp","cat":"CAT-02","checks":"Whether the climate file's year coverage matches what file.cio asks for."},{"file":"*.sol","cat":"CAT-01","checks":"Null/NaN values in soil properties."}]},"swat_plus":{"label":"SWAT+","categories":[{"cat":"CAT-01","name":"Watershed Setup & HRU Delineation","nature":"Procedural","n_threads":435,"resolution_pct":12,"verdict":"resolved"},{"cat":"CAT-03","name":"Calibration & Sensitivity Analysis","nature":"Theoretical","n_threads":306,"resolution_pct":18,"verdict":"frontier"},{"cat":"CAT-02","name":"Runtime Errors & Model Crashes","nature":"Bug","n_threads":299,"resolution_pct":9,"verdict":"resolved"},{"cat":"CAT-04","name":"Management Schedules & Decision Tables","nature":"Theoretical","n_threads":107,"resolution_pct":10,"verdict":"frontier"},{"cat":"CAT-05","name":"Soil, Climate & Input Data Errors","nature":"Config","n_threads":99,"resolution_pct":17,"verdict":"resolved"},{"cat":"CAT-07","name":"SWAT+ Editor / Toolbox / QSWAT+ GUI Bugs","nature":"Bug","n_threads":77,"resolution_pct":28,"verdict":"resolved"},{"cat":"CAT-09","name":"Advanced: gwflow, Nutrients, Pathogens, Sediment","nature":"Mixed","n_threads":60,"resolution_pct":0,"verdict":"mixed"},{"cat":"CAT-06","name":"Output Interpretation & Water Balance","nature":"Theoretical","n_threads":57,"resolution_pct":7,"verdict":"frontier"},{"cat":"CAT-08","name":"Reservoirs, Wetlands & Water Bodies","nature":"Mixed","n_threads":27,"resolution_pct":17,"verdict":"mixed"}],"file_checks":[{"file":"time.sim","cat":"CAT-02","checks":"Simulation start/end dates in the wrong order or out of range (1900-2100)."},{"file":"print.prt","cat":"CAT-06","checks":"File presence — without it, output control is undefined."},{"file":"soils.sol","cat":"CAT-05","checks":"Null/NaN fields and zero bulk-density/thickness values (the #1 cause of the 'floating invalid' / error 65 crash)."},{"file":"weather-sta.cli","cat":"CAT-05","checks":"Climate files (.pcp/.tmp/.slr/.hmd/.wnd) referenced but missing from the folder."},{"file":"gwflow.*","cat":"CAT-09","checks":"Signature of widespread zero aquifer thickness, a common cause of NaN heads at initialization."}]},"swat_mf":{"label":"SWAT-MODFLOW","categories":[{"cat":"CAT-01","name":"Model Linking & Coupling Setup","nature":"Procedural","n_threads":111,"resolution_pct":18,"verdict":"resolved"},{"cat":"CAT-06","name":"QSWATMOD2 GUI & Plugin Errors","nature":"Bug","n_threads":51,"resolution_pct":26,"verdict":"resolved"},{"cat":"CAT-03","name":"Simulation Crashes & Runtime Errors","nature":"Procedural","n_threads":44,"resolution_pct":6,"verdict":"resolved"},{"cat":"CAT-05","name":"Calibration & Parameter Sensitivity","nature":"Theoretical","n_threads":29,"resolution_pct":6,"verdict":"frontier"},{"cat":"CAT-04","name":"Recharge & SW-GW Exchange Outputs","nature":"Theoretical","n_threads":23,"resolution_pct":0,"verdict":"frontier"},{"cat":"CAT-02","name":"MODFLOW Convergence Failures","nature":"Theoretical","n_threads":18,"resolution_pct":0,"verdict":"frontier"},{"cat":"CAT-07","name":"Temporal & Spatial Discretisation Mismatch","nature":"Config","n_threads":18,"resolution_pct":25,"verdict":"resolved"},{"cat":"CAT-08","name":"Advanced Features (RT3D, Irrigation, Extensions)","nature":"Mixed","n_threads":7,"resolution_pct":null,"verdict":"mixed"}],"file_checks":[{"file":"modflow.mfn","cat":"CAT-03","checks":"Low Fortran file-unit numbers (<5000) that conflict with SWAT-MODFLOW's reserved range — a classic silent-crash-at-startup cause."},{"file":"*.dis","cat":"CAT-07","checks":"Whether the MODFLOW stress-period length covers the full SWAT simulation period."},{"file":"swatmf_link.txt","cat":"CAT-01","checks":"File presence — controls coupling exchange configuration."}]},"modflow":{"label":"MODFLOW","categories":[{"cat":"CAT-05","name":"Runtime Errors & File Configuration","nature":"Procedural","n_threads":571,"resolution_pct":13,"verdict":"resolved"},{"cat":"CAT-04","name":"Parameter Estimation & Calibration","nature":"Theoretical","n_threads":498,"resolution_pct":11,"verdict":"frontier"},{"cat":"CAT-03","name":"Boundary Condition Conceptualisation","nature":"Theoretical","n_threads":304,"resolution_pct":15,"verdict":"frontier"},{"cat":"CAT-06","name":"Output Interpretation & Mass Balance","nature":"Theoretical","n_threads":258,"resolution_pct":13,"verdict":"frontier"},{"cat":"CAT-02","name":"Solver Convergence & Numerical Stability","nature":"Theoretical","n_threads":239,"resolution_pct":14,"verdict":"frontier"},{"cat":"CAT-01","name":"Model Setup & Grid Discretisation","nature":"Procedural","n_threads":158,"resolution_pct":21,"verdict":"resolved"},{"cat":"CAT-07","name":"GUI & FloPy / ModelMuse Bugs","nature":"Bug","n_threads":88,"resolution_pct":16,"verdict":"resolved"}],"file_checks":[{"file":"*.nam","cat":"CAT-05","checks":"Package files referenced in the name file that are missing from the folder."},{"file":"*.lst/.list","cat":"CAT-02","checks":"Convergence-failure strings and dry-cell/rewetting oscillation."},{"file":"*.lst/.list","cat":"CAT-06","checks":"Water-budget PERCENT DISCREPANCY above 1% (a non-conservative solution)."},{"file":"*.chd","cat":"CAT-03","checks":"An implausibly large fraction of constant-head cells relative to model size (over-constraining the domain)."}]}}; /* __COVERAGE_DATA__ */
+
+/* Each signature maps to the (model, category) whose community solution set it draws on. */
+const SIGNATURES = [
+  { re:/error\s*65|floating\s*invalid/i, fw:"SWAT+ / SWAT2012", model:"swat_plus", cat:"CAT-05",
+    title:"Floating-point 'invalid' crash (error 65)",
+    cause:"The model computed with an undefined number — overwhelmingly caused by null/zero fields in the soil database (bulk density, depth, AWC) or corrupted input rows.",
+    fix:"Scan your soil tables for null/zero properties and re-import; run the file check in this tool on your TxtInOut.", attr:ATTR.swatplus },
+  { re:/forrtl.*severe.*157|access violation/i, fw:"SWAT family / SWAT-MODFLOW", model:"swat_mf", cat:"CAT-03",
+    title:"forrtl severe (157): access violation",
+    cause:"The executable read past an array — typical triggers: input file with fewer records than declared, wrong file-unit numbers in modflow.mfn, or a basin too large for the compiled array sizes.",
+    fix:"Check period alignment and (for SWAT-MODFLOW) renumber .mfn units > 5000; verify no input file is truncated.", attr:ATTR.swatmf },
+  { re:/exit code\s*24|end[- ]of[- ]file/i, fw:"SWAT-MODFLOW / SWAT2012", model:"swat_mf", cat:"CAT-07",
+    title:"End-of-file (exit code 24)",
+    cause:"An input ended earlier than the declared simulation period — most often climate files shorter than NBYR, or MODFLOW stress periods shorter than the SWAT period.",
+    fix:"Make climate records cover the full period and extend MODFLOW DIS ≥ SWAT period.", attr:ATTR.swatmf },
+  { re:/failed to meet solver|did not converge|failed to converge/i, fw:"MODFLOW / SWAT-MODFLOW", model:"modflow", cat:"CAT-02",
+    title:"Solver convergence failure",
+    cause:"Numerical divergence — extreme K contrasts, dry-cell oscillation, poor starting heads, or a conceptualization the solver cannot satisfy.",
+    fix:"Try NWT/MF6-Newton, relax closure moderately, smooth K transitions. If it persists, the issue may be conceptual (frontier-level) — prepare a well-formed community post.", attr:ATTR.modflow },
+  { re:/peewee|doesnotexist|rout_unit/i, fw:"SWAT+", model:"swat_plus", cat:"CAT-07",
+    title:"SWAT+ Editor database error (peewee / DoesNotExist)",
+    cause:"The project SQLite database is out of sync with the Editor version — a table or row the Editor expects is missing.",
+    fix:"Match Editor version to the database (or re-create the project); avoid opening one project with multiple Editor versions.", attr:ATTR.swatplus },
+  { re:/keyerror.*hru|hru_id|hrugis/i, fw:"SWAT-MODFLOW (QSWATMOD)", model:"swat_mf", cat:"CAT-01",
+    title:"Missing HRU_ID / HRUGIS field during linking",
+    cause:"The HRU shapefile lacks the field QSWATMOD needs to intersect HRUs with the MODFLOW grid.",
+    fix:"Regenerate the HRU shapefile from the SWAT project (don't edit it manually) and re-run the linking step.", attr:ATTR.swatmf },
+  { re:/gpkg.*exists|already exists/i, fw:"QSWAT+ / QSWATMOD", model:"swat_mf", cat:"CAT-06",
+    title:"GeoPackage 'already exists' conflict",
+    cause:"A previous partial run left .gpkg layers on disk that the plugin refuses to overwrite.",
+    fix:"Close QGIS, delete the stale .gpkg files (or use a clean project folder), and re-run the step.", attr:ATTR.swatmf },
+  { re:/percent discrepancy/i, fw:"MODFLOW", model:"modflow", cat:"CAT-06",
+    title:"Water-budget discrepancy",
+    cause:"Mass-balance error above tolerance — solution not conservative.",
+    fix:"Tighten solver closure, check boundary conductances and dry cells; distrust results until the budget is < 1%.", attr:ATTR.modflow },
+  { re:/stuck|hangs? (at|on)|day 1|period 1/i, fw:"SWAT-MODFLOW", model:"swat_mf", cat:"CAT-03",
+    title:"Run hangs at period 1 / day 1",
+    cause:"Classic coupling-startup failure: file-unit conflicts in modflow.mfn or period misalignment between SWAT and MODFLOW.",
+    fix:"Renumber .mfn units > 5000 and verify MODFLOW covers the whole SWAT period.", attr:ATTR.swatmf },
+  { re:/nan|not a number/i, fw:"SWAT+ (incl. gwflow)", model:"swat_plus", cat:"CAT-09",
+    title:"NaN in outputs or heads",
+    cause:"A division by zero or undefined property during initialization — zero aquifer thickness (gwflow), zero soil layer values, or corrupted parameters.",
+    fix:"Enforce positive thickness/density everywhere; check the first NaN's location in the output to trace the module.", attr:ATTR.swatplus },
+  { re:/projection|crs|coordinate/i, fw:"QSWAT+ / ArcSWAT", model:"swat_plus", cat:"CAT-01",
+    title:"Projection / CRS mismatch",
+    cause:"DEM, soils, and land-use rasters are not in the same projected CRS (delineation fails or produces 0 HRUs).",
+    fix:"Reproject every raster to one projected CRS (meters) before starting the project.", attr:ATTR.swat },
+  { re:/decision table|d_table|dtl/i, fw:"SWAT+", model:"swat_plus", cat:"CAT-04",
+    title:"Decision-table logic question",
+    cause:"Management triggering in SWAT+ is controlled by decision tables — behavior questions here are commonly conceptual rather than file errors.",
+    fix:"Check lum.dtl syntax against the documented examples; if the question is about *why* a rule fires, it may need conceptual review — consider a community post with your table attached.", attr:ATTR.swatplus },
+];
+
+/* ═════════════════════ example-error gallery (one click = paste + diagnose) ═════════════════════ */
+const EXAMPLE_ERRORS = [
+  { fw:"SWAT+",         title:"Floating invalid crash",     text:"error 65: floating invalid" },
+  { fw:"SWAT+",         title:"Editor database error",      text:"peewee.DoesNotExist: RoutUnit instance matching query does not exist" },
+  { fw:"SWAT+ (gwflow)",title:"NaN in gwflow heads",         text:"gwflow: aquifer head returned NaN at cell 1043" },
+  { fw:"SWAT2012",      title:"Runtime access violation",   text:"forrtl: severe (157): Program Exception - access violation" },
+  { fw:"SWAT2012",      title:"Projection mismatch",        text:"QSWAT error: DEM and soil raster projection/CRS do not match" },
+  { fw:"SWAT-MODFLOW",  title:"Run stuck at day 1",          text:"simulation hangs at period 1, day 1 — no progress after 10 minutes" },
+  { fw:"SWAT-MODFLOW",  title:"Missing HRU field",           text:"KeyError: 'HRU_ID' — field not found in HRU shapefile during linking" },
+  { fw:"SWAT-MODFLOW",  title:"End-of-file crash",           text:"exit code 24 — end-of-file reached while reading input" },
+  { fw:"MODFLOW",       title:"Solver non-convergence",      text:"FAILED TO MEET SOLVER CONVERGENCE CRITERIA IN 500 OUTER ITERATIONS" },
+  { fw:"MODFLOW",       title:"Water-budget discrepancy",    text:"PERCENT DISCREPANCY = 4.87 — budget error exceeds tolerance" },
+  { fw:"MODFLOW",       title:"GeoPackage conflict",         text:"QGIS plugin error: gpkg layer 'dhru' already exists" },
+];
+
+function buildErrorGallery(){
+  const el = $("exampleGallery");
+  el.innerHTML = "";
+  EXAMPLE_ERRORS.forEach(ex=>{
+    const b = document.createElement("button");
+    b.className = "chip";
+    b.innerHTML = `<span class="fw">${esc(ex.fw)}</span><span class="et">${esc(ex.title)}</span>`;
+    b.title = ex.text;
+    b.onclick = ()=>{
+      $("errText").value = ex.text;
+      $("diagnoseBtn").click();
+      $("errResults").scrollIntoView({behavior:"smooth", block:"start"});
+    };
+    el.appendChild(b);
+  });
+}
+
+$("diagnoseBtn").onclick = ()=>{
+  const txt = $("errText").value.trim();
+  const el = $("errResults");
+  if(!txt){ el.innerHTML='<span class="muted">Paste an error message first.</span>'; return; }
+  const hits = SIGNATURES.filter(s=>s.re.test(txt));
+  if(!hits.length){
+    el.innerHTML = `<div class="frontier"><i class="ti ti-compass" aria-hidden="true"></i><b>No known signature matched.</b> This may be a rare issue or a
+      <b>frontier-level</b> question. Post to the community with: exact framework + version, the full error text,
+      your simulation period, and the input files involved — that format typically gets answers in one round.</div>`;
+  } else {
+    el.innerHTML = hits.map(h=>`
+      <div class="finding error">
+        <span class="head">${esc(h.title)}</span><span class="badge warning">${esc(h.fw)}</span>
+        <div style="margin-top:6px;"><b>Likely cause:</b> ${h.cause}</div>
+        <div class="fix"><b>Recommended action:</b> ${h.fix}</div>
+        <div class="attr">${esc(h.attr)}</div>
+      </div>`).join("");
+  }
+  // Show the community solution set for the matched signature's problem class.
+  if(hits.length && hits[0].model && hits[0].cat){
+    const panel = renderSolutionSet(hits[0].model, hits[0].cat);
+    if(panel) el.insertAdjacentHTML("beforeend", panel);
+  }
+  // Always surface the report generator — even a match may not fix it,
+  // and the user should always have an easy path back to the community.
+  $("reportCard").style.display = "";
+  $("rError").value = txt;
+  if(hits.length){
+    $("rFramework").value = hits[0].fw.split(" / ")[0].replace("QSWAT+","SWAT+").replace("QSWATMOD","SWAT-MODFLOW");
+    $("rTried").value = `This tool matched the signature "${hits[0].title}" and suggested: ${hits[0].fix} — this did not resolve it.`;
+  }
+};
+
+/* ═════════════════════ community solution sets (real data, Phase 2) ═════════════════════ */
+const SOL_ICON = {
+  FILE_EDIT:"ti-file-pencil", FILE_MISSING:"ti-file-plus", CONFIG_ENV:"ti-settings",
+  REGEN:"ti-refresh", PARAM_CHANGE:"ti-adjustments", CONCEPT:"ti-bulb",
+  REFER_OUT:"ti-users", WORKAROUND:"ti-tool", OTHER:"ti-dots",
+};
+const VERIFIABLE = new Set(["FILE_EDIT","FILE_MISSING","CONFIG_ENV"]);
+
+function renderSolutionSet(model, cat){
+  const data = (SOLUTION_DATA[model] || {})[cat];
+  if(!data || !data.candidates || !data.candidates.length) return "";
+  const maxSup = Math.max(...data.candidates.map(c=>c.support || 0), 1);
+  const rows = data.candidates.map(c=>{
+    const icon = SOL_ICON[c.type] || "ti-dots";
+    const verify = VERIFIABLE.has(c.type);
+    const act = verify
+      ? `<button class="sol-act verify" data-goto="files"><i class="ti ti-search" aria-hidden="true"></i> Check my files for this</button>`
+      : `<button class="sol-act" data-goto="report"><i class="ti ti-message" aria-hidden="true"></i> Draft a question about this</button>`;
+    return `
+      <div class="sol">
+        <div class="sol-top">
+          <i class="ti ${icon} sol-icon" aria-hidden="true"></i>
+          <span class="sol-label">${esc(c.label)}</span>
+          <span class="sol-stats">${c.support} thread${c.support===1?"":"s"} · ${c.resolved_pct}% resolved</span>
+        </div>
+        <div class="sol-bar"><span style="width:${Math.round(100*(c.support||0)/maxSup)}%"></span></div>
+        ${c.example ? `<div class="sol-ex">“${esc(c.example)}”</div>` : ""}
+        ${act}
+      </div>`;
+  }).join("");
+  return `
+    <div class="solset">
+      <p class="solset-head">How the community approached this class of problem</p>
+      <p class="solset-sub">Auto-extracted from ${data.n_threads} discussion threads in the ${esc(data.category)} category · ranked by how often each approach was proposed · provisional signal, not a guarantee.</p>
+      ${rows}
+    </div>`;
+}
+
+/* Delegated handling for the per-solution action buttons. */
+document.addEventListener("click", e=>{
+  const b = e.target.closest(".sol-act");
+  if(!b) return;
+  if(b.dataset.goto === "files"){
+    document.querySelector('.picker-card[data-mode="files"]').click();
+  } else {
+    $("reportCard").style.display = "";
+    $("reportCard").scrollIntoView({behavior:"smooth", block:"start"});
+  }
+});
+
+/* ═════════════════════ report generator (SWAT+ 2026 template-style) ═════════════════════ */
+function buildReport(){
+  const f = id => $(id).value.trim();
+  const fw      = f("rFramework") || "(framework)";
+  const version = f("rVersion")   || "(not specified)";
+  const os      = f("rOS")        || "(not specified)";
+  const when    = f("rWhen")      || "(not specified)";
+  const period  = f("rPeriod")    || "(not specified)";
+  const errtext = f("rError")     || "(paste the exact error text)";
+  const tried   = f("rTried")     || "(none noted)";
+  const files   = f("rFiles")     || "(not specified)";
+
+  return `[${fw}] Issue report
+Generated with the Hydro-Model Diagnostic Assistant — please fill any (…) fields before posting.
+
+Framework / Version : ${fw} — ${version}
+Operating system     : ${os}
+When it happens       : ${when}
+Simulation period     : ${period}
+
+Exact error text:
+${errtext}
+
+Relevant input files involved:
+${files}
+
+What I already tried:
+${tried}
+
+---
+Posted via the SWAT Issue Atlas diagnostic tool (local pre-check, no known signature fully resolved this).`;
+}
+
+$("genReportBtn").onclick = ()=>{
+  const out = $("reportOut");
+  out.value = buildReport();
+  out.style.display = "";
+  $("copyReportBtn").style.display = "";
+};
+$("copyReportBtn").onclick = async ()=>{
+  try{
+    await navigator.clipboard.writeText($("reportOut").value);
+    $("copyReportBtn").textContent = "Copied";
+    setTimeout(()=>{ $("copyReportBtn").textContent = "Copy to clipboard"; }, 1800);
+  }catch(_){
+    $("reportOut").select();
+    document.execCommand("copy");
+  }
+};
+
+/* ═════════════════════ init galleries (after all handlers are wired) ═══════ */
+buildDemoGallery();
+buildErrorGallery();
+renderFileCheckTable();
+buildCoverageTabs();
+/* Expose the corpus-derived community knowledge to the Tier-2 module below. */
+window.__COMMUNITY_KB__ = SOLUTION_DATA;
+</script>
+
+<!-- ═══════════ Tier 2: Ask the docs (client-side retrieval + local Ollama generation) ═══════════ -->
+<script type="module">
+const $ = id => document.getElementById(id);
+const esc = s => String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+const OLLAMA = 'http://localhost:11434';
+const LS_KEY = 'ragUserNotes_v1';
+/* Heuristic only — not validated against a labeled set. Cosine similarity from normalized
+   MiniLM embeddings; unrelated text typically scores ~0.1-0.25, relevant matches ~0.4+.
+   Below this, we assume no source answers the question well and offer the growth-loop capture. */
+const GROWTH_THRESHOLD = 0.35;
+const FW_LABEL = {swat2012:'SWAT2012', swat_plus:'SWAT+', swat_mf:'SWAT-MODFLOW', modflow:'MODFLOW'};
+
+/* Minimum official manual set per framework — verified direct links, official sources only.
+   Fetching these cross-origin into the tool is blocked by the publishers' CORS policy, so the
+   flow is: open/download here, then drag the file into the box below to index it locally. */
+const MANUALS = [
+  { fw:'SWAT2012', title:'SWAT 2012 Input/Output Documentation', src:'swat.tamu.edu (official)',
+    url:'https://swat.tamu.edu/media/69296/swat-io-documentation-2012.pdf' },
+  { fw:'SWAT+', title:'SWAT+ Training Manual', src:'swat.tamu.edu (official)',
+    url:'https://swat.tamu.edu/media/116333/swatplus-training-manual-v1-locked.pdf' },
+  { fw:'SWAT+', title:'SWAT+ Inputs Documentation', src:'swat.tamu.edu (official)',
+    url:'https://swat.tamu.edu/media/116078/inputs_swatplus.pdf' },
+  { fw:'SWAT+', title:'QSWAT+ Manual', src:'swatplus.gitbook.io (official)',
+    url:'https://swatplus.gitbook.io/docs/user/qswat+' },
+  { fw:'SWAT-MODFLOW', title:'SWAT-MODFLOW overview & downloads', src:'swat.tamu.edu (official)',
+    url:'https://swat.tamu.edu/software/swat-modflow/' },
+  { fw:'SWAT-MODFLOW', title:'QSWATMOD2 repository (tutorials + example datasets)', src:'GitHub — spark-brc (official maintainer)',
+    url:'https://github.com/spark-brc/QSWATMOD2' },
+  { fw:'MODFLOW', title:'MODFLOW 6 — Description of Input and Output', src:'USGS (official)',
+    url:'https://water.usgs.gov/water-resources/software/MODFLOW-6/mf6io_6.5.0.pdf' },
+  { fw:'MODFLOW', title:'MODFLOW 6 documentation (readthedocs)', src:'USGS MODFLOW-ORG (official)',
+    url:'https://modflow6.readthedocs.io/' },
+];
+
+/* Curated peer-reviewed literature for frontier-adjacent topics — citation text only
+   (no guessed DOI/URLs, to avoid ever pointing to the wrong paper). Matched by keyword so
+   a low-confidence or frontier answer can point the user at the right paper to search for
+   and drag in, rather than leaving them with only "consult an expert". */
+const SUGGESTED_PAPERS = [
+  { re:/sw.?gw|surface.?water.?groundwater|recharge|exchange/i,
+    cite:'Bailey, R.T., Abbas, S., Arnold, J.G., & White, M.J. (2025). SWAT+MODFLOW: a new hydrologic model for simulating surface–subsurface flow in managed watersheds. Geoscientific Model Development, 18, 5681–5697.' },
+  { re:/legacy|model selection|which model|choose|choosing/i,
+    cite:'Addor, N., & Melsen, L.A. (2019). Legacy, rather than adequacy, drives the selection of hydrological models. Water Resources Research, 55(1), 378–390.' },
+  { re:/uncertain|red herring|disinformation|calibration.?judg/i,
+    cite:'Beven, K., & Westerberg, I. (2011). On red herrings and real herrings: disinformation and information in hydrological inference. Hydrological Processes, 25(10), 1676–1680.' },
+  { re:/swat\+|architecture|re.?design|modular/i,
+    cite:'Bieger, K., Arnold, J.G., Rathjens, H., White, M.J., Bosch, D.D., Allen, P.M., Volk, M., & Srinivasan, R. (2017). Introduction to SWAT+. JAWRA, 53(1), 115–130.' },
+  { re:/groundwater.?flow|modflow|finite.?difference/i,
+    cite:'Harbaugh, A.W. (2005). MODFLOW-2005, the U.S. Geological Survey modular ground-water model. U.S. Geological Survey.' },
+];
+function findSuggestedPaper(q){ return SUGGESTED_PAPERS.find(p=>p.re.test(q)); }
+
+function renderManualsList(){
+  const el = $('manualsList');
+  if(!el) return;
+  const byFw = {};
+  MANUALS.forEach(m => (byFw[m.fw] ||= []).push(m));
+  el.innerHTML = Object.entries(byFw).map(([fw, list]) => `
+    <div class="manuals-group">
+      <div class="manuals-fw">${esc(fw)}</div>
+      ${list.map(m => `
+        <a class="manual-link" href="${esc(m.url)}" target="_blank" rel="noopener">
+          <i class="ti ti-external-link" aria-hidden="true"></i>
+          <div><div class="ml-title">${esc(m.title)}</div><div class="ml-src">${esc(m.src)}</div></div>
+        </a>`).join('')}
+    </div>`).join('');
+}
+
+let TF = null, embedder = null, pdfjsLib = null;
+let CHUNKS = [];             // PDF passages: {type:'pdf', source, page, text, vec}
+let COMMUNITY_CHUNKS = [];   // corpus-derived: {type:'community', model, cat, category, fwLabel, n_threads, resolution_pct, text, vec}
+let USER_CHUNKS = [];        // growth-loop, local only: {type:'user', question, note, text, ts, vec}
+let ollamaModel = null;
+let ollamaReachable = false;
+let communityBuilt = false;
+let LOADED_DOCS = [];        // {name, pages, done, status:'reading'|'indexing'|'done'|'error', error, chunks}
+
+/* Frontier questions get a caution before any answer (the anti-hallucination discipline). */
+const FRONTIER_RE = /(boundary.?condition|general.?head|constant.?head|\bghb\b|sw.?gw|surface.?water.?groundwater|recharge|convergen|joint.?calibration|calibration.?strategy|conceptual.?model|what.?value.?should|is it physically|why (does|is))/i;
+
+function loadUserChunks(){
+  try{ USER_CHUNKS = JSON.parse(localStorage.getItem(LS_KEY) || '[]'); }
+  catch(_){ USER_CHUNKS = []; }
+}
+function saveUserChunks(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(USER_CHUNKS)); }catch(_){ /* storage full — ignore */ }
+}
+function updateExportBtn(){
+  const btn = $('exportNotesBtn');
+  if(USER_CHUNKS.length){
+    btn.style.display = '';
+    btn.innerHTML = `<i class="ti ti-download" aria-hidden="true"></i> Export my notes (${USER_CHUNKS.length})`;
+  } else {
+    btn.style.display = 'none';
+  }
+}
+$('exportNotesBtn').onclick = ()=>{
+  const payload = USER_CHUNKS.map(({vec, ...rest})=>rest);
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'my_diagnostic_notes.json';
+  a.click();
+};
+
+function renderEnvStatus(building){
+  const lines = [];
+  if(building) lines.push(`<div><i class="ti ti-loader-2" aria-hidden="true"></i> Indexing community knowledge…</div>`);
+  if(ollamaReachable && ollamaModel){
+    lines.push(`<div><i class="ti ti-circle-check" aria-hidden="true"></i> Local model detected (<b>${esc(ollamaModel)}</b>) — written answers are generated privately on your machine.</div>`);
+  } else if(ollamaModel){
+    lines.push(`<div><i class="ti ti-info-circle" aria-hidden="true"></i> Using manually set model <b>${esc(ollamaModel)}</b> — could not confirm it's reachable yet. If generation fails when you ask, see the CORS note below.</div>`);
+  } else {
+    lines.push(`<div><i class="ti ti-info-circle" aria-hidden="true"></i> No local model detected — you still get cited passages.
+      <b>If Ollama is running</b>, this is almost always a CORS setting, not a missing install: browsers block a
+      page opened as a file from talking to Ollama unless it explicitly allows it. Fix: set the environment
+      variable <code>OLLAMA_ORIGINS=*</code> (PowerShell: <code>$env:OLLAMA_ORIGINS="*"</code> before
+      <code>ollama serve</code>; if Ollama runs as a background app, set it as a <i>system</i> environment
+      variable and restart Ollama), then click Retry below.</div>`);
+  }
+  const kb = window.__COMMUNITY_KB__ || {};
+  lines.push(`<div><i class="ti ti-database" aria-hidden="true"></i> Community knowledge base: `
+    + (COMMUNITY_CHUNKS.length
+        ? `<b>${COMMUNITY_CHUNKS.length}</b> entries indexed from ${Object.keys(kb).length} framework(s), each carrying its real support count.`
+        : (Object.keys(kb).length ? 'loading…' : 'not available on this page.'))
+    + `</div>`);
+  $('ragStatus').innerHTML = lines.join('');
+}
+
+/* Preference order for the DEFAULT pick only — not a benchmarked ranking. This project found
+   qwen2.5 followed strict output formats better for the classification pipeline (see the
+   coding scripts), which is a different task than open-ended RAG answers; we have no evaluation
+   showing one model writes better grounded answers than another, so this is a starting point,
+   always overridable in the dropdown below — never presented as "the program knows best". */
+const MODEL_PREFERENCE = [/qwen2\.5/i, /qwen/i, /llama3/i, /mistral/i, /gemma/i];
+function pickDefaultModel(names){
+  for(const pat of MODEL_PREFERENCE){ const m = names.find(n=>pat.test(n)); if(m) return m; }
+  return names[0] || null;
+}
+
+async function detectOllama(){
+  try{
+    const ctl = new AbortController();
+    const t = setTimeout(()=>ctl.abort(), 2500);
+    const r = await fetch(OLLAMA+'/api/tags', {signal:ctl.signal});
+    clearTimeout(t);
+    if(!r.ok) return {reachable:false, names:[]};
+    const d = await r.json();
+    return {reachable:true, names:(d.models||[]).map(m=>m.name)};
+  }catch(_){ return {reachable:false, names:[]}; }
+}
+
+function renderModelPicker(names){
+  const wrap = $('ragModelPicker'), sel = $('ragModelSelect');
+  if(!names.length){ wrap.style.display='none'; return; }
+  sel.innerHTML = names.map(n=>`<option value="${esc(n)}"${n===ollamaModel?' selected':''}>${esc(n)}</option>`).join('');
+  wrap.style.display = '';
+  sel.onchange = ()=>{
+    ollamaModel = sel.value;
+    try{ localStorage.setItem('ragModelChoice', ollamaModel); }catch(_){}
+    renderEnvStatus(false);
+  };
+}
+
+async function getEmbedder(){
+  if(embedder) return embedder;
+  $('ragStatus').innerHTML = '<div><i class="ti ti-loader-2" aria-hidden="true"></i> Loading the embedding model (~25 MB, one time)…</div>';
+  TF = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+  TF.env.allowLocalModels = false;
+  embedder = await TF.pipeline('feature-extraction', 'Xenova/all-MiniLM-L6-v2');
+  return embedder;
+}
+async function embed(text){
+  const e = await getEmbedder();
+  const out = await e(text, {pooling:'mean', normalize:true});
+  return Array.from(out.data);
+}
+function cosine(a,b){ let s=0; for(let i=0;i<a.length;i++) s+=a[i]*b[i]; return s; }
+
+/* Turn the already-loaded, corpus-derived SOLUTION_DATA into embeddable text — no LLM call,
+   a deterministic template. Each entry keeps its real support count (n threads / resolved %)
+   so it can be cited exactly like a page number, not paraphrased away. */
+async function ensureCommunityCorpus(){
+  if(communityBuilt) return;
+  const KB = window.__COMMUNITY_KB__ || {};
+  if(!Object.keys(KB).length){ communityBuilt = true; return; }
+  renderEnvStatus(true);
+  for(const [model, cats] of Object.entries(KB)){
+    for(const [catId, d] of Object.entries(cats)){
+      const top = (d.candidates || []).slice(0, 3);
+      if(!top.length) continue;
+      const solText = top.map(c =>
+        `${c.label} (${c.support} threads, ${c.resolved_pct}% resolved${c.example ? ` — e.g. "${c.example}"` : ''})`
+      ).join('; ');
+      const fwLabel = FW_LABEL[model] || model;
+      const text = `${fwLabel} — ${d.category}: ${d.n_threads} community threads coded, `
+        + `${d.resolution_pct}% resolved overall. Approaches the community proposed: ${solText}.`;
+      COMMUNITY_CHUNKS.push({
+        type: 'community', model, cat: catId, category: d.category, fwLabel,
+        n_threads: d.n_threads, resolution_pct: d.resolution_pct,
+        text, vec: await embed(text),
+      });
+    }
+  }
+  communityBuilt = true;
+  renderEnvStatus(false);
+}
+
+async function getPdfjs(){
+  if(pdfjsLib) return pdfjsLib;
+  pdfjsLib = await import('https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.min.mjs');
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdn.jsdelivr.net/npm/pdfjs-dist@4.0.379/build/pdf.worker.min.mjs';
+  return pdfjsLib;
+}
+function chunkText(text, size=700, overlap=120){
+  const out=[]; let i=0;
+  while(i<text.length){ out.push(text.slice(i, i+size)); i += (size-overlap); }
+  return out;
+}
+
+function renderDocList(){
+  const el = $('ragDocList');
+  if(!LOADED_DOCS.length){ el.innerHTML = ''; return; }
+  const icon = {reading:'ti-loader-2', indexing:'ti-loader-2', done:'ti-circle-check', error:'ti-alert-triangle'};
+  el.innerHTML = LOADED_DOCS.map(d=>{
+    const meta = d.status==='error' ? d.error
+      : d.status==='done' ? `${d.pages} page(s) · ${d.chunks} passage(s) indexed`
+      : `page ${d.done}/${d.pages||'…'}`;
+    return `<div class="doc-row">
+      <i class="ti ${icon[d.status]||'ti-file-text'} dr-icon" aria-hidden="true"></i>
+      <div class="dr-body"><div class="dr-name">${esc(d.name)}</div><div class="dr-meta">${esc(meta)}</div></div>
+      <span class="dr-status ${d.status}">${d.status}</span>
+    </div>`;
+  }).join('');
+}
+
+function showProgress(on){ $('ragProgressWrap').style.display = on ? '' : 'none'; }
+function updateProgress(done, total, label){
+  const pct = total>0 ? Math.min(100, Math.round(done/total*100)) : 0;
+  $('ragProgressFill').style.width = pct + '%';
+  $('ragProgressText').textContent = `${pct}% — ${label}`;
+}
+
+const dz = $('ragDrop'), fi = $('ragInput');
+/* Same fix as the files dropzone: fi is nested inside the <label>, so it already opens
+   natively on click. Don't call fi.click() again — that double-trigger is what was
+   breaking multi-file PDF selection. */
+dz.ondragover = e=>{ e.preventDefault(); dz.classList.add('over'); };
+dz.ondragleave = ()=>dz.classList.remove('over');
+dz.ondrop = e=>{ e.preventDefault(); dz.classList.remove('over'); ingest([...e.dataTransfer.files]); };
+fi.onchange = ()=>ingest([...fi.files]);
+
+async function ingest(files){
+  const pdfs = files.filter(f=>/\.pdf$/i.test(f.name));
+  if(!pdfs.length){ return; }
+  await ensureCommunityCorpus();
+  const lib = await getPdfjs();
+  $('ragAskBtn').disabled = true;
+  $('ragAskBtn').textContent = 'Indexing…';
+
+  /* Phase 1 — open every file first (fast: metadata only, no text extraction yet) so we know
+     the true total page count up front and can show one continuous, accurate progress bar
+     across the whole batch instead of resetting per file. */
+  const opened = [];
+  for(const f of pdfs){
+    const entry = {name:f.name, pages:0, done:0, status:'reading', error:null, chunks:0};
+    LOADED_DOCS.push(entry);
+    renderDocList();
+    try{
+      const pdf = await lib.getDocument({data: await f.arrayBuffer()}).promise;
+      entry.pages = pdf.numPages;
+      opened.push({file:f, pdf, entry});
+    }catch(_){
+      entry.status = 'error';
+      entry.error = 'Could not open (scanned image or corrupt PDF?)';
+    }
+    renderDocList();
+  }
+  if(!opened.length){ $('ragAskBtn').disabled = CHUNKS.length+COMMUNITY_CHUNKS.length===0; $('ragAskBtn').textContent='Ask'; return; }
+
+  const totalPages = opened.reduce((s,o)=>s+o.pdf.numPages, 0);
+  let pagesDone = 0;
+  showProgress(true);
+  updateProgress(0, totalPages, 'Starting…');
+
+  /* Phase 2 — extract + embed page by page. A short yield every few chunks hands control back
+     to the browser so the progress bar repaints and the page stays interactive (you can switch
+     tabs, scroll, or read while this runs) instead of freezing during the embedding calls. */
+  for(const {file:f, pdf, entry} of opened){
+    entry.status = 'indexing';
+    renderDocList();
+    let n = 0;
+    for(let p=1; p<=pdf.numPages; p++){
+      let text = '';
+      try{
+        const tc = await (await pdf.getPage(p)).getTextContent();
+        text = tc.items.map(i=>i.str).join(' ').replace(/\s+/g,' ').trim();
+      }catch(_){ /* unreadable page — skip, keep going */ }
+      for(const ch of chunkText(text)){
+        if(ch.trim().length < 40) continue;
+        CHUNKS.push({type:'pdf', source:f.name, page:p, text:ch, vec: await embed(ch)});
+        n++;
+        if(n % 3 === 0) await new Promise(r=>setTimeout(r, 0));
+      }
+      entry.done = p; entry.chunks = n;
+      pagesDone++;
+      updateProgress(pagesDone, totalPages, `${f.name} — page ${p}/${pdf.numPages}`);
+      renderDocList();
+    }
+    entry.status = 'done';
+    renderDocList();
+  }
+
+  showProgress(false);
+  $('ragAskBtn').disabled = (CHUNKS.length + COMMUNITY_CHUNKS.length) === 0;
+  $('ragAskBtn').textContent = 'Ask';
+}
+
+function citeLine(r, i){
+  const c = r.c;
+  if(c.type==='pdf')
+    return `[${i+1}] ${esc(c.source)} · page ${c.page} · similarity ${r.s.toFixed(2)}`;
+  if(c.type==='community')
+    return `[${i+1}] Community knowledge · ${esc(c.fwLabel)} · ${esc(c.category)} · `
+      + `${c.n_threads} threads, ${c.resolution_pct}% resolved · similarity ${r.s.toFixed(2)}`;
+  return `[${i+1}] Your note (user-added, unverified) · similarity ${r.s.toFixed(2)}`;
+}
+function ctxLine(r, i){
+  const c = r.c;
+  const src = c.type==='pdf' ? `${c.source} p.${c.page}`
+            : c.type==='community' ? `Community knowledge — ${c.fwLabel}, ${c.category}, ${c.n_threads} threads (${c.resolution_pct}% resolved)`
+            : `User note (unverified)`;
+  return `[${i+1}] (${src}) ${c.text}`;
+}
+
+$('ragAskBtn').onclick = async ()=>{
+  const q = $('ragQuery').value.trim();
+  const el = $('ragAnswer');
+  if(!q){ el.innerHTML='<span class="muted">Type a question first.</span>'; return; }
+  if(!CHUNKS.length && !COMMUNITY_CHUNKS.length && !USER_CHUNKS.length){
+    el.innerHTML='<span class="muted">Add a PDF manual first (or wait a moment for community knowledge to index).</span>';
+    return;
+  }
+  el.innerHTML='<span class="muted">Searching your documents and the community knowledge base…</span>';
+  await ensureCommunityCorpus();
+
+  const qv = await embed(q);
+  const rankPool = pool => pool.map(c=>({c, s:cosine(qv, c.vec)})).sort((a,b)=>b.s-a.s);
+  const topPool = (pool, n) => rankPool(pool).slice(0, n);
+  /* Fusion: guarantee a slot per source pool rather than one global ranking, so a manual
+     passage never silently crowds out a high-support community answer (or vice versa) —
+     this is the paper's "official docs + tacit community knowledge are complementary" claim,
+     built into the retrieval mechanics rather than left as a design note. */
+  const communityRanked = rankPool(COMMUNITY_CHUNKS);   // full ranking, kept for the coverage panel
+  const selected = [...topPool(CHUNKS, 3), ...communityRanked.slice(0, 3), ...topPool(USER_CHUNKS, 2)];
+  if(!selected.length){ el.innerHTML = '<span class="muted">Nothing indexed yet.</span>'; return; }
+  selected.sort((a,b)=>b.s-a.s);
+  const ranked = selected.slice(0, 6);
+  const bestScore = ranked[0].s;
+  const frontier = FRONTIER_RE.test(q);
+
+  let html = '';
+  if(frontier){
+    html += `<div class="frontier"><i class="ti ti-compass" aria-hidden="true"></i> <b>This looks like a frontier-level question.</b> Documentation and community threads often describe the mechanism but not a case-specific answer. Treat any generated text as a starting point and verify against the passages or an expert.</div>`;
+  }
+  const suggested = (frontier || bestScore < GROWTH_THRESHOLD) ? findSuggestedPaper(q) : null;
+  if(suggested){
+    html += `<div class="suggested-paper"><div class="lbl"><i class="ti ti-books" aria-hidden="true"></i> Suggested further reading</div>
+      This question resembles a topic covered in the peer-reviewed literature but not yet in your indexed documents.
+      Search for and download this paper, then drag it in above for a grounded answer:<br><br>
+      <i>${esc(suggested.cite)}</i></div>`;
+  }
+
+  if(ollamaModel){
+    el.innerHTML = html + '<span class="muted">Generating a grounded answer locally…</span>';
+    const ctx = ranked.map(ctxLine).join('\n\n');
+    const prompt = `You are a hydrology-modeling documentation assistant. Answer the QUESTION using ONLY the PASSAGES below, citing them as [n]. Passages marked "Community knowledge" carry a real support count (how many independent forum threads proposed that approach and what fraction were resolved) — weigh higher-support approaches more, and mention the support count when it strengthens your answer. If the passages do not contain the answer, say so plainly and do not invent one.${frontier?' This is a frontier question: if the passages only describe the mechanism without a definitive case-specific answer, say that explicitly and recommend consulting an expert.':''}\n\nPASSAGES:\n${ctx}\n\nQUESTION: ${q}\n\nANSWER:`;
+    let gen='';
+    try{
+      const r = await fetch(OLLAMA+'/api/generate', {method:'POST', headers:{'Content-Type':'application/json'},
+        body: JSON.stringify({model:ollamaModel, prompt, stream:false, options:{temperature:0.2, num_predict:450}})});
+      gen = ((await r.json()).response||'').trim();
+    }catch(_){ gen=''; }
+    html += gen
+      ? `<div class="rag-gen"><div class="lbl">Grounded answer · ${esc(ollamaModel)} · generated locally</div>${esc(gen)}</div>`
+      : `<div class="frontier"><i class="ti ti-info-circle" aria-hidden="true"></i> Local generation failed (Ollama reachable but the request errored). Showing the cited passages instead.</div>`;
+  } else {
+    html += `<div class="frontier"><i class="ti ti-info-circle" aria-hidden="true"></i> No local model — showing the most relevant passages to read yourself. Enable Ollama for a written answer.</div>`;
+  }
+
+  html += `<p style="font-size:13px;font-weight:500;margin:12px 0 4px;">Sources — manuals, community knowledge, and your notes</p>`;
+  html += ranked.map((r,i)=>`<div class="rag-passage"><div class="rag-cite">${citeLine(r,i)}</div><div class="txt">${esc(r.c.text)}</div></div>`).join('');
+
+  if(communityRanked.length){
+    const usedCats = new Set(selected.filter(r=>r.c.type==='community').map(r=>r.c.model+'|'+r.c.cat));
+    html += `<button class="kb-toggle" id="kbCovToggle">Show community-knowledge coverage for this question (${communityRanked.length} categories reviewed, ${usedCats.size} used) ▾</button>
+      <div id="kbCovPanel" style="display:none;">${renderKbCoverage(communityRanked, usedCats)}</div>`;
+  }
+  el.innerHTML = html;
+  const toggleBtn = $('kbCovToggle');
+  if(toggleBtn) toggleBtn.onclick = ()=>{
+    const p = $('kbCovPanel');
+    const showing = p.style.display !== 'none';
+    p.style.display = showing ? 'none' : '';
+    toggleBtn.textContent = toggleBtn.textContent.replace(showing?'▴':'▾', showing?'▾':'▴');
+  };
+
+  renderGrowthLoop(bestScore, q);
+};
+
+/* Full transparency on the community-knowledge routing: every coded category is scored against
+   the question, not just the ones that were used — so the user sees what was considered and
+   rejected, not only a cherry-picked top result. */
+function renderKbCoverage(ranked, usedCats){
+  const rows = ranked.map(r=>{
+    const used = usedCats.has(r.c.model+'|'+r.c.cat);
+    return `<tr class="${used?'':'not-used'}">
+      <td>${used?'<span class="kb-used">✓</span>':'<span class="kb-notused">–</span>'}</td>
+      <td>${esc(r.c.fwLabel)}</td>
+      <td>${esc(r.c.category)}</td>
+      <td>${r.c.n_threads} thr · ${r.c.resolution_pct}% resolved</td>
+      <td>${r.s.toFixed(2)}</td>
+    </tr>`;
+  }).join('');
+  return `<table class="kb-cov-table">
+    <tr><th></th><th>Framework</th><th>Category</th><th>Real support</th><th>Similarity</th></tr>
+    ${rows}
+  </table>`;
+}
+
+/* Growth loop (Level 1, local-only): when nothing indexed answers the question well, offer to
+   capture what the user learns. Saved to this browser only — never uploaded automatically.
+   The user can export their notes as JSON to share with the maintainers if they choose to. */
+function renderGrowthLoop(bestScore, q){
+  if(bestScore >= GROWTH_THRESHOLD) return;
+  const wrap = document.createElement('div');
+  wrap.className = 'card';
+  wrap.style.marginTop = '14px';
+  wrap.innerHTML = `
+    <h2>We don't have a strong match for this</h2>
+    <p class="muted">If you find the answer, save it here — it stays in your browser and helps
+    your <i>next</i> search on this question. Nothing is uploaded automatically; nothing here is
+    verified against documentation, unlike the community-knowledge entries above.</p>
+    <textarea id="growthNote" rows="3" placeholder="What did you find? A short note is enough."></textarea>
+    <div style="margin-top:8px;"><button class="action primary" id="growthSaveBtn">Save my note (local only)</button></div>`;
+  $('ragAnswer').appendChild(wrap);
+  wrap.querySelector('#growthSaveBtn').onclick = async (e)=>{
+    const note = wrap.querySelector('#growthNote').value.trim();
+    if(!note) return;
+    const text = `Q: ${q}\nA (user-added, unverified): ${note}`;
+    const vec = await embed(text);
+    USER_CHUNKS.push({type:'user', question:q, note, text, ts:Date.now(), vec});
+    saveUserChunks();
+    updateExportBtn();
+    e.target.disabled = true;
+    e.target.textContent = 'Saved ✓ — it will surface next time this question comes up';
+  };
+}
+
+/* Probe the environment + build the community corpus the first time the user opens the docs
+   tab (Tier 1 loads none of this — no cost to users who never open "Ask the docs"). */
+let probed = false;
+let savedManualModel = null;
+try{ savedManualModel = localStorage.getItem('ragModelChoice'); }catch(_){}
+
+async function boot(){
+  $('ragStatus').innerHTML = '<div><i class="ti ti-loader-2" aria-hidden="true"></i> Checking environment…</div>';
+  const res = await detectOllama();
+  ollamaReachable = res.reachable;
+  if(res.reachable && res.names.length){
+    ollamaModel = (savedManualModel && res.names.includes(savedManualModel)) ? savedManualModel : pickDefaultModel(res.names);
+    renderModelPicker(res.names);
+    $('ragManualModel').style.display = 'none';
+  } else {
+    /* Can't list models (almost always the CORS/OLLAMA_ORIGINS issue) — fall back to a
+       manually typed model name so the user isn't fully blocked, and offer Retry once they've
+       fixed the setting. */
+    ollamaModel = savedManualModel || null;
+    $('ragModelPicker').style.display = 'none';
+    $('ragManualModel').style.display = '';
+    if(savedManualModel) $('ragManualModelInput').value = savedManualModel;
+  }
+  renderEnvStatus(false);
+  await ensureCommunityCorpus();
+  updateExportBtn();
+}
+
+$('ragRetryBtn').onclick = ()=>boot();
+$('ragManualModelBtn').onclick = ()=>{
+  const v = $('ragManualModelInput').value.trim();
+  if(!v) return;
+  ollamaModel = v;
+  try{ localStorage.setItem('ragModelChoice', v); }catch(_){}
+  renderEnvStatus(false);
+};
+
+document.querySelector('.picker-card[data-mode="docs"]').addEventListener('click', ()=>{
+  if(!probed){ probed = true; boot(); }
+});
+renderManualsList();
+loadUserChunks();
+updateExportBtn();
+</script>
+</body>
+</html>
