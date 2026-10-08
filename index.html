@@ -238,7 +238,8 @@
                    color:var(--accent-text); background:var(--accent-bg); padding:4px 12px; border-radius:20px; margin-bottom:12px; }
   .hero h1 { font-size:30px; line-height:1.15; letter-spacing:-.3px; margin:0 0 10px; }
   .hero .lead { font-size:16.5px; line-height:1.55; color:var(--text); max-width:620px; margin:0 auto 20px; }
-  .recog { display:grid; grid-template-columns:1fr 1.6fr; gap:12px; text-align:left; margin:0 0 10px; }
+  .recog { display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left; margin:0 0 10px; align-items:start; }
+  .rleft { display:flex; flex-direction:column; gap:12px; }
   .rgroup { background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:12px 14px; }
   .rtitle { font-size:11px; font-weight:500; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
   .rlist { display:flex; flex-wrap:wrap; gap:6px; }
@@ -267,21 +268,28 @@
     <p class="lead">Drop your model folder. It works out <b>what it is</b> &mdash; the model, its version, the groundwater module and how they are coupled &mdash; and checks it <b>before you run</b>.</p>
 
     <div class="recog">
-      <div class="rgroup">
-        <div class="rtitle">Surface models</div>
-        <div class="rlist">
-          <span class="rchip full"><b>SWAT2012</b><i>full checks</i></span>
-          <span class="rchip full"><b>SWAT+</b><i>full checks</i></span>
-          <span class="rchip id"><b>APEX</b><i>identified</i></span>
+      <div class="rleft">
+        <div class="rgroup">
+          <div class="rtitle">Surface models</div>
+          <div class="rlist">
+            <span class="rchip full"><b>SWAT2012</b><i>full checks</i></span>
+            <span class="rchip full"><b>SWAT+</b><i>full checks</i></span>
+            <span class="rchip id"><b>APEX</b><i>identified</i></span>
+          </div>
+        </div>
+        <div class="rgroup">
+          <div class="rtitle">Groundwater models</div>
+          <div class="rlist">
+            <span class="rchip full"><b>MODFLOW 2005 / NWT / USG</b><i>full checks</i></span>
+            <span class="rchip part"><b>MODFLOW 6</b><i>basic checks</i></span>
+          </div>
         </div>
       </div>
       <div class="rgroup">
-        <div class="rtitle">Groundwater &amp; couplings</div>
+        <div class="rtitle">Couplings</div>
         <div class="rlist">
           <span class="rchip full"><b>SWAT+ / gwflow</b><i>SWAT+ checks + gwflow detection</i></span>
           <span class="rchip full"><b>SWAT-MODFLOW</b><i>full checks</i></span>
-          <span class="rchip full"><b>MODFLOW 2005 / NWT / USG</b><i>full checks</i></span>
-          <span class="rchip part"><b>MODFLOW 6</b><i>basic checks</i></span>
           <span class="rchip part"><b>SWAT+MODFLOW</b><i>SWAT+ side checked</i></span>
           <span class="rchip part"><b>SWAT+ &rarr; MODFLOW 6 (MF6SWATP)</b><i>identified + 1 check</i></span>
           <span class="rchip id"><b>APEX-MODFLOW</b><i>identified</i></span>
