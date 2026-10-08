@@ -1,0 +1,8 @@
+.DS_Store
+Thumbs.db
+*.log
+.vscode/
+.idea/
+# generated test fixtures (headers of real model folders, ~12 MB); rebuild with tests/make_fixtures.py
+tests/fixtures.js
+tests/audit_result.json

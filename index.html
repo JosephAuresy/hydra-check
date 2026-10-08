@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hydro-Model Diagnostic Assistant — SWAT / SWAT+ / SWAT-MODFLOW / MODFLOW</title>
+<title>Hydro-Model Diagnostic Assistant — SWAT / SWAT+ / MODFLOW / APEX and their couplings</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
 <style>
   :root {
@@ -55,6 +55,8 @@
   button.action.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
   button.action.primary:hover { background:var(--accent-text); }
 
+  .sysbtn.active { outline:2px solid var(--accent); }
+  .fchk-table { display:block; overflow-x:auto; max-width:100%; }
   .finding { border-left:3px solid var(--faint); background:var(--surface-1);
              border-radius:0 9px 9px 0; padding:13px 15px; margin:9px 0; }
   .finding.error { border-left-color:var(--red); background:var(--red-bg); }
@@ -236,8 +238,9 @@
 <div class="wrap">
   <header class="top">
     <h1>Hydro-model diagnostic assistant</h1>
-    <p class="sub">For <b>SWAT2012 · SWAT+ · SWAT-MODFLOW · MODFLOW</b> — built from a taxonomy of
-    ~9,100 community-reported issues (2009–2026).</p>
+    <p class="sub">Recognizes <b>SWAT2012 · SWAT+ · SWAT-MODFLOW · SWAT+MODFLOW · MODFLOW · MODFLOW 6 · APEX · APEX-MODFLOW</b>
+    from your files, then checks them. Rules come from ~9,100 community-reported issues (2009–2026) and were tested on real models.
+    Full checks: SWAT2012, SWAT+, SWAT-MODFLOW, MODFLOW. Basic checks: MODFLOW 6. APEX: identified only.</p>
     <span class="privacy"><i class="ti ti-lock" aria-hidden="true"></i> Runs in your browser — your files never leave your computer.</span>
   </header>
 
@@ -319,7 +322,9 @@
         <option value="swat_plus">SWAT+</option>
         <option value="swat2012">SWAT2012</option>
         <option value="swat_mf">SWAT-MODFLOW</option>
-        <option value="modflow">MODFLOW</option>
+        <option value="modflow">MODFLOW (2005 / NWT / USG)</option>
+        <option value="modflow6">MODFLOW 6 (identification only)</option>
+        <option value="apex">APEX (identification only)</option>
       </select>
     </div>
     <div class="card">
@@ -337,6 +342,11 @@
         <input type="file" id="fileInput" webkitdirectory multiple>
       </label>
       <div class="filelist" id="fileList"></div>
+    </div>
+    <div class="card" id="charCard" style="display:none;">
+      <h2>What the tool thinks you gave it</h2>
+      <p class="muted" style="margin-bottom:10px;">You do not need to know the exact model, version or coupling. We read the files, say what we believe this is and why, and tell you what is missing. If it is wrong, pick the right model in Step 1 and the checks will follow your choice.</p>
+      <div id="charOut"></div>
     </div>
     <div class="card" id="fileBrowserCard" style="display:none;">
       <h2>Files scanned — click one to see its raw content</h2>
@@ -601,10 +611,663 @@
 </div>
 
 <script>
+/*<<HDA:src:start>>*/
+/* ---- src/characterize.js ---- */
+/* Hydro-Model Diagnostic Assistant: model characterization.
+ *
+ * Input : a list of entries {path, size, text}  (text is null for files that were not read as text)
+ * Output: what the uploaded files are -- surface model, version, groundwater component, coupling --
+ *         with the evidence behind every claim, what is missing, and what is ambiguous.
+ *
+ * Design rules (they exist so that no user is left out):
+ *  1. Never require the user to know the model, version, or coupling. Detect, show the reasoning, allow override.
+ *  2. Never fall back silently. Unknown stays "unknown" and says what was seen.
+ *  3. Accept partial uploads and parent-folder drops (several components, several scenarios).
+ *  4. Old file formats are classified, not rejected.
+ *
+ * Every signature below carries a `basis` tag saying how it was established:
+ *   'sample'    seen in real model files on the author's machine
+ *   'source'    read in the model source code
+ *   'documented' stated in official documentation or in the author's corpus analysis
+ *   'needs-sample' written from knowledge of the format; NOT yet checked against a real folder
+ */
+(function (root) {
+  'use strict';
+  var HDA = root.HDA = root.HDA || {};
+
+  /* ------------------------------------------------------------------ utilities */
+  function norm(p) { return String(p).replace(/\\/g, '/').replace(/^\.\//, ''); }
+  function baseOf(p) { var i = p.lastIndexOf('/'); return i < 0 ? p : p.slice(i + 1); }
+  function dirOf(p) { var i = p.lastIndexOf('/'); return i < 0 ? '' : p.slice(0, i); }
+  function extOf(b) { var i = b.lastIndexOf('.'); return i < 0 ? '' : b.slice(i + 1); }
+  function uniq(a) { return a.filter(function (x, i) { return a.indexOf(x) === i; }); }
+  function firstLine(t) { return t ? t.split(/\r?\n/, 1)[0] : ''; }
+  function ev(file, why) { return { file: file, why: why }; }
+
+  function normalizeEntries(entries) {
+    return entries.map(function (e) {
+      var path = norm(e.path || e.name || '');
+      var base = baseOf(path).toLowerCase();
+      return { path: path, base: base, ext: extOf(base), dir: dirOf(path), size: e.size || 0,
+               text: (typeof e.text === 'string') ? e.text : null };
+    });
+  }
+
+  /* Components dropped together share the upload root, so siblings (TxtInOut next to MODFLOW) count as related.
+     Which surface model a groundwater component belongs to is decided by path closeness (commonDepth), not here. */
+  function related() { return true; }
+  function commonDepth(a, b) {
+    var x = a === '' ? [] : a.split('/'), y = b === '' ? [] : b.split('/'), i = 0;
+    while (i < x.length && i < y.length && x[i] === y[i]) i++;
+    return i;
+  }
+
+  /* ------------------------------------------------------------------ version stamps (SWAT+) */
+  /* basis: sample. Editor-written files carry the revision in line 1; pre-Editor files carry only a database path. */
+  var RE_EDITOR = /written by SWAT\+\s*editor\s+v?([\d.]+)\s+on\s+(\d{4}-\d{2}-\d{2})[^\n]*?for SWAT\+\s*rev\.?\s*([\d.]+)/i;
+  var RE_LEGACY = /Generated from\s+.*?\.accdb\s+Time:\s*(.*)$/i;
+
+  function parseStamp(text) {
+    var line = firstLine(text);
+    if (!line) return null;
+    var m = RE_EDITOR.exec(line);
+    if (m) return { format: 'editor', editor: m[1], date: m[2], rev: m[3], revMajor: parseInt(m[3], 10) };
+    m = RE_LEGACY.exec(line);
+    if (m) return { format: 'legacy', date: m[1].trim() };
+    return null;
+  }
+
+  /* ------------------------------------------------------------------ MODFLOW family */
+  var RE_MF6_BLOCK = /^\s*BEGIN\s+(OPTIONS|PACKAGES|TIMING|MODELS|SOLUTIONGROUP|DIMENSIONS)\b/im;
+  var RE_LEGACY_PKG = /^\s*(LIST|DATA|DATA\(BINARY\)|BAS6?|DISU?|BCF6|LPF|UPW|HUF2|NWT|PCGN?|SIP|SOR|DE4|GMG|SMS|OC|RIV|WEL|RCH|EVT|DRN|GHB|CHD|HFB6|STR|SFR|UZF|LAK|MNW2|BTN|ADV|DSP|GCG|FTL|VDF|VSC|SWI2)\s+\d+\s+\S+/gim;
+
+  function classifyModflowNameFile(entry) {
+    var t = entry.text;
+    if (!t) return null;
+    if (entry.base === 'mfsim.nam' || RE_MF6_BLOCK.test(t)) {
+      return { kind: 'modflow6', file: entry.path,
+               why: entry.base === 'mfsim.nam' ? 'mfsim.nam is the MODFLOW 6 simulation name file'
+                                               : 'BEGIN/END block syntax is MODFLOW 6' };
+    }
+    var m = t.match(RE_LEGACY_PKG);
+    if (m && m.length >= 2) {
+      var sub = 'modflow-legacy';
+      if (/^\s*(NWT|UPW)\s/im.test(t)) sub = 'modflow-nwt';
+      else if (/^\s*(DISU|SMS)\s/im.test(t)) sub = 'modflow-usg';
+      else if (/^\s*(LPF|BCF6|HUF2)\s/im.test(t) && /^\s*(PCGN?|SIP|SOR|DE4|GMG)\s/im.test(t)) sub = 'modflow-2005';
+      return { kind: sub, file: entry.path,
+               why: m.length + ' unit-numbered package lines (LIST/BAS/DIS/...) are the MODFLOW-2005 family name-file format' };
+    }
+    return null;
+  }
+
+  var RE_MF6_VERSION = /VERSION\s+(\d+\.\d+\.\d+)/i;
+  var RE_MFLEG_VERSION = /(MODFLOW-[A-Z0-9-]+)[\s\S]{0,300}?VERSION\s+([\d.]+)/i;
+
+  /* What a MODFLOW 6 simulation contains: model types (GWF/GWT/...), grid type, packages. basis: sample (FloPy-written MF6 6.7.0 models) */
+  var MF6_MODEL_TYPES = /^(gwf|gwt|gwe|prt|olf|chf|swf)6$/i;
+  function describeMf6(by) {
+    var info = { models: [], grid: null, transport: false };
+    var sim = by['mfsim.nam'] && by['mfsim.nam'][0];
+    var simText = (sim && sim.text) || '';
+    var re = /^\s*([a-z]{3}6)\s+(\S+)\s+(\S+)\s*$/gim, m;
+    while ((m = re.exec(simText))) {
+      if (!MF6_MODEL_TYPES.test(m[1])) continue;
+      var nameFile = by[m[2].toLowerCase()] && by[m[2].toLowerCase()][0];
+      var pk = [];
+      if (nameFile && nameFile.text) {
+        var block = /BEGIN\s+PACKAGES([\s\S]*?)END\s+PACKAGES/i.exec(nameFile.text);
+        if (block) block[1].split(/\r?\n/).forEach(function (ln) {
+          var p = /^\s*([A-Za-z0-9]+)6\s+\S+/.exec(ln);
+          if (p) pk.push(p[1].toUpperCase());
+        });
+      }
+      var type = m[1].slice(0, 3).toUpperCase();
+      info.models.push({ type: type, name: m[3], file: m[2], packages: uniq(pk) });
+      if (type === 'GWT') info.transport = true;
+    }
+    var all = [];
+    info.models.forEach(function (x) { all = all.concat(x.packages); });
+    info.grid = ['DISV', 'DISU', 'DIS'].filter(function (g) { return all.indexOf(g) >= 0; })[0] || null;
+    info.packages = uniq(all);
+    return info;
+  }
+
+  /* ------------------------------------------------------------------ per-directory analysis */
+  function analyzeDirectory(dir, files) {
+    var by = {};
+    files.forEach(function (f) { (by[f.base] = by[f.base] || []).push(f); });
+    function has(name) { return !!by[name]; }
+    function get(name) { return by[name] ? by[name][0] : null; }
+    function anyBase(re) { return files.filter(function (f) { return re.test(f.base); }); }
+    var res = { dir: dir, nFiles: files.length, kinds: [], evidence: [] };
+
+    /* --- SWAT+ --- basis: sample */
+    if (has('time.sim') && (has('print.prt') || has('file.cio') || has('object.cnt') || has('hru-data.hru') || has('codes.bsn'))) {
+      var sp = { family: 'swatplus', evidence: [ev(get('time.sim').path, 'time.sim exists (SWAT+ simulation period file)')] };
+      var stamps = [], unstamped = 0, legacy = 0;
+      files.forEach(function (f) {
+        if (!f.text) return;
+        var s = parseStamp(f.text);
+        if (s) { s.file = f.path; stamps.push(s); }
+      });
+      var edit = stamps.filter(function (s) { return s.format === 'editor'; });
+      legacy = stamps.filter(function (s) { return s.format === 'legacy'; }).length;
+      var revCount = {};
+      edit.forEach(function (s) { revCount[s.rev] = (revCount[s.rev] || 0) + 1; });
+      var majors = uniq(edit.map(function (s) { return s.revMajor; }));
+      sp.stamps = { editorStamped: edit.length, legacyStamped: legacy, byRevision: revCount, editorVersions: uniq(edit.map(function (s) { return s.editor; })) };
+      sp.mixedRevisions = majors.length > 1;
+      if (sp.mixedRevisions) {
+        var dom = Object.keys(revCount).sort(function (a, b) { return revCount[b] - revCount[a]; })[0];
+        sp.stamps.minorityFiles = edit.filter(function (s) { return s.rev !== dom; }).map(function (s) { return baseOf(s.file) + ' (rev ' + s.rev + ')'; }).slice(0, 10);
+      }
+      if (edit.length) {
+        /* dominant revision = the one on most files */
+        var best = Object.keys(revCount).sort(function (a, b) { return revCount[b] - revCount[a]; })[0];
+        sp.revision = best;
+        sp.revisionConfidence = sp.mixedRevisions ? 'medium' : 'high';
+        sp.evidence.push(ev(edit[0].file, 'first line states "for SWAT+ rev. ' + edit[0].rev + '" (SWAT+ Editor ' + edit[0].editor + ')'));
+      } else if (legacy) {
+        sp.revision = null;
+        sp.format = 'pre-editor';
+        sp.revisionConfidence = 'medium';
+        sp.evidence.push(ev(stamps[0].file, 'first line is "Generated from ...accdb": a pre-Editor SWAT+ file format with no revision number'));
+      } else {
+        sp.revision = null;
+        sp.revisionConfidence = 'low';
+        sp.evidence.push(ev(get('time.sim').path, 'no version stamp found in any readable file (hand-edited or stripped)'));
+      }
+      /* groundwater inside SWAT+: parse file.cio connect row. basis: sample */
+      var cio = get('file.cio');
+      var connect = null;
+      if (cio && cio.text) {
+        var line = cio.text.split(/\r?\n/).filter(function (l) { return /^\s*connect\b/i.test(l); })[0];
+        if (line) connect = line.trim().split(/\s+/).slice(1).map(function (x) { return x.toLowerCase(); });
+      }
+      var gwInput = get('gwflow.input');
+      var gw = { present: !!gwInput || has('gwflow.con') };
+      gw.activeInCio = connect ? (connect.indexOf('gwflow.con') >= 0) : null;
+      gw.lumpedAquiferInCio = connect ? (connect.indexOf('aquifer.con') >= 0) : null;
+      /* the switch SWAT+ itself reads: codes.bsn column "gwflow" (bsn_cc%gwflow). basis: sample + source */
+      var cb = get('codes.bsn');
+      gw.codesFlag = null;
+      if (cb && cb.text) {
+        var cl = cb.text.split(/\r?\n/).filter(function (l) { return l.trim(); });
+        if (cl.length >= 3) {
+          var hdr = cl[1].trim().split(/\s+/), val = cl[2].trim().split(/\s+/), gi = hdr.indexOf('gwflow');
+          if (hdr.indexOf('qual2e') >= 0 && hdr.indexOf('idc_till') >= 0) sp.codesLayout = 62;
+          else if (hdr.indexOf('i_fpwet') >= 0) sp.codesLayout = 61;
+          sp.codesColumns = hdr.length;
+          if (gi >= 0 && /^[01]$/.test(val[gi] || '')) gw.codesFlag = parseInt(val[gi], 10);
+        }
+      }
+      gw.active = gw.codesFlag !== null ? gw.codesFlag === 1 : (gw.activeInCio === true);
+      if (gw.codesFlag !== null && gw.activeInCio !== null && (gw.codesFlag === 1) !== gw.activeInCio) gw.flagDisagreement = true;
+      /* MF6SWATP hook: activates when mf6swatp.cfg exists in the working directory. basis: source (mf6swatp_module.f90) */
+      var cfgFile = get('mf6swatp.cfg');
+      if (cfgFile) sp.mf6swatp = { cfg: cfgFile.path };
+      if (gwInput && gwInput.text) {
+        var T = gwInput.text;
+        var gt = /^\s*(structured|unstructured)\b/im.exec(T);
+        gw.grid = gt ? gt[1].toLowerCase() : null;
+        var cells = /^\s*(\d+)\s+number of cells/im.exec(T);
+        if (cells) gw.cells = parseInt(cells[1], 10);
+        var rows = /^\s*(\d+)\s+(\d+)\s+number of rows, number of columns/im.exec(T);
+        if (rows) gw.rowsCols = [parseInt(rows[1], 10), parseInt(rows[2], 10)];
+        var rc = /^\s*(\d)\s+recharge connection type/im.exec(T);
+        if (rc) gw.rechargeConnection = (rc[1] === '2') ? 'LSU-cell' : 'HRU-cell';
+        var gs = /^\s*(\d)\s+groundwater-->soil transfer/im.exec(T);
+        if (gs) gw.gwToSoilTransfer = (gs[1] === '1');
+        var st = parseStamp(T);
+        if (st && st.format === 'editor') gw.writtenForRev = st.rev;
+      }
+      /* gwflow generation by file names. basis: sample (2024 ARB/usg examples vs rev 61/62 Pecos) */
+      var oldGen = ['gwflow.hrucell', 'gwflow.huc12cell', 'gwflow.canals', 'gwflow.solutes', 'gwflow.tiles'].filter(has);
+      var newGen = ['gwflow.lsucell', 'gwflow.pumpex', 'gwflow.floodplain', 'gwflow.obs'].filter(has);
+      if (gw.present) {
+        gw.generation = newGen.length ? 'rev61+ (LSU-capable file set)' : (oldGen.length ? 'pre-rev61 (HRU-cell file set)' : 'unknown');
+        gw.generationFiles = newGen.concat(oldGen);
+      }
+      sp.exes = files.filter(function (f) { return f.ext === 'exe'; }).map(function (f) { return f.base; });
+      sp.gwflow = gw;
+      sp.hasLumpedAquifer = has('aquifer.aqu') || has('aquifer.con');
+      res.kinds.push(sp);
+    }
+
+    /* --- SWAT2012 --- basis: documented (file.cio with NBYR labels); needs a real folder to verify */
+    var cio2 = get('file.cio');
+    if (cio2 && !has('time.sim')) {
+      var isSwat = (cio2.text && /\bNBYR\b/.test(cio2.text)) || (anyBase(/\.sub$/).length && anyBase(/\.hru$/).length);
+      if (isSwat) {
+        var s12 = { family: 'swat2012', basis: 'needs-sample', evidence: [ev(cio2.path, 'file.cio with NBYR/IYR labels (SWAT2012/2009/2005 control file)')] };
+        var std = get('output.std');
+        if (std && std.text) {
+          /* basis: sample (SWAT-MODFLOW3 Middle Bosque: "VER 2012/Rev 636_smrt"; the _smrt suffix marks the SWAT-MODFLOW build) */
+          var vm = /VER\s*(\d{4})\s*\/\s*Rev\s*(\d+[A-Za-z0-9_]*)/i.exec(std.text);
+          if (vm) {
+            s12.revision = 'Rev ' + vm[2]; s12.revisionConfidence = 'high';
+            s12.evidence.push(ev(std.path, 'output.std banner: VER ' + vm[1] + '/Rev ' + vm[2]));
+            if (/_smrt$/i.test(vm[2])) { s12.smrtBuild = true; s12.evidence.push(ev(std.path, 'the "_smrt" suffix marks the SWAT-MODFLOW executable build')); }
+          }
+        }
+        if (!s12.revision) {
+          files.forEach(function (f) {
+            var m = /^rev(\d{3,4})\w*\.exe$/i.exec(f.base);
+            if (m && !s12.revision) { s12.revision = 'Rev ' + m[1] + ' (from the executable name)'; s12.revisionConfidence = 'low';
+              s12.evidence.push(ev(f.path, 'version guessed from the executable name ' + f.base)); }
+          });
+        }
+        if (!s12.revision) { s12.revision = null; s12.revisionConfidence = 'low'; }
+        res.kinds.push(s12);
+      }
+    }
+
+    /* --- APEX --- basis: needs-sample */
+    var apexMark = ['apexcont.dat', 'apexrun.dat', 'apexfile.dat'].filter(has);
+    if (apexMark.length) {
+      var ax = { family: 'apex', basis: 'sample', revision: null, revisionConfidence: 'low',
+        evidence: apexMark.map(function (n) { return ev(get(n).path, n.toUpperCase() + ' is an APEX control/run file'); }) };
+      files.forEach(function (f) {
+        var m = /^apex(\d{4})\.exe$/i.exec(f.base);
+        if (m && !ax.revision) { ax.revision = 'APEX' + m[1]; ax.revisionConfidence = 'medium';
+          ax.evidence.push(ev(f.path, 'version taken from the executable name (' + f.base + '); APEX input files do not state a version')); }
+      });
+      res.kinds.push(ax);
+    }
+
+    /* --- MODFLOW --- name files found in this directory */
+    var mfFiles = [];
+    files.forEach(function (f) {
+      if (f.ext === 'nam' || f.ext === 'mfn' || f.base === 'mfsim.nam') {
+        var c = classifyModflowNameFile(f);
+        if (c) mfFiles.push(c);
+      }
+    });
+    if (mfFiles.length) {
+      var kind = mfFiles.some(function (c) { return c.kind === 'modflow6'; }) ? 'modflow6' : mfFiles[0].kind;
+      var mf = { family: kind, basis: kind === 'modflow6' ? 'documented' : 'documented',
+                 evidence: mfFiles.map(function (c) { return ev(c.file, c.why); }) };
+      /* version from a listing file if one was provided */
+      files.forEach(function (f) {
+        if (mf.revision || !f.text || !/\.(lst|list)$|^mfsim\.lst$/.test(f.base)) return;
+        var v = (kind === 'modflow6') ? RE_MF6_VERSION.exec(f.text) : RE_MFLEG_VERSION.exec(f.text);
+        if (v) { mf.revision = (kind === 'modflow6') ? v[1] : (v[1] + ' ' + v[2]); mf.revisionConfidence = 'high';
+                 mf.evidence.push(ev(f.path, 'listing file states version ' + mf.revision)); }
+      });
+      if (!mf.revision) { mf.revision = null; mf.revisionConfidence = 'low'; }
+      mf.tdis = anyBase(/\.tdis$/).length > 0;
+      if (kind === 'modflow6') mf.mf6 = describeMf6(by);
+      res.kinds.push(mf);
+    }
+
+    /* --- SWAT-MODFLOW / SWAT+MODFLOW linkage markers --- basis: documented / source */
+    var link = {};
+    var swatmf = anyBase(/^swatmf/);          /* swatmf_link.txt, swatmf.* : SWAT(2012)-MODFLOW runtime linkage (corpus) */
+    if (swatmf.length) link.swatmf = swatmf.map(function (f) { return ev(f.path, 'SWAT-MODFLOW linkage file name'); });
+    var smrt = anyBase(/^smrt\./);            /* smrt.hrucells etc.: SWAT+MODFLOW (Bailey 2025) a-priori linkage; basis: source */
+    if (smrt.length) link.smrt = smrt.map(function (f) { return ev(f.path, 'smrt.* linkage file used by SWAT+MODFLOW'); });
+    var mfn = anyBase(/\.mfn$/);
+    if (mfn.length) link.mfn = mfn.map(function (f) { return ev(f.path, '.mfn file maps MODFLOW packages in SWAT-MODFLOW'); });
+    var apexmf = anyBase(/^apexmf[._]/);          /* apexmf_link.txt, apexmf_grid2sa.txt ... basis: sample (AMRS data/animas) */
+    if (apexmf.length) link.apexmf = apexmf.slice(0, 3).map(function (f) { return ev(f.path, 'APEX-MODFLOW linkage file name'); });
+    var exports = anyBase(/^mf6swatp_day_\d+\.txt$/);   /* daily exports written by the MF6SWATP hook. basis: source */
+    if (exports.length) link.mf6swatp = [ev(exports[0].path, exports.length + ' daily export file(s) written by the MF6SWATP hook (mf6swatp_day_NNNNNN.txt)')];
+    if (Object.keys(link).length) res.link = link;
+
+    /* --- scripts that hint at an API / offline coupling with MODFLOW 6 --- basis: needs-sample */
+    var scripts = files.filter(function (f) { return (f.ext === 'py' || f.ext === 'ipynb') && f.text; });
+    var hints = {};
+    scripts.forEach(function (f) {
+      if (/\b(modflowapi|xmipy|ModflowApi)\b/.test(f.text)) (hints.api = hints.api || []).push(ev(f.path, 'imports the MODFLOW 6 API (modflowapi/xmipy)'));
+      if (/\bflopy\b/i.test(f.text)) (hints.flopy = hints.flopy || []).push(ev(f.path, 'uses FloPy to build or read a MODFLOW model'));
+      if (/\bswatplus|SWAT\+|TxtInOut\b/i.test(f.text)) (hints.swat = hints.swat || []).push(ev(f.path, 'mentions SWAT+ / TxtInOut'));
+    });
+    if (Object.keys(hints).length) res.scriptHints = hints;
+    return res;
+  }
+
+  /* ------------------------------------------------------------------ system assembly */
+  var LABEL = {
+    'swatplus-gwflow': 'SWAT+ with the built-in gwflow groundwater module',
+    'swatplus-lumped': 'SWAT+ with lumped (conceptual) aquifers',
+    'swatplus-modflow-nwt': 'SWAT+MODFLOW (SWAT+ coupled to MODFLOW-NWT)',
+    'swatplus-modflow-legacy': 'SWAT+ with a legacy MODFLOW model (linkage files not found)',
+    'swatplus-modflow6': 'SWAT+ with MODFLOW 6',
+    'swatplus-mf6swatp': 'SWAT+ coupled to MODFLOW 6 through MF6SWATP',
+    'swat-modflow': 'SWAT-MODFLOW (SWAT2012 coupled to MODFLOW)',
+    'swat2012-lumped': 'SWAT2012 with its built-in aquifers',
+    'apex-alone': 'APEX',
+    'apex-modflow': 'APEX-MODFLOW',
+    'modflow6-alone': 'MODFLOW 6 groundwater model',
+    'modflow-legacy-alone': 'MODFLOW (2005/NWT/USG) groundwater model',
+    'unknown': 'Not identified'
+  };
+
+  function assemble(dirResults, allEntries) {
+    var surfaces = [], gws = [];
+    dirResults.forEach(function (d) {
+      d.kinds.forEach(function (k) {
+        var item = { dir: d.dir, k: k, d: d };
+        if (k.family === 'swatplus' || k.family === 'swat2012' || k.family === 'apex') surfaces.push(item);
+        else gws.push(item);
+      });
+    });
+    var systems = [], used = [];
+
+    function attach(surf) {
+      /* groundwater components in the same tree, nearest first */
+      var cand = gws.filter(function (g) { return related(g.dir, surf.dir); });
+      cand.sort(function (a, b) { return commonDepth(b.dir, surf.dir) - commonDepth(a.dir, surf.dir); });
+      return cand;
+    }
+
+    surfaces.forEach(function (s) {
+      var sys = { surface: s.k, dir: s.dir, groundwater: [], missing: [], ambiguity: [], notes: [], problems: [] };
+      var cands = attach(s);
+      /* more than one surface component in the upload: attach a groundwater model only when it is STRICTLY closer to
+         this one. A tie means the files do not say which pair is meant, so nothing is coupled by guesswork. */
+      if (surfaces.length > 1) {
+        cands = cands.filter(function (g) {
+          var mine = commonDepth(g.dir, s.dir);
+          return surfaces.every(function (o) { return o === s || commonDepth(g.dir, o.dir) < mine; });
+        });
+      }
+      sys.groundwater = cands.map(function (g) { return g.k; });
+      sys.dirs = uniq([s.dir].concat(cands.map(function (g) { return g.dir; })));
+      cands.forEach(function (g) { used.push(g); });
+      var link = {};
+      var roots = [s.dir].concat(cands.map(function (g) { return g.dir; }));
+      dirResults.forEach(function (d) {
+        var inTree = roots.some(function (r) { return r === '' || d.dir === r || d.dir.indexOf(r + '/') === 0; });
+        if (inTree && d.link) Object.keys(d.link).forEach(function (k) { link[k] = (link[k] || []).concat(d.link[k]); });
+      });
+      var hints = s.d.scriptHints || {};
+      cands.forEach(function (g) { if (g.d.scriptHints) Object.keys(g.d.scriptHints).forEach(function (k) { hints[k] = (hints[k] || []).concat(g.d.scriptHints[k]); }); });
+      /* also scripts anywhere in the upload */
+      dirResults.forEach(function (d) { if (d.scriptHints && related(d.dir, s.dir)) Object.keys(d.scriptHints).forEach(function (k) { if (!hints[k]) hints[k] = d.scriptHints[k]; }); });
+      sys.link = link; sys.scriptHints = hints;
+
+      var mf6 = cands.filter(function (g) { return g.k.family === 'modflow6'; });
+      var mfl = cands.filter(function (g) { return /^modflow-(legacy|2005|nwt|usg)$/.test(g.k.family); });
+
+      if (s.k.family === 'swatplus') {
+        var gw = s.k.gwflow || {};
+        var gwActive = gw.present && gw.active;
+        var mf6sp = s.k.mf6swatp || link.mf6swatp;
+        if (mf6sp) {
+          sys.coupling = 'swatplus-mf6swatp';
+          sys.couplingConfidence = s.k.mf6swatp ? 'high' : 'medium';
+          if (!mf6.length) sys.missing.push('MF6SWATP needs a MODFLOW 6 model next to the SWAT+ run. None was found in this upload.');
+          if (!s.k.mf6swatp) sys.notes.push('MF6SWATP export files were found, but mf6swatp.cfg was not. The hook only runs when that file is in the SWAT+ working folder.');
+          if (s.k.mf6swatp && gw.codesFlag === 1) {
+            sys.problems.push({ sev: 'error', file: 'codes.bsn',
+              title: 'MF6SWATP is switched on but gwflow is also on: SWAT+ will stop',
+              detail: 'mf6swatp.cfg exists, and codes.bsn has gwflow = 1. The MF6SWATP hook refuses to run with gwflow active (MODFLOW 6 replaces the aquifers) and ends the run with a fatal message.',
+              fix: 'Set gwflow = 0 in codes.bsn, or remove mf6swatp.cfg, then run again.',
+              basis: 'source: mf6swatp_module.f90 (mf6swatp_check_enabled)' });
+          }
+        } else if (mf6.length) {
+          sys.coupling = 'swatplus-modflow6';
+          sys.couplingConfidence = 'medium';
+          sys.notes.push('The files show SWAT+ and MODFLOW 6 side by side. They do not show HOW they are coupled (offline, one-way recharge hand-off, or API-driven). Say which, or add the scripts that connect them.');
+          if (hints.api) sys.notes.push('An MODFLOW 6 API script was found, which suggests an API-driven coupling.');
+          if (gw.present) sys.ambiguity.push('gwflow input files are present AND a MODFLOW 6 model is present. Only one of them is normally the active groundwater model.');
+        } else if (mfl.length) {
+          if (link.smrt) { sys.coupling = 'swatplus-modflow-nwt'; sys.couplingConfidence = 'high'; }
+          else { sys.coupling = 'swatplus-modflow-legacy'; sys.couplingConfidence = 'low';
+                 sys.missing.push('SWAT+MODFLOW normally needs its smrt.* linkage files next to the model. None were found.'); }
+          if (gw.present) sys.ambiguity.push('gwflow input files are present alongside a legacy MODFLOW model.');
+        } else if (gwActive) {
+          sys.coupling = 'swatplus-gwflow';
+          sys.couplingConfidence = (gw.codesFlag === 1 || gw.activeInCio === true) ? 'high' : 'medium';
+          if (gw.codesFlag === null && gw.activeInCio === null) sys.notes.push('Neither codes.bsn nor file.cio could be read, so it could not be confirmed that gwflow is switched on.');
+        } else {
+          sys.coupling = 'swatplus-lumped';
+          sys.couplingConfidence = s.k.hasLumpedAquifer ? 'high' : 'medium';
+        }
+        if (gw.present && !gw.active) sys.ambiguity.push('gwflow input files exist but the module is switched off (' + (gw.codesFlag === 0 ? 'codes.bsn has gwflow = 0' : 'file.cio does not connect gwflow.con') + ').');
+        if (gw.flagDisagreement) sys.ambiguity.push('codes.bsn says gwflow = ' + gw.codesFlag + ' but file.cio ' + (gw.activeInCio ? 'connects' : 'does not connect') + ' gwflow.con. The two disagree.');
+        if (!gw.present && gw.codesFlag === 1 && !s.k.mf6swatp) sys.missing.push('codes.bsn switches gwflow on, but gwflow.input was not found.');
+        if (s.k.codesLayout && s.k.revision) {
+          var domMajor = parseInt(s.k.revision, 10);
+          var layoutMismatch = (s.k.codesLayout === 62 && domMajor < 62) || (s.k.codesLayout === 61 && domMajor >= 62);
+          if (layoutMismatch) {
+            sys.notes.push('codes.bsn has the rev-' + s.k.codesLayout + ' column layout (' + s.k.codesColumns + ' columns), but most files here are rev ' + s.k.revision +
+              '. In rev 62 the column i_fpwet became qual2e and idc_till was added, so an executable of the other revision reads this file shifted by one column' +
+              (s.k.exes && s.k.exes.length ? ' (executables in the folder: ' + s.k.exes.slice(0, 4).join(', ') + ')' : '') + '. Make sure the executable matches the codes.bsn revision.');
+          }
+        }
+        if (s.k.mixedRevisions) sys.notes.push('Files in this folder were written for different SWAT+ revisions (' + Object.keys(s.k.stamps.byRevision).join(', ') + '). Minority files: ' + (s.k.stamps.minorityFiles || []).join(', ') + '. This is flagged for you to check, not as an error: the revision stamp records what wrote the file, not whether it still fits.');
+      } else if (s.k.family === 'swat2012') {
+        if (mfl.length || link.swatmf || link.mfn) {
+          sys.coupling = 'swat-modflow';
+          sys.couplingConfidence = (mfl.length && (link.swatmf || link.mfn)) ? 'high' : 'medium';
+          if (!mfl.length) sys.missing.push('SWAT-MODFLOW linkage was detected, but no MODFLOW model files. Add the MODFLOW folder to check the two together.');
+          if (!link.swatmf && !link.mfn) sys.notes.push('A MODFLOW model sits next to SWAT2012 but no swatmf linkage file was found.');
+        } else { sys.coupling = 'swat2012-lumped'; sys.couplingConfidence = 'medium'; }
+        if (link.apexmf) sys.notes.push('Files named apexmf_* sit next to this SWAT model. They look like leftovers from an APEX-MODFLOW model.');
+        if (mf6.length) { sys.coupling = 'swat-modflow'; sys.couplingConfidence = 'low'; sys.notes.push('SWAT2012 with MODFLOW 6 is not a standard coupling; check that these belong together.'); }
+      } else if (s.k.family === 'apex') {
+        var apexCoupled = mf6.length || mfl.length || link.apexmf;
+        sys.coupling = apexCoupled ? 'apex-modflow' : 'apex-alone';
+        sys.couplingConfidence = (link.apexmf && (mf6.length || mfl.length)) ? 'high' : 'medium';
+        if (link.swatmf) sys.notes.push('Files named swatmf_* sit next to this APEX model. APEX-MODFLOW uses apexmf_* names, so these look like leftovers from a SWAT-MODFLOW model copied into the folder. They are ignored for the classification.');
+        if (link.apexmf && !(mf6.length || mfl.length)) sys.missing.push('APEX-MODFLOW linkage files were found but no MODFLOW model. Add the MODFLOW folder to check the pair.');
+      }
+      sys.label = LABEL[sys.coupling] || LABEL.unknown;
+      systems.push(sys);
+    });
+
+    /* groundwater components with no surface model in the upload */
+    gws.forEach(function (g) {
+      if (used.indexOf(g) >= 0) return;
+      var sys = { surface: null, dir: g.dir, dirs: [g.dir], groundwater: [g.k], missing: [], ambiguity: [], notes: [], problems: [], link: g.d.link || {}, scriptHints: g.d.scriptHints || {} };
+      sys.coupling = (g.k.family === 'modflow6') ? 'modflow6-alone' : 'modflow-legacy-alone';
+      sys.couplingConfidence = 'high';
+      sys.label = LABEL[sys.coupling];
+      if (sys.link.swatmf || sys.link.mfn || sys.link.smrt) sys.missing.push('Linkage files point to a SWAT model, but no SWAT or SWAT+ folder was provided. Drop the parent folder to check the pair.');
+      else if (surfaces.length > 1) sys.notes.push('This upload has ' + surfaces.length + ' surface models and this groundwater model is equally close to several of them, so it was not attached to any. Drop it together with its own SWAT / SWAT+ / APEX folder to check the pair.');
+      else sys.notes.push('Only a groundwater model was provided. If it is part of a SWAT / SWAT+ / APEX coupling, drop that folder too and the pair will be checked together.');
+      systems.push(sys);
+    });
+
+    if (!systems.length) {
+      systems.push({ surface: null, dir: '', dirs: null, groundwater: [], coupling: 'unknown', couplingConfidence: 'none', label: LABEL.unknown,
+        missing: [], ambiguity: [], notes: [], problems: [], link: {}, scriptHints: {} });
+    }
+    return systems;
+  }
+
+  /* ------------------------------------------------------------------ main entry */
+  function characterize(entries) {
+    var E = normalizeEntries(entries);
+    var byDir = {};
+    E.forEach(function (e) { (byDir[e.dir] = byDir[e.dir] || []).push(e); });
+    var dirResults = Object.keys(byDir).map(function (d) { return analyzeDirectory(d, byDir[d]); })
+                                       .filter(function (r) { return r.kinds.length || r.link || r.scriptHints; });
+    var systems = assemble(dirResults, E);
+    var unread = E.filter(function (e) { return e.text === null; }).length;
+    return {
+      nFiles: E.length, nUnread: unread, systems: systems,
+      identified: systems.some(function (s) { return s.coupling !== 'unknown'; }),
+      sawFiles: E.slice(0, 12).map(function (e) { return e.path; })
+    };
+  }
+
+  /* ------------------------------------------------------------------ plain-language explanation */
+  var PLAIN = {
+    'swatplus-gwflow': 'SWAT+ simulates the land surface, crops, rivers and reservoirs. In this model the groundwater is calculated by gwflow, a groundwater module built into SWAT+, so there is no separate groundwater program to run. It is simpler to run and to calibrate than a full MODFLOW model.',
+    'swatplus-lumped': 'SWAT+ simulates the land surface and rivers, and groundwater is represented by simple "aquifer" storage tanks. There is no map-like groundwater model, so water-table depth and flow between neighbouring areas are not simulated.',
+    'swatplus-modflow-nwt': 'SWAT+ simulates the surface and a separate MODFLOW-NWT model simulates groundwater. They exchange water every day through linkage files, so both folders must stay consistent.',
+    'swatplus-modflow-legacy': 'A SWAT+ model and a MODFLOW model were found, but the files that tie them together were not. They might be coupled in another way, or not at all.',
+    'swatplus-modflow6': 'SWAT+ simulates the surface and MODFLOW 6 simulates groundwater. There are several ways to connect them; the files alone do not say which one is used here.',
+    'swatplus-mf6swatp': 'SWAT+ simulates the surface and, once a day, hands recharge to MODFLOW 6, which simulates groundwater. MF6SWATP is the framework under development that makes this exchange; it replaces the SWAT+ aquifers, so gwflow must be off.',
+    'swat-modflow': 'SWAT (2012) simulates the surface and MODFLOW simulates groundwater; a linkage layer exchanges water between them. Both folders and the linkage files have to agree on grid, period and units.',
+    'swat2012-lumped': 'SWAT2012 simulates the watershed with its own simple shallow and deep aquifers. There is no separate groundwater model.',
+    'apex-alone': 'APEX simulates fields and small watersheds (crops, management, soil). It does not simulate a groundwater model by itself.',
+    'apex-modflow': 'APEX simulates fields and MODFLOW simulates the aquifer; they exchange water through a linkage layer.',
+    'modflow6-alone': 'A MODFLOW 6 groundwater model on its own, with no surface model attached in what was provided.',
+    'modflow-legacy-alone': 'A MODFLOW (2005, NWT or USG) groundwater model on its own, with no surface model attached in what was provided.',
+    'unknown': 'The files provided did not match any model this tool knows how to recognise.'
+  };
+  function plainExplanation(system) { return PLAIN[system.coupling] || PLAIN.unknown; }
+
+  HDA.characterize = characterize;
+  HDA.plainExplanation = plainExplanation;
+  HDA._parseStamp = parseStamp;
+  HDA.COUPLING_LABELS = LABEL;
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));
+
+/* ---- src/char_ui.js ---- */
+/* Presentation of the characterization result: plain language first, evidence one click away.
+ * Pure functions (no DOM access) so they can be tested in the same page as characterize.js. */
+(function (root) {
+  'use strict';
+  var HDA = root.HDA = root.HDA || {};
+
+  function esc(s) { return String(s).replace(/[&<>"]/g, function (c) { return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]; }); }
+
+  /* which rule set (RULES key in index.html) applies to a characterized system */
+  HDA.ruleKeyFor = function (sys) {
+    switch (sys && sys.coupling) {
+      case 'swatplus-gwflow': case 'swatplus-lumped': case 'swatplus-modflow-nwt':
+      case 'swatplus-modflow-legacy': case 'swatplus-modflow6': case 'swatplus-mf6swatp': return 'swat_plus';
+      case 'swat2012-lumped': return 'swat2012';
+      case 'swat-modflow': return 'swat_mf';
+      case 'modflow-legacy-alone': return 'modflow';
+      case 'modflow6-alone': return 'modflow6';
+      case 'apex-alone': case 'apex-modflow': return 'apex';
+      default: return null;
+    }
+  };
+
+  /* honest statement of what actually ran, so a short list of checks is never mistaken for a clean bill of health */
+  HDA.ruleCoverageText = function (sys, ruleKey) {
+    var c = sys && sys.coupling;
+    var base = {
+      swat_plus: 'SWAT+ rule set, written against rev. 61/62 file layouts. Older layouts get the same checks, so a finding may not apply to them.',
+      swat2012: 'SWAT2012 rule set.',
+      swat_mf: 'SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).',
+      modflow: 'MODFLOW-2005/NWT/USG rule set. There are no MODFLOW 6 rules yet.',
+      modflow6: 'Two MODFLOW 6 checks: that every file named in the name files exists, and that NPER matches the stress periods defined. Nothing else is checked yet (not convergence, not packages, not units).',
+      apex: 'No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.'
+    }[ruleKey] || 'No model-specific rules apply; only the generic file checks ran.';
+    var extra = '';
+    if (c === 'swatplus-gwflow') extra = ' There are no gwflow-specific rules beyond the basic file checks.';
+    if (c === 'swatplus-mf6swatp') extra = ' The only MF6SWATP check is that gwflow is off when mf6swatp.cfg is present; the exchange itself is not checked yet.';
+    if (c === 'swatplus-modflow-nwt' || c === 'swatplus-modflow6' || c === 'swatplus-modflow-legacy') extra = ' There are no checks for the coupling itself yet, so only the SWAT+ side was examined.';
+    if (c === 'apex-modflow') extra = ' The APEX-MODFLOW coupling is not checked yet.';
+    return base + extra;
+  };
+
+  function revisionLine(sf) {
+    if (!sf) return '';
+    if (sf.family === 'swatplus') {
+      if (sf.format === 'pre-editor') return 'SWAT+, pre-Editor file format (no revision number is recorded in these files)';
+      if (sf.revision) {
+        var s = 'SWAT+ rev. ' + esc(sf.revision) + (sf.stamps && sf.stamps.editorVersions.length ? ' (SWAT+ Editor ' + esc(sf.stamps.editorVersions.join(', ')) + ')' : '');
+        if (sf.mixedRevisions) s += ' <b>mixed revisions</b>: ' + esc(Object.keys(sf.stamps.byRevision).map(function (k) { return 'rev ' + k + ' on ' + sf.stamps.byRevision[k] + ' files'; }).join(', '));
+        return s;
+      }
+      return 'SWAT+, revision not stated in the files';
+    }
+    if (sf.family === 'swat2012') return 'SWAT2012' + (sf.revision ? ', ' + esc(sf.revision) : ', revision not stated in the files');
+    if (sf.family === 'apex') return 'APEX, version not stated in the files';
+    return esc(sf.family);
+  }
+  function gwflowLine(gw) {
+    if (!gw || !gw.present) return '';
+    var bits = ['gwflow'];
+    if (gw.grid) bits.push(gw.grid + ' grid' + (gw.cells ? ' of ' + gw.cells.toLocaleString('en-US') + ' cells' : (gw.rowsCols ? ' (' + gw.rowsCols[0] + ' x ' + gw.rowsCols[1] + ')' : '')));
+    if (gw.rechargeConnection) bits.push(gw.rechargeConnection + ' recharge');
+    if (gw.generation) bits.push('file set: ' + gw.generation);
+    if (gw.codesFlag === 1) bits.push('switched on in codes.bsn'); else if (gw.codesFlag === 0) bits.push('switched OFF in codes.bsn');
+    else if (gw.activeInCio === false) bits.push('NOT connected in file.cio');
+    return esc(bits.join(', '));
+  }
+  var GWNAME = { modflow6: 'MODFLOW 6', 'modflow-nwt': 'MODFLOW-NWT', 'modflow-usg': 'MODFLOW-USG', 'modflow-2005': 'MODFLOW-2005', 'modflow-legacy': 'MODFLOW (2005/NWT/USG not distinguishable from the files)' };
+  function groundwaterLines(sys) {
+    return sys.groundwater.map(function (g) {
+      var s = esc((GWNAME[g.family] || g.family) + (g.revision ? ' ' + g.revision : '')) + (g.revision ? '' : ' (version not stated in the files)');
+      if (g.mf6 && g.mf6.models.length) {
+        s += ' &mdash; ' + esc(g.mf6.models.map(function (x) { return x.type; }).join(' + ')) +
+             (g.mf6.grid ? ', ' + esc(g.mf6.grid) + ' grid' : '') +
+             (g.mf6.transport ? ', with solute transport' : '') +
+             (g.mf6.packages.length ? '; packages: ' + esc(g.mf6.packages.join(', ')) : '');
+      }
+      return s;
+    });
+  }
+  var CONF = { high: 'confident', medium: 'fairly sure', low: 'not sure', none: 'could not identify' };
+
+  function evidenceList(sys) {
+    var ev = [];
+    if (sys.surface) ev = ev.concat(sys.surface.evidence || []);
+    sys.groundwater.forEach(function (g) { ev = ev.concat(g.evidence || []); });
+    ['swatmf', 'smrt', 'mfn'].forEach(function (k) { if (sys.link && sys.link[k]) ev = ev.concat(sys.link[k].slice(0, 2)); });
+    return ev.slice(0, 14);
+  }
+
+  /* char: result of HDA.characterize; sel: index of the system being shown */
+  HDA.renderCharacterization = function (char, sel) {
+    if (!char) return '';
+    var h = '';
+    if (char.systems.length > 1) {
+      h += '<div class="muted" style="margin-bottom:6px;">' + char.systems.length + ' models were found in what you dropped. Choose which one to check:</div><div class="gallery" style="margin-bottom:10px;">';
+      char.systems.forEach(function (s, i) {
+        h += '<button class="chip sysbtn' + (i === sel ? ' active' : '') + '" data-i="' + i + '"><span class="fw">' + esc(s.label) + '</span><span class="et">' + esc(s.dir || '(top folder)') + '</span></button>';
+      });
+      h += '</div>';
+    }
+    var s = char.systems[Math.min(sel, char.systems.length - 1)];
+    if (!s || s.coupling === 'unknown') {
+      h += '<div class="finding warning"><span class="head">We could not tell which model this is</span>' +
+           '<div style="margin-top:4px;">' + char.nFiles + ' files were received and none matched a model this tool knows. Nothing has been assumed.</div>' +
+           '<div class="fix"><b>What you can do:</b> choose the model yourself in Step 1 (SWAT+, SWAT2012, SWAT-MODFLOW, MODFLOW, MODFLOW 6 or APEX), or drop the model folder itself instead of a parent folder. Generic file checks still run below.</div>' +
+           (char.sawFiles.length ? '<div class="attr">Files seen: ' + esc(char.sawFiles.join(', ')) + (char.nFiles > char.sawFiles.length ? ' ...' : '') + '</div>' : '') + '</div>';
+      return h;
+    }
+    var ruleKey = HDA.ruleKeyFor(s);
+    h += '<div class="finding ok"><span class="head">' + esc(s.label) + '</span> <span class="badge ' + (s.couplingConfidence === 'high' ? 'ok' : 'warning') + '">' + esc(CONF[s.couplingConfidence] || '') + '</span>';
+    h += '<div style="margin-top:6px;">' + esc(HDA.plainExplanation(s)) + '</div>';
+    var rows = [];
+    if (s.surface) rows.push('<b>Surface model:</b> ' + revisionLine(s.surface));
+    var gl = s.surface ? gwflowLine(s.surface.gwflow) : '';
+    if (gl) rows.push('<b>Groundwater module:</b> ' + gl);
+    else if (s.surface && s.surface.family === 'swatplus' && s.coupling === 'swatplus-lumped') rows.push('<b>Groundwater:</b> lumped aquifers (no gwflow connected)');
+    groundwaterLines(s).forEach(function (x) { rows.push('<b>Groundwater model:</b> ' + x); });
+    rows.forEach(function (r) { h += '<div style="margin-top:4px;font-size:13.5px;">' + r + '</div>'; });
+    h += '</div>';
+    function list(title, arr, cls) {
+      if (!arr.length) return '';
+      return '<div class="finding ' + cls + '"><span class="head">' + title + '</span><ul style="margin:6px 0 0 18px;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+    }
+    (s.problems || []).forEach(function (p) {
+      h += '<div class="finding error"><span class="head">' + esc(p.title) + '</span> <span class="badge error">WILL STOP THE RUN</span><div style="margin-top:4px;">' + esc(p.detail) + '</div><div class="fix"><b>Fix:</b> ' + esc(p.fix) + '</div><div class="attr">' + esc(p.basis) + '</div></div>';
+    });
+    h += list('Missing, and why it matters', s.missing, 'warning');
+    h += list('Could be read two ways', s.ambiguity, 'warning');
+    h += list('Worth knowing', s.notes, 'ok');
+    h += '<div class="muted" style="margin:8px 0;"><b>What ran:</b> ' + esc(HDA.ruleCoverageText(s, ruleKey)) + '</div>';
+    var ev = evidenceList(s);
+    if (ev.length) {
+      h += '<details style="margin-top:6px;"><summary>Why we think so (technical detail)</summary><ul style="margin:6px 0 0 18px;font-size:13px;">' +
+           ev.map(function (e) { return '<li><code>' + esc(e.file) + '</code>: ' + esc(e.why) + '</li>'; }).join('') + '</ul></details>';
+    }
+    h += '<div class="muted" style="margin-top:8px;">Not right? Choose the model in Step 1 and the checks will follow your choice.</div>';
+    return h;
+  };
+})(typeof globalThis !== 'undefined' ? globalThis : (typeof window !== 'undefined' ? window : this));
+
+/*<<HDA:src:end>>*/
+</script>
+
+<script>
 "use strict";
 /* ═════════════════════ helpers ═════════════════════ */
 const $ = id => document.getElementById(id);
-const TEXT_EXT = /\.(cio|sim|prt|sol|hru|sub|bsn|gw|mgt|rte|swq|wwq|wus|chm|pcp|tmp|slr|hmd|wnd|cli|sdc|con|txt|csv|ini|mfn|nam|dis|bas|lpf|upw|npf|ic|pcg|nwt|ims|sms|oc|rch|riv|ghb|chd|drn|wel|sfr|lak|evt|lst|list|out|dat|ref|cal|plt|def|fig|cod|std)$/i;
+const TEXT_EXT = /\.(cio|sim|prt|sol|hru|sub|bsn|gw|mgt|rte|swq|wwq|wus|chm|pcp|tmp|slr|hmd|wnd|cli|sdc|con|txt|csv|ini|mfn|nam|dis|bas|lpf|upw|npf|ic|pcg|nwt|ims|sms|oc|rch|riv|ghb|chd|drn|wel|sfr|lak|evt|lst|list|out|dat|ref|cal|plt|def|fig|cod|std|input|tdis|gwf|py|ipynb|aqu|hrucell|lsucell|canals|solutes|tiles|obs)$/i;
 const looksTexty = name => TEXT_EXT.test(name) || !/\./.test(name.split("/").pop());
 
 function esc(s){ return String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
@@ -721,23 +1384,63 @@ function buildFileBrowser(){
   });
 }
 
+let RAW = [];      // every received file: {path, size, text|null}
+let CHAR = null;   // result of HDA.characterize(RAW)
+let SEL_SYS = 0;   // which detected model the checks run on
+
 async function intake(fileArr){
-  FILES = {}; FILENAMES = [];
+  RAW = []; CHAR = null; SEL_SYS = 0;
   const MAX = 40*1024*1024;
   for(const f of fileArr){
     const rel = (f.webkitRelativePath || f.name);
-    FILENAMES.push(rel);
     const base = rel.split("/").pop();
-    if(f.size===0){ FILES[base.toLowerCase()] = ""; continue; }
-    if(f.size>MAX || !looksTexty(base)) continue;
-    try{ FILES[base.toLowerCase()] = await f.text(); }catch(_){}
+    const e = {path: rel, size: f.size, text: null};
+    if(f.size===0) e.text = "";
+    else if(f.size<=MAX && looksTexty(base)){ try{ e.text = await f.text(); }catch(_){} }
+    RAW.push(e);
   }
-  $("fileList").textContent = FILENAMES.length + " files received · " +
-      Object.keys(FILES).length + " scanned as text: " +
+  CHAR = HDA.characterize(RAW);
+  applySystem(0);
+}
+
+function belongsTo(dir, i){
+  const sys = CHAR && CHAR.systems[i];
+  if(!sys || !sys.dirs || CHAR.systems.length===1) return true;
+  const claim = s=>{ let m=-1; (s.dirs||[]).forEach(sd=>{ if(dir===sd || sd==="" || dir.indexOf(sd+"/")===0) m = Math.max(m, sd.length); }); return m; };
+  const mine = claim(sys);
+  return mine>=0 && CHAR.systems.every((o,j)=> j===i || claim(o)<=mine);
+}
+
+function applySystem(i){
+  SEL_SYS = i;
+  const sys = CHAR && CHAR.systems[i];
+  FILES = {}; FILENAMES = [];
+  RAW.forEach(e=>{
+    const dir = e.path.indexOf("/")<0 ? "" : e.path.slice(0, e.path.lastIndexOf("/"));
+    if(!belongsTo(dir, i)) return;
+    FILENAMES.push(e.path);
+    if(e.text!==null) FILES[e.path.split("/").pop().toLowerCase()] = e.text;
+  });
+  $("fileList").textContent = RAW.length + " files received" +
+      (FILENAMES.length!==RAW.length ? " (" + FILENAMES.length + " belong to the selected model)" : "") +
+      " · " + Object.keys(FILES).length + " scanned as text: " +
       Object.keys(FILES).slice(0,40).join(", ") + (Object.keys(FILES).length>40?" …":"");
+  renderCharacterization();
   buildFileBrowser();
+  renderFileCheckTable();
   runChecks();
 }
+
+function renderCharacterization(){
+  const card = $("charCard");
+  if(!CHAR){ card.style.display = "none"; return; }
+  card.style.display = "";
+  $("charOut").innerHTML = HDA.renderCharacterization(CHAR, SEL_SYS);
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest(".sysbtn"); if(!b) return;
+  applySystem(parseInt(b.dataset.i,10));
+});
 
 /* ═════════════════════ demo models (synthetic, no real data) ═══════════════ */
 const DEMO_MODELS = {
@@ -746,9 +1449,10 @@ const DEMO_MODELS = {
     files: {
       "time.sim": "time.sim: simulation start/end\nheader line ignored\n0 2015 0 2010 0",
       "print.prt": "print.prt: output control\nnpr 0 0 0",
-      "soils.sol": "name  nly  hyd  zmx  anion  crk  texture  ...\n" +
-        "loam1  1  A  1000  0.5  0.1  clay  1.30  null  0.20  0.10  15.0  0.05  1  1\n" +
-        "loam2  1  B  800   0.5  0.1  silt  1.35  0.42  0.22  0.11  12.0  0.05  1  1",
+      "soils.sol": "soils.sol: demo\n" +
+        "name nly hyd_grp dp_tot anion_excl perc_crk texture dp bd awc soil_k carbon clay silt sand rock alb usle_k ec caco3 ph\n" +
+        "loam1 1 A 1000.0 0.5 0.5 null 1000.0 null 0.20 10.0 1.0 20.0 40.0 40.0 0.0 0.01 0.30 0.0 0.0 7.5\n" +
+        "loam2 1 B 800.0 0.5 0.5 clay_loam 800.0 1.35 0.22 12.0 1.0 25.0 35.0 40.0 0.0 0.01 0.30 0.0 0.0 7.5",
       "weather-sta.cli": "weather-sta.cli\nheader\nSTA1 sta1.pcp sta1.tmp sta1.slr sta1.hmd sta1.wnd",
       "sta1.tmp": "(present)",
       "sta1.slr": "(present)",
@@ -768,7 +1472,7 @@ const DEMO_MODELS = {
     label: "SWAT-MODFLOW", desc: "Planted issues: low file-unit numbers in modflow.mfn, short MODFLOW period vs SWAT.",
     files: {
       "modflow.mfn": "# unit assignments\nBAS6  13  bas.bas\nDIS   29  model.dis\nOC    22  model.oc",
-      "model.dis": "# DIS\n1 100 100 12 1 4\n1 1000.0 1000.0 -1 1.0 1 1",
+      "model.dis": "# DIS\n 1 100 100 1 4 2 # NLAY NROW NCOL NPER ITMUNI LENUNI\n 0 # LAYCB\nCONSTANT 1000.0 # DELR\n   1.000000000000E+002  100  1.000000000000E+000  TR # PERLEN NSTP TSMULT Ss/tr (100 days only)",
       "file.cio": "General input/output file\n10 | NBYR\n2010 | IYR",
     }
   },
@@ -777,7 +1481,7 @@ const DEMO_MODELS = {
     files: {
       "model.nam": "LIST  2   model.lst\nDIS   11  model.dis\nRIV   18  model.riv\nWEL   19  model_missing.wel",
       "model.dis": "# DIS\n1 50 50 1 1 4\n1 500.0 500.0 -1 1.0 1 1",
-      "model.lst": "MODFLOW 6 listing file\n...\nFAILED TO MEET SOLVER CONVERGENCE CRITERIA\nPERCENT DISCREPANCY = 3.42\n...",
+      "model.lst": "MODFLOW-2005 listing file\n...\nFAILED TO MEET SOLVER CONVERGENCE CRITERIA\nPERCENT DISCREPANCY = 3.42\n...",
     }
   }
 };
@@ -789,6 +1493,8 @@ function loadDemo(key){
     FILES[name.toLowerCase()] = content;
     FILENAMES.push(name);
   });
+  RAW = Object.entries(demo.files).map(([n,c])=>({path:n, size:c.length, text:c}));
+  CHAR = HDA.characterize(RAW); SEL_SYS = 0; renderCharacterization();
   $("fwSelect").value = key;
   $("fileList").textContent = "Demo model loaded (" + demo.label + "): " +
       FILENAMES.length + " synthetic files · " + demo.desc;
@@ -811,13 +1517,9 @@ function buildDemoGallery(){
 }
 
 function detectFramework(){
-  const names = Object.keys(FILES);
-  const has = re => names.some(n=>re.test(n));
-  if(has(/swatmf_link/) || has(/\.mfn$/) && has(/file\.cio/)) return "swat_mf";
-  if(has(/time\.sim/) || has(/\.sqlite/) || has(/rout_unit/)) return "swat_plus";
-  if(has(/file\.cio/)) return "swat2012";
-  if(has(/\.nam$/) || has(/\.dis$/)) return "modflow";
-  return "swat_plus";
+  if(!CHAR) return null;
+  const sys = CHAR.systems[SEL_SYS];
+  return sys ? HDA.ruleKeyFor(sys) : null;   // null = could not identify; no silent fallback to SWAT+
 }
 
 /* ═════════════════════ rule engine ═════════════════════ */
@@ -832,6 +1534,24 @@ const ATTR = {
 function grab(name){ return FILES[name] ?? null; }
 function findByExt(ext){ return Object.keys(FILES).filter(n=>n.endsWith(ext)); }
 function nums(line){ return (line.match(/-?\d+(\.\d+)?([eE][+-]?\d+)?/g)||[]).map(Number); }
+
+/* Name-file check shared by MODFLOW and SWAT-MODFLOW. LIST and DATA lines name files that MODFLOW WRITES, so they are not inputs. */
+function checkNameFile(out, nam, attr){
+  const have = new Set(FILENAMES.map(n=>n.split(/[\\/]/).pop().toLowerCase()));
+  const missing = [];
+  (grab(nam)||"").split(/\r?\n/).forEach(l=>{
+    if(/^#|^\s*$/.test(l)) return;
+    const p = l.trim().split(/\s+/);
+    if(/^(LIST|DATA|DATA\(BINARY\))$/i.test(p[0])) return;
+    const f = (p[2]||p[1]||"").toLowerCase().split(/[\\\/]/).pop();
+    if(f && /\.\w+$/.test(f) && !have.has(f) && !/\.(hds|hed|cbb|cbc|ccf|bud|grb|fhd|fdn)$/.test(f)) missing.push(f);
+  });
+  if(missing.length)
+    out.push(finding("error","Name file references files that are not in the folder", nam+" → "+missing.slice(0,8).join(", "),
+      "The name file lists package files that are not in the folder. MODFLOW stops as soon as it cannot open one (checked by running SWAT-MODFLOW with a package file removed: it stopped with ERROR OPENING FILE).",
+      "Copy the missing files next to the name file or fix the paths (avoid long paths and spaces).", attr,
+      nam, missing[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+}
 
 const RULES = {
 /* ─── SWAT+ ─────────────────────────────────────────── */
@@ -866,24 +1586,43 @@ swat_plus: [
   function soilNulls(out){
     const sol = grab("soils.sol");
     if(!sol) return;
-    const lines = sol.split(/\r?\n/);
-    let hits = [];
-    lines.forEach((l,i)=>{
-      if(/(^|\s)(null|nan)(\s|$)/i.test(l)) hits.push(i+1);
-      // absurd values: bulk density 0 or negative in numeric fields
-    });
-    if(hits.length)
-      out.push(finding("error","Null/NaN fields inside soils.sol","soils.sol — lines "+hits.slice(0,8).join(", ")+(hits.length>8?" …":""),
-        "Null or NaN soil properties are the most common cause of the <code>floating invalid</code> (error 65) crash: the model computes with an undefined number and aborts.",
-        "Fill every soil property field with a physical value (check bulk density, awc, k, carbon). Re-import the soil table and rewrite inputs.", ATTR.swatplus,
-        "soils.sol", "(^|\\s)(null|nan)(\\s|$)"));
-    // zero thickness / zero bd quick scan on numeric rows
-    let zeroBD = 0;
-    lines.forEach(l=>{ const v = nums(l); if(v.length>8 && v[3]===0) zeroBD++; });
-    if(zeroBD>0)
-      out.push(finding("warning","Possible zero values in soil layer properties","soils.sol",
-        zeroBD+" data line(s) contain a zero in a property column (possible zero bulk density / thickness). Zero thickness or density produces NaN during initialization.",
-        "Verify layer depth and bulk density columns are positive for every layer.", ATTR.swatplus,
+    const raw = sol.split(/\r?\n/);
+    /* Header: name nly hyd_grp dp_tot anion_excl perc_crk texture dp bd awc ...
+       The soil-level fields and the text field `texture` (legitimately "null" for many soils) are written only on a
+       soil's first layer line; the following layer lines hold just the columns after `texture`.
+       Only the numeric columns are judged. */
+    const hi = raw.findIndex(l=>/^\s*name\s+nly\b/i.test(l));
+    if(hi < 0) return;                           /* unknown layout: say nothing rather than guess */
+    const H = raw[hi].trim().split(/\s+/);
+    const tx = H.indexOf("texture");
+    if(tx < 0) return;
+    const textCols = new Set(["name","hyd_grp","texture"]);
+    const layerCols = H.slice(tx+1);
+    const isNumber = t => /^[-+]?(\d+\.?\d*|\.\d+)([eEdD][-+]?\d+)?$/.test(t);
+    const bad = [], badLines = [], zero = [];
+    for(let i=hi+1;i<raw.length;i++){
+      if(!raw[i].trim()) continue;
+      const t = raw[i].trim().split(/\s+/);
+      let cols;
+      if(t.length === H.length) cols = H;                     /* first layer line of a soil */
+      else if(t.length === layerCols.length) cols = layerCols; /* later layer lines */
+      else continue;                                           /* unexpected shape: not judged */
+      cols.forEach((c,j)=>{
+        if(textCols.has(c)) return;
+        if(!isNumber(t[j])){ bad.push(`line ${i+1}: ${c} = ${t[j]}`); if(badLines[badLines.length-1]!==i+1) badLines.push(i+1); }
+      });
+      const val = c => { const j = cols.indexOf(c); return j<0 ? NaN : parseFloat(t[j]); };
+      if(val("bd") <= 0 || val("dp") <= 0) zero.push(i+1);
+    }
+    if(bad.length)
+      out.push(finding("error","Null/NaN fields inside soils.sol","soils.sol — "+bad.slice(0,6).join(" · ")+(bad.length>6?" …":""),
+        "A numeric soil property holds null or NaN. Reported often in the community as the cause of the <code>floating invalid</code> (error 65) crash. In one test here (null in the bulk density of one layer) SWAT+ did NOT stop: it finished and the basin water balance changed by up to 4.5%, so the damage can be silent. (A <code>null</code> in the text column <code>texture</code> is normal and is not flagged.)",
+        "Fill every numeric soil property with a physical value (check bulk density, awc, k, carbon). Re-import the soil table and rewrite inputs.", ATTR.swatplus,
+        "soils.sol", "^\\s*"+(raw[badLines[0]-1].trim().split(/\s+/)[0]||"").replace(/[.*+?^${}()|[\]\\]/g,"\\$&")+"\\s"));
+    if(zero.length)
+      out.push(finding("warning","Zero or negative bulk density / layer depth in soils.sol","soils.sol — lines "+zero.slice(0,8).join(", ")+(zero.length>8?" …":""),
+        "A layer has bd or dp equal to zero or below. Zero thickness or density produces NaN during initialization.",
+        "Check the layer depth (dp) and bulk density (bd) columns: both must be positive.", ATTR.swatplus,
         "soils.sol", null));
   },
   function gwflowChecks(out){
@@ -914,9 +1653,40 @@ swat_plus: [
     });
     if(missing.length)
       out.push(finding("error","Weather files referenced but not found","weather-sta.cli → "+missing.slice(0,6).join(", "),
-        "The station file points to climate files that are not in the folder — the run aborts while reading weather.",
+        "The station file points to climate files that are not in the folder. SWAT+ does NOT stop: it writes \"file not found\" in diagnostics.out and carries on without that data, so the results are silently affected (checked by running SWAT+ with one precipitation file removed).",
         "Copy the missing files into TxtInOut or fix the names in weather-sta.cli.", ATTR.swatplus,
         "weather-sta.cli", missing[0].replace(/\./g,"\\.")));
+  },
+  function cliSorted(out){
+    /* SWAT+ finds a gage in these lists by name in sorted order. An unsorted list makes most stations "not found",
+       and the run still finishes. Seen in three Pekin projects: 129 of 129 entries out of place, ~97% of stations ignored. */
+    const bad = [];
+    ["pcp.cli","tmp.cli","slr.cli","hmd.cli","wnd.cli"].forEach(n=>{
+      const t = grab(n); if(t===null) return;
+      const lines = t.split(/\r?\n/).slice(2).map(l=>l.trim()).filter(Boolean);
+      if(lines.length<2) return;
+      const sorted = lines.slice().sort();
+      const off = lines.filter((l,i)=>l!==sorted[i]).length;
+      if(off>0) bad.push(`${n}: ${off} of ${lines.length} entries out of order`);
+    });
+    if(bad.length)
+      out.push(finding("error","Station lists are not sorted", bad.join(" · "),
+        "SWAT+ looks each gage up by name assuming the list is sorted. With an unsorted list most stations are reported as \"file not found\" in diagnostics.out and are ignored, and the run still ends with \"Execution successfully completed\". Seen on three Pekin projects where about 97% of the stations were ignored.",
+        "Sort the file names in the list alphabetically (ASCII order), keep the two header lines, and run again.", ATTR.swatplus,
+        "pcp.cli", null));
+  },
+  function diagLog(out){
+    /* If the folder still holds the diagnostics.out of a finished run, the engine itself says what it could not find. */
+    const d = grab("diagnostics.out");
+    if(d===null) return;
+    /* "sim" and "null" are placeholders (weather generator / unused), not files: SWAT+ logs "sim file not found (petgage)" in healthy models */
+    const hits = d.split(/\r?\n/).filter(l=>/file not found/i.test(l) && !/basins_carbon\.tes/i.test(l) && !/^\s*(sim|null)\s+file not found/i.test(l));
+    if(!hits.length) return;
+    const names = [...new Set(hits.map(l=>l.trim().split(/\s+/)[0]))];
+    out.push(finding("error","The last run reported missing input files", `diagnostics.out → ${hits.length} \"file not found\" line(s): ${names.slice(0,5).join(", ")}${names.length>5?" …":""}`,
+      "SWAT+ wrote these messages and carried on without that data. A finished run (success.fin) does not mean the inputs were all read.",
+      "Find out why each file is not found: wrong name, wrong folder, or an unsorted list (pcp.cli / tmp.cli).", ATTR.swatplus,
+      "diagnostics.out", "file not found"));
   }
 ],
 /* ─── SWAT2012 ──────────────────────────────────────── */
@@ -958,6 +1728,23 @@ swat2012: [
         "Null soil properties are a classic cause of runtime crashes and of implausible water-balance output.",
         "Repair the usersoil database entries and re-create the .sol files.", ATTR.swat,
         files[0], "(^|\\s)(null|nan)(\\s|$)"));
+  },
+  function referencedFiles(out){
+    /* Names sit back to back in .sub files (000010001.hru000010001.mgt...), so they are picked out by pattern, not by spaces. */
+    const EXT = "hru|mgt|sol|chm|gw|sdr|ops|pnd|swq|rte|wgn|sep|pcp|tmp|slr|hmd|wnd|lwq";
+    const re = new RegExp("(\\d{9}|[A-Za-z][\\w\\-]*)\\.(?:" + EXT + ")(?![A-Za-z])", "ig");
+    const have = new Set(FILENAMES.map(n=>n.split(/[\\/]/).pop().toLowerCase()));
+    const seen = new Set(), missing = [], from = {};
+    Object.keys(FILES).filter(n=>/\.(sub|hru)$|^fig\.fig$/.test(n)).forEach(n=>{
+      const txt = (FILES[n]||"").split(/\r?\n/).map(l=>l.split("|")[0]).join("\n");
+      let m; re.lastIndex = 0;
+      while((m = re.exec(txt))){ const f = m[0].toLowerCase(); if(!seen.has(f)){ seen.add(f); if(!have.has(f)){ missing.push(f); from[f] = n; } } }
+    });
+    if(missing.length)
+      out.push(finding("error","Input files named by the model are not in the folder", missing.slice(0,8).map(f=>f+" (named in "+from[f]+")").join(", ")+(missing.length>8?" …":""),
+        "SWAT2012 stops when it cannot open an input file that a .sub, .hru or fig.fig file names (checked by running SWAT2012 with a .sol file removed).",
+        "Restore the missing files or re-write the inputs from the interface.", ATTR.swat,
+        null, null));
   }
 ],
 /* ─── SWAT-MODFLOW ──────────────────────────────────── */
@@ -977,7 +1764,7 @@ swat_mf: [
     });
     if(bad.length)
       out.push(finding("warning","Low file-unit numbers in "+mfn, bad.slice(0,6).join(" · "),
-        "SWAT-MODFLOW reserves low Fortran unit numbers; conflicts cause silent crashes at startup (period 1, day 1).",
+        "Low Fortran unit numbers can collide with files that SWAT keeps open. Measured on the Middle Bosque model: of 9 values below 5000, 3 stopped the run (10, 11, 50) and 6 ran fine; every value of 5000 or more ran. It is a risk, not a certainty.",
         "Renumber the units in the .mfn to values &gt; 5000.", ATTR.swatmf,
         mfn, null));
   },
@@ -986,17 +1773,33 @@ swat_mf: [
     const cio = grab("file.cio");
     if(!dis || !cio) return;
     const m = cio.match(/^\s*(\d+)\s*\|\s*NBYR/m);
-    const txt = grab(dis)||"";
-    const line2 = txt.split(/\r?\n/).find(l=>nums(l).length>=4 && !l.trim().startsWith("#"));
-    if(m && line2){
-      const nper = nums(line2)[3];
-      const swatDays = (+m[1])*365;
-      if(nper && nper < swatDays)
-        out.push(finding("error","MODFLOW period shorter than SWAT period", dis,
-          `MODFLOW defines ${nper} stress periods but SWAT simulates ≈${swatDays} days. When MODFLOW runs out of stress periods the coupled model crashes or hangs.`,
-          "Extend the MODFLOW DIS stress periods so MODFLOW covers ≥ the SWAT simulation (community practice: SWAT period + ~100 days).", ATTR.swatmf,
-          dis, line2.replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
-    }
+    if(!m) return;
+    const lines = (grab(dis)||"").split(/\r?\n/);
+    /* header line: NLAY NROW NCOL NPER ITMUNI LENUNI */
+    const hdrLine = lines.find(l=>!l.trim().startsWith("#") && nums(l).length>=6);
+    if(!hdrLine) return;
+    const h = nums(hdrLine);
+    const nper = h[3];
+    const toDays = {1:1/86400, 2:1/1440, 3:1/24, 4:1, 5:365.25}[h[4]];
+    if(!toDays) return;                       /* time unit undefined: cannot compare, so say nothing */
+    /* stress-period lines: PERLEN NSTP TSMULT SS|TR (Fortran exponents such as E+004 or D+04 are accepted) */
+    const re = /^\s*([0-9.]+(?:[eEdD][+-]?\d+)?)\s+(\d+)\s+([0-9.]+(?:[eEdD][+-]?\d+)?)\s+(SS|TR)\b/i;
+    let total = 0, found = 0, hitLine = null;
+    lines.forEach(l=>{ const q = l.match(re); if(q){ total += parseFloat(q[1].replace(/[dD]/,"e")); found++; if(!hitLine) hitLine = l; } });
+    if(found !== nper) return;                /* could not read every stress period reliably: abstain rather than guess */
+    const totalDays = total*toDays;
+    const idaf = (cio.match(/^\s*(\d+)\s*\|\s*IDAF/m)||[])[1], idal = (cio.match(/^\s*(\d+)\s*\|\s*IDAL/m)||[])[1];
+    let swatDays = (+m[1])*365;
+    if(idaf && idal) swatDays = swatDays - (+idaf - 1) - (365 - (+idal));
+    if(totalDays < swatDays)
+      out.push(finding("error","MODFLOW time is shorter than the SWAT period", dis,
+        `The stress periods in the DIS file add up to ${Math.round(totalDays)} days (${nper} period${nper===1?"":"s"}, PERLEN summed), but SWAT simulates ≈${swatDays} days. SWAT-MODFLOW advances MODFLOW one day at a time through the stress periods, so when they run out the coupled run stops.`,
+        "Make the total PERLEN at least as long as the SWAT period (community practice: SWAT period + ~100 days).", ATTR.swatmf,
+        dis, hitLine.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"\\s+")));
+  },
+  function mfnRefs(out){
+    const mfn = Object.keys(FILES).find(n=>n.endsWith(".mfn"));
+    if(mfn) checkNameFile(out, mfn, ATTR.swatmf);
   },
   function linkFile(out){
     if(!Object.keys(FILES).some(n=>n.includes("swatmf_link")))
@@ -1009,19 +1812,7 @@ swat_mf: [
 modflow: [
   function namRefs(out){
     const nam = Object.keys(FILES).find(n=>n.endsWith(".nam"));
-    if(!nam) return;
-    const missing = [];
-    (grab(nam)||"").split(/\r?\n/).forEach(l=>{
-      if(/^#|^\s*$/.test(l)) return;
-      const p = l.trim().split(/\s+/);
-      const f = (p[2]||p[1]||"").toLowerCase().split(/[\\\/]/).pop();
-      if(f && /\.\w+$/.test(f) && grab(f)===null && !/\.(hds|cbb|cbc|bud|grb)$/.test(f)) missing.push(f);
-    });
-    if(missing.length)
-      out.push(finding("error","Name file references files that are not in the folder", nam+" → "+missing.slice(0,8).join(", "),
-        "MODFLOW aborts immediately when a package file listed in the name file cannot be opened.",
-        "Copy the missing files next to the name file or fix the paths (avoid long paths and spaces).", ATTR.modflow,
-        nam, missing[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
+    if(nam) checkNameFile(out, nam, ATTR.modflow);
   },
   function lstDiagnostics(out){
     const lst = Object.keys(FILES).find(n=>/\.(lst|list)$/.test(n));
@@ -1063,9 +1854,20 @@ modflow: [
 generic: [
   function emptyFiles(out){
     const empt = Object.keys(FILES).filter(n=>FILES[n]==="");
-    if(empt.length)
-      out.push(finding("warning","Empty (0-byte) files detected", empt.slice(0,8).join(", ")+(empt.length>8?" …":""),
-        "Zero-byte input files usually mean an interrupted write by the GUI/editor and cause end-of-file crashes.",
+    if(!empt.length) return;
+    /* Many empty files are normal (outputs and placeholders such as hru.dat, rch.dat, output.pst).
+       Only an empty file that a control file names as an input is a problem. */
+    const ctrl = Object.keys(FILES).filter(n=>/(^file\.cio$|^fig\.fig$|\.(nam|mfn|sub|cli)$)/.test(n));
+    /* In file.cio-style lines ("name | LABEL: description") only the text before the bar counts; names that appear in the
+       description (e.g. output.pst) are not inputs. Optional files such as cst.cst (forecast) are excluded by extension.
+       SWAT2012 .sub files write several names back to back with no separator (000010001.hru000010001.mgt...), so a
+       name is looked up as a substring of the control text rather than as a whitespace-separated word. */
+    const ctrlText = ctrl.map(n=>(FILES[n]||"").split(/\r?\n/).map(l=>(l.includes("|") ? l.split("|")[0] : l).toLowerCase()).join("\n")).join("\n");
+    const MUST_READ = /\.(pcp|tmp|slr|hmd|wnd|wgn|sol|mgt|hru|sub|gw|rte|swq|chm|pnd|wus|bsn|dis|bas|upw|lpf|nwt|nam|mfn|pcg|oc|rch|riv|ghb|chd|drn|wel|sfr|evt|cli|con|sim|prt)$/i;
+    const bad = empt.filter(n=>MUST_READ.test(n) && ctrlText.includes(n));
+    if(bad.length)
+      out.push(finding("warning","Empty (0-byte) files that the model reads", bad.slice(0,8).join(", ")+(bad.length>8?" …":""),
+        "These files are named as inputs by the control files but contain nothing. An empty input file usually means an interrupted write by the GUI/editor and causes end-of-file crashes.",
         "Re-write the affected inputs from the interface.", ATTR.doc));
   },
   function pathHygiene(out){
@@ -1078,16 +1880,59 @@ generic: [
 ]
 };
 
+const RULES_MF6 = [
+  function mf6Refs(out){
+    const have = new Set(FILENAMES.map(n=>n.split(/[\\/]/).pop().toLowerCase()));
+    const names = Object.keys(FILES).filter(n=>n==="mfsim.nam" || /\.nam$/.test(n));
+    const missing = [];
+    names.forEach(n=>{
+      let inBlock = false;
+      (FILES[n]||"").split(/\r?\n/).forEach(l=>{
+        const t = l.trim();
+        if(/^BEGIN\s+/i.test(t)){ inBlock = true; return; }
+        if(/^END\s+/i.test(t)){ inBlock = false; return; }
+        if(!inBlock || !t || t.startsWith("#")) return;
+        const p = t.split(/\s+/);
+        if(/^[A-Za-z0-9]+6(-[A-Za-z0-9]+6)?$/.test(p[0]) && p[1] && /\.\w+$/.test(p[1])){
+          const f = p[1].toLowerCase().split(/[\\/]/).pop();
+          if(!have.has(f)) missing.push(f+" (named in "+n+")");
+        }
+      });
+    });
+    if(missing.length)
+      out.push(finding("error","MODFLOW 6 name files reference files that are not in the folder", missing.slice(0,8).join(", ")+(missing.length>8?" …":""),
+        "MODFLOW 6 stops with an error report as soon as a package file listed in mfsim.nam or a model name file cannot be opened (checked by running MODFLOW 6 with gwf.npf removed).",
+        "Restore the missing files or correct the names in the name files.", ATTR.modflow, null, null));
+  },
+  function mf6Tdis(out){
+    const tdis = Object.keys(FILES).find(n=>n.endsWith(".tdis"));
+    if(!tdis) return;
+    const t = FILES[tdis]||"";
+    const dim = t.match(/BEGIN\s+dimensions[\s\S]*?\bNPER\s+(\d+)[\s\S]*?END\s+dimensions/i);
+    const blk = t.match(/BEGIN\s+perioddata\s*\n([\s\S]*?)END\s+perioddata/i);
+    if(!dim || !blk) return;
+    const rows = blk[1].split(/\r?\n/).map(l=>l.trim()).filter(l=>l && !l.startsWith("#")).length;
+    if(rows !== +dim[1])
+      out.push(finding("error","NPER does not match the stress periods defined", tdis,
+        `The dimensions block says NPER = ${dim[1]} but the perioddata block defines ${rows} period(s). MODFLOW 6 stops when they disagree (checked by running MODFLOW 6 with NPER changed).`,
+        "Make NPER equal to the number of rows in perioddata.", ATTR.modflow, tdis, "NPER"));
+  }
+];
+RULES.modflow6 = RULES_MF6;
+
 function runChecks(){
   const el = $("results");
   if(!Object.keys(FILES).length){ el.innerHTML='<span class="muted">No readable text files found.</span>'; return; }
   let fw = $("fwSelect").value;
-  if(fw==="auto") fw = detectFramework();
+  const manual = fw!=="auto";
+  if(!manual) fw = detectFramework();
   const out = [];
   (RULES[fw]||[]).forEach(r=>{ try{ r(out); }catch(_){} });
   RULES.generic.forEach(r=>{ try{ r(out); }catch(_){} });
-  const label = {swat_plus:"SWAT+",swat2012:"SWAT2012",swat_mf:"SWAT-MODFLOW",modflow:"MODFLOW"}[fw];
-  el.innerHTML = `<div class="muted" style="margin-bottom:8px;">Framework: <b>${label}</b> · ${Object.keys(FILES).length} files scanned · ${(RULES[fw]||[]).length + RULES.generic.length} rule groups applied</div>`;
+  const label = {swat_plus:"SWAT+",swat2012:"SWAT2012",swat_mf:"SWAT-MODFLOW",modflow:"MODFLOW (2005/NWT/USG)",modflow6:"MODFLOW 6",apex:"APEX"}[fw] || "not identified";
+  const sysNow = CHAR && CHAR.systems[SEL_SYS];
+  const covTxt = fw ? HDA.ruleCoverageText(manual ? {coupling:null} : sysNow, fw) : "No model-specific rules ran. Only the generic file checks ran.";
+  el.innerHTML = `<div class="muted" style="margin-bottom:4px;">Model: <b>${label}</b>${manual?" (chosen by you)":""} · ${Object.keys(FILES).length} files scanned · ${(RULES[fw]||[]).length + RULES.generic.length} rule groups applied</div>` + `<div class="muted" style="margin-bottom:8px;">${esc(covTxt)}</div>`;
   const div = document.createElement("div");
   renderFindings(out, div);
   el.appendChild(div);

@@ -1,11 +1,10 @@
 # Hydro-Model Diagnostic Assistant
 
-A free, private, in-browser pre-run checker for **SWAT2012, SWAT+, SWAT-MODFLOW, and MODFLOW**.
+A free, private, in-browser pre-run checker. It first works out **what you gave it** (SWAT2012, SWAT+ rev 61/62 and older formats, SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 2005/NWT/USG/6, APEX, APEX-MODFLOW, and the groundwater module or coupling in use), then checks it. Full rule sets exist for SWAT2012, SWAT+, SWAT-MODFLOW and MODFLOW; MODFLOW 6 has two basic checks; APEX is identified only.
 Paste an error message or drop your model folder, and get an instant diagnosis — no upload,
 no account, no server.
 
 **Live tool:** https://JosephAuresy.github.io/hydro-diagnostic-assistant/
-*(replace once GitHub Pages is enabled — see below)*
 
 ## What this is
 
