@@ -232,16 +232,71 @@
   .method-links button.tab-link { background:none; border:none; color:var(--accent-text);
               font-size:13px; cursor:pointer; padding:4px 0; }
   .method-links button.tab-link:hover { text-decoration:underline; }
+  /* ---- hero ---- */
+  .hero { text-align:center; margin-bottom:22px; }
+  .hero .eyebrow { display:inline-block; font-size:11px; font-weight:500; letter-spacing:.8px; text-transform:uppercase;
+                   color:var(--accent-text); background:var(--accent-bg); padding:4px 12px; border-radius:20px; margin-bottom:12px; }
+  .hero h1 { font-size:30px; line-height:1.15; letter-spacing:-.3px; margin:0 0 10px; }
+  .hero .lead { font-size:16.5px; line-height:1.55; color:var(--text); max-width:620px; margin:0 auto 20px; }
+  .recog { display:grid; grid-template-columns:1fr 1.6fr; gap:12px; text-align:left; margin:0 0 10px; }
+  .rgroup { background:var(--surface); border:0.5px solid var(--border); border-radius:12px; padding:12px 14px; }
+  .rtitle { font-size:11px; font-weight:500; letter-spacing:.6px; text-transform:uppercase; color:var(--muted); margin-bottom:8px; }
+  .rlist { display:flex; flex-wrap:wrap; gap:6px; }
+  .rchip { display:block; flex:1 1 auto; background:var(--surface-1); border-left:3px solid var(--faint); border-radius:6px; padding:5px 10px; font-size:13px; }
+  .rchip b { font-weight:500; display:block; }
+  .rchip i { font-style:normal; font-size:11px; color:var(--muted); }
+  .rchip.full { border-left-color:var(--green); }
+  .rchip.part { border-left-color:var(--amber); }
+  .rchip.id { border-left-color:var(--faint); }
+  .legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; font-size:11.5px; color:var(--muted); margin:0 0 16px; }
+  .legend .dot { display:inline-block; width:9px; height:9px; border-radius:50%; margin-right:6px; vertical-align:baseline; }
+  .dot.full { background:var(--green); } .dot.part { background:var(--amber); } .dot.id { background:var(--faint); }
+  .versions { display:flex; gap:12px; align-items:flex-start; text-align:left; background:var(--accent-bg); border:0.5px solid var(--border);
+              border-radius:12px; padding:12px 14px; font-size:13.5px; line-height:1.55; color:var(--text); margin:0 0 14px; }
+  .versions .vicon { font-size:20px; color:var(--accent-text); margin-top:1px; }
+  .versions code { font-size:12px; background:var(--surface); padding:1px 5px; border-radius:4px; }
+  .hero .proof { font-size:12.5px; color:var(--muted); margin:0 0 12px; }
+  @media (max-width:640px){ .recog { grid-template-columns:1fr; } .hero h1 { font-size:25px; } .hero .lead { font-size:15px; } }
 </style>
 </head>
 <body>
 <div class="wrap">
-  <header class="top">
+  <header class="top hero">
+    <div class="eyebrow">Free &middot; private &middot; no upload</div>
     <h1>Hydro-model diagnostic assistant</h1>
-    <p class="sub">Recognizes <b>SWAT2012 · SWAT+ · SWAT-MODFLOW · SWAT+MODFLOW · MODFLOW · MODFLOW 6 · APEX · APEX-MODFLOW</b>
-    from your files, then checks them. Rules come from ~9,100 community-reported issues (2009–2026) and were tested on real models.
-    Full checks: SWAT2012, SWAT+, SWAT-MODFLOW, MODFLOW. Basic checks: MODFLOW 6. APEX: identified only.</p>
-    <span class="privacy"><i class="ti ti-lock" aria-hidden="true"></i> Runs in your browser — your files never leave your computer.</span>
+    <p class="lead">Drop your model folder. It works out <b>what it is</b> &mdash; the model, its version, the groundwater module and how they are coupled &mdash; and checks it <b>before you run</b>.</p>
+
+    <div class="recog">
+      <div class="rgroup">
+        <div class="rtitle">Surface models</div>
+        <div class="rlist">
+          <span class="rchip full"><b>SWAT2012</b><i>full checks</i></span>
+          <span class="rchip full"><b>SWAT+</b><i>full checks</i></span>
+          <span class="rchip id"><b>APEX</b><i>identified</i></span>
+        </div>
+      </div>
+      <div class="rgroup">
+        <div class="rtitle">Groundwater &amp; couplings</div>
+        <div class="rlist">
+          <span class="rchip full"><b>SWAT+ / gwflow</b><i>SWAT+ checks + gwflow detection</i></span>
+          <span class="rchip full"><b>SWAT-MODFLOW</b><i>full checks</i></span>
+          <span class="rchip full"><b>MODFLOW 2005 / NWT / USG</b><i>full checks</i></span>
+          <span class="rchip part"><b>MODFLOW 6</b><i>basic checks</i></span>
+          <span class="rchip part"><b>SWAT+MODFLOW</b><i>SWAT+ side checked</i></span>
+          <span class="rchip part"><b>SWAT+ &rarr; MODFLOW 6 (MF6SWATP)</b><i>identified + 1 check</i></span>
+          <span class="rchip id"><b>APEX-MODFLOW</b><i>identified</i></span>
+        </div>
+      </div>
+    </div>
+    <div class="legend"><span><i class="dot full"></i>full rule set</span><span><i class="dot part"></i>basic / partial</span><span><i class="dot id"></i>identified only</span></div>
+
+    <div class="versions">
+      <i class="ti ti-git-compare vicon" aria-hidden="true"></i>
+      <div><b>It reads versions too.</b> SWAT+ <b>rev 60 &rarr; 61 &rarr; 62</b> and the older pre-Editor files, the SWAT+ Editor version, folders that mix revisions, the rev 61 / rev 62 <code>codes.bsn</code> layout, the gwflow grid (structured or unstructured) and file generation, the SWAT2012 revision, MODFLOW 6 version and APEX build.</div>
+    </div>
+
+    <p class="proof">Rules built from ~9,100 community-reported issues (2009&ndash;2026), then audited on 141 real models that ran.</p>
+    <span class="privacy"><i class="ti ti-lock" aria-hidden="true"></i> Runs in your browser &mdash; your files never leave your computer.</span>
   </header>
 
   <div class="picker-grid">
