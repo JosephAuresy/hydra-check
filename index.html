@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Hydro-Model Diagnostic Assistant — SWAT / SWAT+ / MODFLOW / APEX and their couplings</title>
+<title>Hydra Check — SWAT / SWAT+ / MODFLOW / APEX and their couplings</title>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
 <style>
   :root {
@@ -237,6 +237,7 @@
   .hero .eyebrow { display:inline-block; font-size:11px; font-weight:500; letter-spacing:.8px; text-transform:uppercase;
                    color:var(--accent-text); background:var(--accent-bg); padding:4px 12px; border-radius:20px; margin-bottom:12px; }
   .hero h1 { font-size:30px; line-height:1.15; letter-spacing:-.3px; margin:0 0 10px; }
+  .hero .tagline { font-size:15px; color:var(--muted); margin:-4px 0 12px; }
   .hero .lead { font-size:16.5px; line-height:1.55; color:var(--text); max-width:620px; margin:0 auto 20px; }
   .recog { display:grid; grid-template-columns:1fr 1fr; gap:12px; text-align:left; margin:0 0 10px; align-items:start; }
   .rleft { display:flex; flex-direction:column; gap:12px; }
@@ -264,7 +265,8 @@
 <div class="wrap">
   <header class="top hero">
     <div class="eyebrow">Free &middot; private &middot; no upload</div>
-    <h1>Hydro-model diagnostic assistant</h1>
+    <h1>Hydra Check</h1>
+    <div class="tagline">Understand and validate hydrologic models</div>
     <p class="lead">Drop your model folder. It works out <b>what it is</b> &mdash; the model, its version, the groundwater module and how they are coupled &mdash; and checks it <b>before you run</b>.</p>
 
     <div class="recog">
@@ -676,7 +678,7 @@
 <script>
 /*<<HDA:src:start>>*/
 /* ---- src/characterize.js ---- */
-/* Hydro-Model Diagnostic Assistant: model characterization.
+/* Hydra Check: model characterization.
  *
  * Input : a list of entries {path, size, text}  (text is null for files that were not read as text)
  * Output: what the uploaded files are -- surface model, version, groundwater component, coupling --
@@ -2248,7 +2250,7 @@ function buildReport(){
   const files   = f("rFiles")     || "(not specified)";
 
   return `[${fw}] Issue report
-Generated with the Hydro-Model Diagnostic Assistant — please fill any (…) fields before posting.
+Generated with Hydra Check — please fill any (…) fields before posting.
 
 Framework / Version : ${fw} — ${version}
 Operating system     : ${os}

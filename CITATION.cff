@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this tool, please cite the associated manuscript (in preparation)."
-title: "Hydro-Model Diagnostic Assistant"
+title: "Hydra Check"
 type: software
 authors:
   - family-names: Serrano
