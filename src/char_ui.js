@@ -117,16 +117,35 @@
     groundwaterLines(s).forEach(function (x) { rows.push('<b>Groundwater model:</b> ' + x); });
     rows.forEach(function (r) { h += '<div style="margin-top:4px;font-size:13.5px;">' + r + '</div>'; });
     h += '</div>';
-    function list(title, arr, cls) {
+    /* Advice (src/advice.js) is looked up by the message text. With advice, the plain words are shown by default and the original
+       message sits in the technical view; without advice the message is shown as before. */
+    function adv(kind, x) { return HDA.charAdviceFor ? HDA.charAdviceFor(kind, x) : null; }
+    var anyAdvice = (s.problems || []).some(function (p) { return adv('problems', p.title); }) ||
+      ['missing', 'ambiguity', 'notes'].some(function (k) { return (s[k] || []).some(function (x) { return adv(k, x); }); });
+    if (anyAdvice && HDA.adviceSwitchHTML) h += HDA.adviceSwitchHTML();
+    function item(kind, x) {
+      var a = adv(kind, x);
+      if (!a) return '<li>' + esc(x) + '</li>';
+      return '<li class="advitem">' + HDA.adviceChipHTML(a) + HDA.advicePlainHTML(a) +
+        '<div class="adv-tech"><div>' + esc(x) + '</div>' + HDA.adviceTechHTML(a) + '</div>' + HDA.adviceEngineHTML(a) + '</li>';
+    }
+    function list(title, kind, arr, cls) {
       if (!arr.length) return '';
-      return '<div class="finding ' + cls + '"><span class="head">' + title + '</span><ul style="margin:6px 0 0 18px;">' + arr.map(function (x) { return '<li>' + esc(x) + '</li>'; }).join('') + '</ul></div>';
+      return '<div class="finding ' + cls + '"><span class="head">' + title + '</span><ul style="margin:6px 0 0 18px;">' + arr.map(function (x) { return item(kind, x); }).join('') + '</ul></div>';
     }
     (s.problems || []).forEach(function (p) {
-      h += '<div class="finding error"><span class="head">' + esc(p.title) + '</span> <span class="badge error">WILL STOP THE RUN</span><div style="margin-top:4px;">' + esc(p.detail) + '</div><div class="fix"><b>Fix:</b> ' + esc(p.fix) + '</div><div class="attr">' + esc(p.basis) + '</div></div>';
+      var a = adv('problems', p.title);
+      h += '<div class="finding error"><span class="head">' + esc(p.title) + '</span> <span class="badge error">WILL STOP THE RUN</span>' + (a ? HDA.adviceChipHTML(a) : '');
+      if (a) {
+        h += HDA.advicePlainHTML(a) + '<div class="adv-tech"><div style="margin-top:4px;">' + esc(p.detail) + '</div><div class="fix"><b>Fix:</b> ' + esc(p.fix) + '</div>' +
+             HDA.adviceTechHTML(a) + '<div class="attr">' + esc(p.basis) + '</div></div>' + HDA.adviceEngineHTML(a) + '</div>';
+      } else {
+        h += '<div style="margin-top:4px;">' + esc(p.detail) + '</div><div class="fix"><b>Fix:</b> ' + esc(p.fix) + '</div><div class="attr">' + esc(p.basis) + '</div></div>';
+      }
     });
-    h += list('Missing, and why it matters', s.missing, 'warning');
-    h += list('Could be read two ways', s.ambiguity, 'warning');
-    h += list('Worth knowing', s.notes, 'ok');
+    h += list('Missing, and why it matters', 'missing', s.missing, 'warning');
+    h += list('Could be read two ways', 'ambiguity', s.ambiguity, 'warning');
+    h += list('Worth knowing', 'notes', s.notes, 'ok');
     h += '<div class="muted" style="margin:8px 0;"><b>What ran:</b> ' + esc(HDA.ruleCoverageText(s, ruleKey)) + '</div>';
     var ev = evidenceList(s);
     if (ev.length) {

@@ -6,7 +6,7 @@ src/ is the editable source. Run:  python build.py
 import io, os, sys
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-ORDER = ['characterize.js', 'char_ui.js']          # dependency order
+ORDER = ['characterize.js', 'advice.js', 'char_ui.js']          # dependency order
 START, END = '/*<<HDA:src:start>>*/', '/*<<HDA:src:end>>*/'
 
 def main():

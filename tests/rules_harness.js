@@ -40,6 +40,7 @@ ctx.FILES = {};
 ctx.FILENAMES = [];
 vm.runInContext(code, ctx, { filename: 'index.html(rules)' });
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'characterize.js'), 'utf8'), ctx, { filename: 'characterize.js' });
+vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'advice.js'), 'utf8'), ctx, { filename: 'advice.js' });
 vm.runInContext(fs.readFileSync(path.join(__dirname, '..', 'src', 'char_ui.js'), 'utf8'), ctx, { filename: 'char_ui.js' });
 const HDA = ctx.HDA;
 const RULES = ctx.__RULES;
