@@ -1740,6 +1740,35 @@ swat_plus: [
         "Sort the file names in the list alphabetically (ASCII order), keep the two header lines, and run again.", ATTR.swatplus,
         "pcp.cli", null));
   },
+  function tableRows(out){
+    /* SWAT+ tables have a header of column names on line 2 and one row per object. A row with a different number of fields
+       than the header is read shifted or short. Only files that never showed such a row in 137 working models are checked
+       (hru-data.hru alone: 3.9 million rows, none short). In a test that dropped the last field of every hru-data.hru row,
+       SWAT+ still finished and 54 outputs changed, the largest by 200%. */
+    const FILES_OK = ["hru-data.hru","topography.hyd","hydrology.hyd","field.fld","aquifer.aqu","channel-lte.cha","landuse.lum","soil_plant.ini","ls_unit.ele","rout_unit.ele","weather-sta.cli","reservoir.res"];
+    const hits = [];
+    FILES_OK.forEach(n=>{
+      const t = grab(n); if(t===null) return;
+      const lines = t.split(/\r?\n/);
+      if(lines.length<4) return;
+      const hdr = lines[1].trim().split(/\s+/);
+      if(hdr.length<3 || /^[-\d.]+$/.test(hdr[0]) || !/[A-Za-z_]/.test(hdr[1])) return;   /* line 2 must be a header of names */
+      let rows=0, bad=0, first=0;
+      for(let i=2;i<lines.length;i++){
+        const l = lines[i].trim(); if(!l) continue;
+        rows++;
+        if(l.split(/\s+/).length!==hdr.length){ bad++; if(!first) first=i+1; }
+      }
+      if(bad) hits.push({n, rows, bad, first, cols:hdr.length, got:lines[first-1].trim().split(/\s+/).length});
+    });
+    if(!hits.length) return;
+    const fatal = hits.some(h=>h.n==="hru-data.hru");
+    out.push(finding(fatal?"error":"warning","Rows with a different number of fields than the header",
+      hits.map(h=>`${h.n}: ${h.bad} of ${h.rows} rows (line ${h.first} has ${h.got} fields, the header has ${h.cols})`).join(" · "),
+      "SWAT+ reads each row by position. A row with fewer or more fields than the header column list is read shifted or incomplete, and the run can still finish with changed results. Rows like this did not appear in any of 137 working models for these files." + (fatal ? " Checked by removing the last field of every hru-data.hru row: the run finished and 54 outputs changed, the largest by 200%." : ""),
+      "Compare the rows with the header and with a working copy of the file, then re-write the file from the Editor / QSWAT+.", ATTR.swatplus,
+      hits[0].n, null));
+  },
   function diagLog(out){
     /* If the folder still holds the diagnostics.out of a finished run, the engine itself says what it could not find. */
     const d = grab("diagnostics.out");
