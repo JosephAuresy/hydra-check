@@ -29,13 +29,13 @@
       swat_mf: 'SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).',
       modflow: 'MODFLOW-2005/NWT/USG rule set. There are no MODFLOW 6 rules yet.',
       modflow6: 'Two MODFLOW 6 checks: that every file named in the name files exists, and that NPER matches the stress periods defined. Nothing else is checked yet (not convergence, not packages, not units).',
-      apex: 'No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.'
+      apex: 'Basic APEX checks only: empty control files (APEXCONT, APEXRUN, APEXFILE) and the APEX-MODFLOW link file. Nothing else in APEX is checked yet.'
     }[ruleKey] || 'No model-specific rules apply; only the generic file checks ran.';
     var extra = '';
     if (c === 'swatplus-gwflow') extra = ' There are no gwflow-specific rules beyond the basic file checks.';
     if (c === 'swatplus-mf6swatp') extra = ' The only MF6SWATP check is that gwflow is off when mf6swatp.cfg is present; the exchange itself is not checked yet.';
     if (c === 'swatplus-modflow-nwt' || c === 'swatplus-modflow6' || c === 'swatplus-modflow-legacy') extra = ' There are no checks for the coupling itself yet, so only the SWAT+ side was examined.';
-    if (c === 'apex-modflow') extra = ' The APEX-MODFLOW coupling is not checked yet.';
+    if (c === 'apex-modflow') extra = ' The exchange between APEX and MODFLOW is not checked beyond the link file.';
     return base + extra;
   };
 

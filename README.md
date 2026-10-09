@@ -2,7 +2,7 @@
 
 **Hydra Check** — understand and validate existing hydrologic models. It is the first of a planned family: *Hydra Build* (construct models automatically from specifications) and *Hydra Hybrid* (combine physics-based and data-driven components).
 
-A free, private, in-browser pre-run checker. It first works out **what you gave it** (SWAT2012, SWAT+ rev 61/62 and older formats, SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 2005/NWT/USG/6, APEX, APEX-MODFLOW, and the groundwater module or coupling in use), then checks it. Full rule sets exist for SWAT2012, SWAT+, SWAT-MODFLOW and MODFLOW; MODFLOW 6 has two basic checks; APEX is identified only.
+A free, private, in-browser pre-run checker. It first works out **what you gave it** (SWAT2012, SWAT+ rev 61/62 and older formats, SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 2005/NWT/USG/6, APEX, APEX-MODFLOW, and the groundwater module or coupling in use), then checks it. Full rule sets exist for SWAT2012, SWAT+, SWAT-MODFLOW and MODFLOW; MODFLOW 6 has two basic checks; APEX has basic checks (empty control files, the APEX-MODFLOW link file).
 Paste an error message or drop your model folder, and get an instant diagnosis — no upload,
 no account, no server.
 

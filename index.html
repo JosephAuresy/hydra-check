@@ -276,7 +276,7 @@
           <div class="rlist">
             <span class="rchip full"><b>SWAT2012</b><i>full checks</i></span>
             <span class="rchip full"><b>SWAT+</b><i>full checks</i></span>
-            <span class="rchip id"><b>APEX</b><i>identified</i></span>
+            <span class="rchip part"><b>APEX</b><i>basic checks</i></span>
           </div>
         </div>
         <div class="rgroup">
@@ -294,7 +294,7 @@
           <span class="rchip full"><b>SWAT-MODFLOW</b><i>full checks</i></span>
           <span class="rchip part"><b>SWAT+MODFLOW</b><i>SWAT+ side checked</i></span>
           <span class="rchip part"><b>SWAT+ &rarr; MODFLOW 6 (MF6SWATP)</b><i>identified + 1 check</i></span>
-          <span class="rchip id"><b>APEX-MODFLOW</b><i>identified</i></span>
+          <span class="rchip part"><b>APEX-MODFLOW</b><i>link file checked</i></span>
         </div>
       </div>
     </div>
@@ -389,7 +389,7 @@
         <option value="swat_mf">SWAT-MODFLOW</option>
         <option value="modflow">MODFLOW (2005 / NWT / USG)</option>
         <option value="modflow6">MODFLOW 6 (identification only)</option>
-        <option value="apex">APEX (identification only)</option>
+        <option value="apex">APEX (basic checks)</option>
       </select>
     </div>
     <div class="card">
@@ -1216,13 +1216,13 @@
       swat_mf: 'SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).',
       modflow: 'MODFLOW-2005/NWT/USG rule set. There are no MODFLOW 6 rules yet.',
       modflow6: 'Two MODFLOW 6 checks: that every file named in the name files exists, and that NPER matches the stress periods defined. Nothing else is checked yet (not convergence, not packages, not units).',
-      apex: 'No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.'
+      apex: 'Basic APEX checks only: empty control files (APEXCONT, APEXRUN, APEXFILE) and the APEX-MODFLOW link file. Nothing else in APEX is checked yet.'
     }[ruleKey] || 'No model-specific rules apply; only the generic file checks ran.';
     var extra = '';
     if (c === 'swatplus-gwflow') extra = ' There are no gwflow-specific rules beyond the basic file checks.';
     if (c === 'swatplus-mf6swatp') extra = ' The only MF6SWATP check is that gwflow is off when mf6swatp.cfg is present; the exchange itself is not checked yet.';
     if (c === 'swatplus-modflow-nwt' || c === 'swatplus-modflow6' || c === 'swatplus-modflow-legacy') extra = ' There are no checks for the coupling itself yet, so only the SWAT+ side was examined.';
-    if (c === 'apex-modflow') extra = ' The APEX-MODFLOW coupling is not checked yet.';
+    if (c === 'apex-modflow') extra = ' The exchange between APEX and MODFLOW is not checked beyond the link file.';
     return base + extra;
   };
 
@@ -1868,8 +1868,8 @@ swat_mf: [
   },
   function linkFile(out){
     if(!Object.keys(FILES).some(n=>n.includes("swatmf_link")))
-      out.push(finding("warning","swatmf_link.txt not found","swatmf_link.txt",
-        "The link file controls coupling outputs and options; without it the exchange is not configured.",
+      out.push(finding("error","swatmf_link.txt not found","swatmf_link.txt",
+        "SWAT-MODFLOW reads this link file at start-up; without it the run crashes with an end-of-file error (checked by deleting it from a working model).",
         "Re-run the linking step in QSWATMOD to regenerate it.", ATTR.swatmf));
   }
 ],
@@ -1930,9 +1930,12 @@ generic: [
     const ctrlText = ctrl.map(n=>(FILES[n]||"").split(/\r?\n/).map(l=>(l.includes("|") ? l.split("|")[0] : l).toLowerCase()).join("\n")).join("\n");
     const MUST_READ = /\.(pcp|tmp|slr|hmd|wnd|wgn|sol|mgt|hru|sub|gw|rte|swq|chm|pnd|wus|bsn|dis|bas|upw|lpf|nwt|nam|mfn|pcg|oc|rch|riv|ghb|chd|drn|wel|sfr|evt|cli|con|sim|prt)$/i;
     const bad = empt.filter(n=>MUST_READ.test(n) && ctrlText.includes(n));
+    /* measured: an empty time.sim made SWAT+ crash (floating divide by zero) and an empty .sol made SWAT2012 crash (end-of-file) */
+    const fatal = bad.some(n=>/^time\.sim$|^\d+\.sol$/.test(n));
     if(bad.length)
-      out.push(finding("warning","Empty (0-byte) files that the model reads", bad.slice(0,8).join(", ")+(bad.length>8?" …":""),
-        "These files are named as inputs by the control files but contain nothing. An empty input file usually means an interrupted write by the GUI/editor and causes end-of-file crashes.",
+      out.push(finding(fatal?"error":"warning","Empty (0-byte) files that the model reads", bad.slice(0,8).join(", ")+(bad.length>8?" …":""),
+        "These files are named as inputs by the control files but contain nothing. An empty input file usually means an interrupted write by the GUI/editor and causes end-of-file crashes."
+          + (fatal ? " Checked by emptying time.sim in a working SWAT+ model and a .sol file in a working SWAT2012 model: both runs crashed." : ""),
         "Re-write the affected inputs from the interface.", ATTR.doc));
   },
   function pathHygiene(out){
@@ -1984,6 +1987,24 @@ const RULES_MF6 = [
   }
 ];
 RULES.modflow6 = RULES_MF6;
+
+/* ─── APEX / APEX-MODFLOW (basic) ─────────────────── */
+RULES.apex = [
+  function apexControl(out){
+    const empty = ["apexcont.dat","apexrun.dat","apexfile.dat"].filter(n=>Object.keys(FILES).some(k=>k.toLowerCase().split(/[\\/]/).pop()===n && FILES[k]===""));
+    if(empty.length)
+      out.push(finding("error","Empty APEX control files", empty.join(", ").toUpperCase(),
+        "APEX reads its control and run-list files at start-up. An empty one stops the run with an end-of-file error (checked by emptying APEXCONT.DAT in a working model).",
+        "Restore the file from a backup or regenerate it with the APEX editor.", ATTR.doc));
+  },
+  function apexmfLink(out){
+    const names = FILENAMES.map(n=>n.split(/[\\/]/).pop().toLowerCase());
+    if(names.includes("apexmf.con") && !names.includes("apexmf_link.txt"))
+      out.push(finding("error","apexmf_link.txt not found","apexmf_link.txt",
+        "This folder has apexmf.con, so it is an APEX-MODFLOW model, and APEX-MODFLOW reads apexmf_link.txt at start-up. Without it the run crashes with an end-of-file error (checked by deleting it from a working model). The file normally sits in the MODFLOW folder.",
+        "Restore apexmf_link.txt (check the MODFLOW sub-folder of your APEX-MODFLOW project) or regenerate it with the APEX-MODFLOW setup.", ATTR.doc));
+  }
+];
 
 function runChecks(){
   const el = $("results");
