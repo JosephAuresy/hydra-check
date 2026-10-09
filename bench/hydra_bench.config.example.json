@@ -1,0 +1,70 @@
+{
+ "_comment": "Copy this file to hydra_bench.config.json (git-ignored) and replace every placeholder. Use absolute paths with forward slashes. Any key can instead be given as an environment variable HYDRA_BENCH_<KEY> (dots become underscores, e.g. HYDRA_BENCH_MODELS_MF6; lists as JSON text). A missing key stops the script and names it. No engine or model is distributed with this repository.",
+ "_comment_work_root": "Folder where the benchmark makes copies of the models and writes results.json, baseline.json, ... Keep it OUTSIDE every model folder; the original models are never modified.",
+ "work_root": "/path/to/bench_runs",
+ "_comment_node_path": "Node.js executable used to run bench/tool_report.js. A full path, or just node if it is on PATH.",
+ "node_path": "node",
+ "_comment_models": "Folder of one WORKING model per engine: the folder that holds the model input files (for SWAT+ the TxtInOut folder). Faults are injected into copies of these.",
+ "models": {
+  "swat2012": "/path/to/swat2012_model",
+  "swatplus_p29": "/path/to/swatplus_model/Scenarios/Default/TxtInOut",
+  "swatmf": "/path/to/swat_modflow_model",
+  "apex": "/path/to/apex_model",
+  "apexmf": "/path/to/apex_modflow_model",
+  "mf6": "/path/to/modflow6_model"
+ },
+ "_comment_executables": "The engine executable that runs each model above. You supply them; none is distributed. It is copied into every work folder and run there. For mf6, libmf6.dll next to mf6.exe is copied as well.",
+ "executables": {
+  "swat2012": "/path/to/swat2012.exe",
+  "swatplus_p29": "/path/to/SWAT+.exe",
+  "swatmf": "/path/to/swat_modflow.exe",
+  "apex": "/path/to/apex.exe",
+  "apexmf": "/path/to/apexmf.exe",
+  "mf6": "/path/to/mf6.exe"
+ },
+ "_comment_audit_targets": "Model folders for tests/audit_fp.js (false-positive audit) and tests/scan_rows.js. set = label for the table; status = published | reference to treat a folder as working without a success.fin marker; expand_prefix = use every sub-folder of dir whose name starts with it. Absent folders are skipped.",
+ "audit_targets": [
+  {
+   "dir": "/path/to/folder_with_TxtInOut_variants",
+   "set": "Variants",
+   "expand_prefix": "TxtInOut_"
+  },
+  {
+   "dir": "/path/to/a_swatplus_TxtInOut",
+   "set": "My models"
+  },
+  {
+   "dir": "/path/to/a_published_model",
+   "set": "Published",
+   "status": "published"
+  },
+  {
+   "dir": "/path/to/a_reference_model",
+   "set": "Reference",
+   "status": "reference"
+  }
+ ],
+ "_comment_rules_real_folders": "tests/run_rules_node.js: model folders that RAN; the rules must raise no ERROR on them. With no configuration at all these cases are skipped (the synthetic cases still run); with a configuration the key is required.",
+ "rules_real_folders": [
+  {
+   "name": "a model that ran",
+   "dir": "/path/to/a_working_model"
+  }
+ ],
+ "_comment_rules_true_positive_folders": "tests/run_rules_node.js: folders where an ERROR whose title matches the regular expression pattern is expected (a model that ran but has a real defect).",
+ "rules_true_positive_folders": [
+  {
+   "name": "a model with a known defect",
+   "dir": "/path/to/a_model",
+   "pattern": "Station lists are not sorted"
+  }
+ ],
+ "_comment_fixture_sources": "tests/make_fixtures.py: folders whose first lines are stored in tests/fixtures.js (git-ignored). depth = how many folder levels to read.",
+ "fixture_sources": [
+  {
+   "name": "my_model",
+   "dir": "/path/to/a_model",
+   "depth": 1
+  }
+ ]
+}

@@ -6,3 +6,7 @@ Thumbs.db
 # generated test fixtures (headers of real model folders, ~12 MB); rebuild with tests/make_fixtures.py
 tests/fixtures.js
 tests/audit_result.json
+# personal benchmark configuration (machine-specific paths); copy bench/hydra_bench.config.example.json to this name
+bench/hydra_bench.config.json
+# python bytecode written by running bench/ scripts
+__pycache__/
