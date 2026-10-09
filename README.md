@@ -8,6 +8,8 @@ no account, no server.
 
 **Live tool:** https://JosephAuresy.github.io/hydra-check/
 
+**How it got here (tests, results, corrections, milestones):** https://JosephAuresy.github.io/hydra-check/evolution/ ; benchmark method and limits in [`bench/README.md`](bench/README.md); blind-test protocol in [`docs/BLIND_TEST_PROTOCOL.md`](docs/BLIND_TEST_PROTOCOL.md).
+
 ## What this is
 
 Two tiers, built from a taxonomy of thousands of user-reported implementation issues mined

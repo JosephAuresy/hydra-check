@@ -1,0 +1,368 @@
+{
+  "schema": 1,
+  "note": "Hand-curated and chronological. Add new milestones at the end (or in date order); each one names where its numbers come from. Numbers are only those measured in a ledger snapshot, printed in a git commit message, or given by the author. 'commits' lets the dashboard check live whether a change is merged into the working branch and into main (the published branch).",
+  "integration_branch": "multi-model",
+  "published_branch": "main",
+  "categories": {
+    "characterization": "Model characterization",
+    "rules": "Rules",
+    "audit": "Precision audit",
+    "benchmark": "Benchmark",
+    "design": "Design",
+    "publication": "Publication",
+    "tooling": "Tooling"
+  },
+  "milestones": [
+    {
+      "id": "first-release",
+      "date": "2026-07-11",
+      "time": "01:42",
+      "title": "First public version",
+      "description": "A single web page that reads SWAT, SWAT-MODFLOW and MODFLOW input files in the browser and lists likely problems before a run. It had 15 rules and no tests, no audit and no benchmark.",
+      "category": "publication",
+      "commits": [
+        "e35bfd0"
+      ],
+      "evidence": [
+        "snapshot 2026-07-11T0142_initial-release (rule counts read from git history)"
+      ],
+      "source": "git commit e35bfd0"
+    },
+    {
+      "id": "benchmark-first-run",
+      "date": "2026-10-08",
+      "time": "16:35",
+      "title": "Injected-fault benchmark: first execution (22 faults)",
+      "description": "22 realistic faults (deleted, truncated or inconsistent input files) were injected into copies of six working models, one per engine, and every copy was run on the real engine. The tool, exactly as it was, was asked about each copy before the run. Of the 15 faults that stop the engine it named the cause in 8, as an error in 3. Of the 4 faults that run to the end but silently change results it named 2.",
+      "category": "benchmark",
+      "evidence": [
+        "snapshot 2026-10-08T1635_before-improvements",
+        "results_BEFORE_improvements.json",
+        "bench/README.md"
+      ],
+      "source": "saved result files (written at the time of the run); numbers match the author's notes",
+      "metrics": {
+        "stop_named": 8,
+        "stop_cases": 15,
+        "stop_as_error": 3,
+        "silent_named": 2,
+        "silent_cases": 4
+      }
+    },
+    {
+      "id": "effect-probe",
+      "date": "2026-10-08",
+      "time": "17:02",
+      "title": "Silent faults measured: which ones change the results",
+      "description": "For the SWAT+ faults the engine survives, the basin water balance was compared with the working model. Four faults (missing climate file, null in a soil column, unsorted climate stations, short rows in hru-data.hru) change the results without any error from the engine. Two (gwflow flag, rev-62 column layout) change nothing.",
+      "category": "benchmark",
+      "evidence": [
+        "snapshot 2026-10-08T1635_before-improvements (engine column: CHANGED / NO-EFFECT)",
+        "effect.json"
+      ],
+      "source": "saved result files (effect probe)"
+    },
+    {
+      "id": "audit-first",
+      "date": "2026-10-08",
+      "title": "First false-alarm audit: 138 false errors on 141 working models",
+      "description": "The rules were run on 141 real models that are known to work (they ran to completion, or are published reference models). A model that works should get no error, so every error there is a false alarm. The first audit found 138.",
+      "category": "audit",
+      "evidence": [
+        "tests/audit_fp.js",
+        "git commit message of d0358d2"
+      ],
+      "source": "git commit d0358d2 and author notes (the time of the first audit run was not recorded)",
+      "metrics": {
+        "audit_false_alarms": 138,
+        "audit_working_models": 141
+      }
+    },
+    {
+      "id": "characterization",
+      "date": "2026-10-08",
+      "time": "17:20",
+      "title": "Model characterization and multi-model detection",
+      "description": "Before any rule runs, the tool now identifies which model it was given, its version and its coupling: SWAT2012, SWAT+ (rev 61, 62 and older formats), SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 6, APEX and APEX-MODFLOW. It never falls back to a guess without saying so, and then picks the rule set of the family it identified.",
+      "category": "characterization",
+      "commits": [
+        "d0358d2",
+        "3145c5e"
+      ],
+      "evidence": [
+        "snapshot 2026-10-08T1729_multi-model-merge (21 rules in 6 families)",
+        "tests/run_node.js (characterization suite, see the latest snapshot for its count)"
+      ],
+      "source": "git commit d0358d2"
+    },
+    {
+      "id": "audit-fixed",
+      "date": "2026-10-08",
+      "time": "17:20",
+      "title": "Rules corrected until no false alarm remained (138 to 0)",
+      "description": "Each rule that fired on a working model was corrected or narrowed until none of the 141 working models received a false error. The commit message records the result: false errors went from 138 to 0. The individual rule changes are in that commit; this ledger does not list them one by one.",
+      "category": "audit",
+      "commits": [
+        "d0358d2"
+      ],
+      "evidence": [
+        "git commit d0358d2",
+        "tests/audit_fp.js and tests/audit_result.json (last saved audit, see the latest snapshot)"
+      ],
+      "source": "git commit d0358d2",
+      "metrics": {
+        "audit_false_alarms": 0,
+        "audit_working_models": 141
+      },
+      "correction": {
+        "fixed": "Rules that raised an error on models that run fine.",
+        "measured_reason": "Audit on 141 working models: false errors 138 before the fixes, 0 after (commit message of d0358d2)."
+      }
+    },
+    {
+      "id": "publication-multi-model",
+      "date": "2026-10-08",
+      "time": "17:29",
+      "title": "Publication of the multi-model version",
+      "description": "The multi-model version (characterization, audited rules, MODFLOW 6 and name-file checks, updated cover text and README) was merged into main, the branch the project page is built from.",
+      "category": "publication",
+      "commits": [
+        "3145c5e"
+      ],
+      "evidence": [
+        "git commit 3145c5e",
+        "snapshot 2026-10-08T1729_multi-model-merge"
+      ],
+      "source": "git commit 3145c5e"
+    },
+    {
+      "id": "header-redesign",
+      "date": "2026-10-08",
+      "time": "17:49",
+      "title": "Header redesign",
+      "description": "The header now shows what the tool recognizes, grouped by surface and groundwater models on the left and couplings on the right, with SWAT+ and gwflow listed and the versions it reads.",
+      "category": "design",
+      "commits": [
+        "26fb4e1",
+        "e59885b"
+      ],
+      "evidence": [
+        "git commits 26fb4e1 and e59885b"
+      ],
+      "source": "git commits 26fb4e1 (17:36) and e59885b (17:49)"
+    },
+    {
+      "id": "rename",
+      "date": "2026-10-08",
+      "time": "21:46",
+      "title": "Renamed Hydra Check",
+      "description": "The tool became Hydra Check, with a tagline and the planned Hydra family of tools, and its project links were pointed to the renamed repository.",
+      "category": "design",
+      "commits": [
+        "95d2fb3",
+        "96b1891"
+      ],
+      "evidence": [
+        "git commits 95d2fb3 (21:46) and 96b1891 (21:49)"
+      ],
+      "source": "git commits 95d2fb3 and 96b1891"
+    },
+    {
+      "id": "rules-first-round",
+      "date": "2026-10-08",
+      "time": "22:03",
+      "title": "First rule round after the benchmark: 8 to 12 of 15",
+      "description": "Rules were added or tightened for the failures the first run exposed: a stress-period count that does not match, a missing package or .sol file named by a control file, unsorted climate stations. Scored again on the same faulted copies, the tool named the cause of 12 of the 15 engine-stopping faults (7 as an error) and 3 of the 4 silent ones.",
+      "category": "rules",
+      "evidence": [
+        "snapshot 2026-10-08T2203_after-first-rule-round",
+        "results_AFTER_prev.json"
+      ],
+      "source": "saved re-scoring file; the commit of this state was not recorded",
+      "metrics": {
+        "stop_named": 12,
+        "stop_cases": 15,
+        "stop_as_error": 7,
+        "silent_named": 3,
+        "silent_cases": 4
+      },
+      "correction": {
+        "fixed": "Cases that were SILENT or only mentioned elsewhere before: tdis NPER mismatch, gwf.npf deleted, mf_1000.upw deleted, .sol file deleted, unsorted pcp.cli.",
+        "measured_reason": "Benchmark verdict changed from SILENT/ELSEWHERE to ERROR on those five cases (see the matrix, columns 1 and 2)."
+      }
+    },
+    {
+      "id": "rules-empty-sol-apex",
+      "date": "2026-10-08",
+      "time": "22:14",
+      "title": "Rules for empty time.sim / .sol, missing swatmf_link.txt and basic APEX checks",
+      "description": "An empty time.sim or SWAT2012 .sol is an error, a missing swatmf_link.txt is an error, and APEX and APEX-MODFLOW get their first checks (empty control files and the link file). Scored again: the cause of 14 of the 15 engine-stopping faults is named (12 as an error) and 3 of the 4 silent faults.",
+      "category": "rules",
+      "commits": [
+        "5383737"
+      ],
+      "evidence": [
+        "snapshot 2026-10-08T2214_after-empty-sol-and-apex-rules",
+        "results_AFTER_round2.json (saved copy of the 22:14 re-scoring)"
+      ],
+      "source": "git commit 5383737 and saved re-scoring file",
+      "metrics": {
+        "stop_named": 14,
+        "stop_cases": 15,
+        "stop_as_error": 12,
+        "silent_named": 3,
+        "silent_cases": 4
+      },
+      "correction": {
+        "fixed": "Empty time.sim, empty .sol and missing swatmf_link.txt were only a warning or an abstention; APEX had no rules at all.",
+        "measured_reason": "Benchmark verdict changed to ERROR on P06, W04, M03, A02 and AM01 (matrix, columns 2 and 3)."
+      }
+    },
+    {
+      "id": "benchmark-before-after",
+      "date": "2026-10-08",
+      "time": "22:14",
+      "title": "Before / after scores on the 22 faults",
+      "description": "Faults that stop the engine and whose cause the tool names: 8 of 15 before, 14 of 15 after. As an error: 3 of 15 before, 12 of 15 after. Faults that run to the end but silently change results: 2 of 4 before, 3 of 4 after. The unmodified controls raised no false error in either.",
+      "category": "benchmark",
+      "evidence": [
+        "snapshots 2026-10-08T1635 and 2026-10-08T2214 (matrix, first and last column)",
+        "bench/compare.py"
+      ],
+      "source": "saved result files; numbers match the author's notes",
+      "metrics": {
+        "stop_named": 14,
+        "stop_cases": 15,
+        "stop_as_error": 12,
+        "silent_named": 3,
+        "silent_cases": 4
+      }
+    },
+    {
+      "id": "mf6-convergence",
+      "date": "2026-10-09",
+      "time": "10:07",
+      "title": "MODFLOW 6 convergence rules",
+      "description": "An error when the simulation listing records a convergence failure (including runs that still end with a normal termination), and a warning for solver settings that failed in every tested non-degenerate case. According to the measurement notes of this work, the listing rule agreed with 169 of 169 real listings; that figure is quoted from the notes, not re-measured here. In the benchmark this names the last engine-stopping fault that was still unnamed (OUTER_MAXIMUM 1), as a warning.",
+      "category": "rules",
+      "commits": [
+        "cc106c5",
+        "fa5bbf8"
+      ],
+      "evidence": [
+        "git commit cc106c5",
+        "tests/run_rules_node.js",
+        "snapshot 2026-10-09T1029_current (case F03_outer_maximum_one: SILENT before, WARN now)"
+      ],
+      "source": "git commit cc106c5 and its measurement notes",
+      "correction": {
+        "fixed": "A fault that stops MODFLOW 6 (OUTER_MAXIMUM 1 with a tiny closure) and that the tool did not mention at all (F03).",
+        "measured_reason": "Benchmark verdict changed from SILENT to WARN on F03_outer_maximum_one; the engine stops with a convergence failure on that case."
+      }
+    },
+    {
+      "id": "autofix",
+      "date": "2026-10-09",
+      "time": "10:09",
+      "title": "Download a fixed file for three findings",
+      "description": "For three findings that have a safe mechanical correction (unsorted station list, short MODFLOW period length, low unit numbers in modflow.mfn) the report offers a corrected file to download.",
+      "category": "tooling",
+      "commits": [
+        "177c659",
+        "e19c3c5"
+      ],
+      "evidence": [
+        "git commit 177c659",
+        "tests/run_fix_node.js (see the latest snapshot for its count)"
+      ],
+      "source": "git commit 177c659"
+    },
+    {
+      "id": "audit-read-cap",
+      "date": "2026-10-09",
+      "time": "10:12",
+      "title": "Audit harness read cap set to the page's own limit (8 MB to 40 MB)",
+      "description": "The new rule for rows with a different number of fields than the header fired wrongly on one truncated 12 MB file when the audit read files up to 8 MB. The audit was rerun with the 40 MB limit the page itself applies, and the rule then raised no false alarm on any of the 141 working models. This corrects the audit harness, not a rule.",
+      "category": "audit",
+      "evidence": [
+        "tests/audit_fp.js (read cap)",
+        "snapshot 2026-10-09T1029_current (no finding of this rule on the working models in the audit it read)"
+      ],
+      "source": "integration note from the session that merged the branches; the absence of the finding is checked in the snapshot",
+      "correction": {
+        "fixed": "The audit measured the new table-rows rule with a smaller file-size cap than the page uses, so one truncated file looked like a false alarm.",
+        "measured_reason": "With the page's own 40 MB cap, 141 working models, 0 false alarms from that rule. A measurement artifact of the harness, not a rule fix."
+      }
+    },
+    {
+      "id": "rule-short-rows",
+      "date": "2026-10-09",
+      "time": "10:16",
+      "title": "Rule for table rows with a different number of fields than the header",
+      "description": "SWAT+ tables whose rows have fewer or more fields than their header are reported as an error. The rule was checked on 12 SWAT+ tables of 137 working models before it was accepted. In the benchmark it closes the last silent-damage fault (hru-data.hru rows lose their last field): 4 of 4 silent faults are now named.",
+      "category": "rules",
+      "commits": [
+        "e938453"
+      ],
+      "evidence": [
+        "git commit e938453",
+        "tests/rule_tablerows.test.js",
+        "snapshot 2026-10-09T1029_current (case P08_hru_rows_short: ELSEWHERE before, ERROR now)"
+      ],
+      "source": "git commit e938453",
+      "correction": {
+        "fixed": "A fault that changed the results without any error or warning about it (P08).",
+        "measured_reason": "Benchmark verdict changed from ELSEWHERE to ERROR on P08_hru_rows_short; before it the engine finished and the basin water balance differed from the working model."
+      }
+    },
+    {
+      "id": "benchmark-current",
+      "date": "2026-10-09",
+      "time": "10:29",
+      "title": "Benchmark with the merged rules: 15 of 15, 4 of 4",
+      "description": "The current rules were asked again about the same 22 faulted copies (nothing was run again; the engine outcomes are the saved ones). Faults that stop the engine: cause named in 15 of 15 (as an error in 12 of 15). Faults the run survives but that change results: named in 4 of 4. The 6 unmodified controls got no error. A second, independent re-scoring of the same copies agrees on every case.",
+      "category": "benchmark",
+      "evidence": [
+        "snapshot 2026-10-09T1029_current",
+        "bench/compare.py"
+      ],
+      "source": "ledger snapshot, answers re-asked of the current rules on the saved faulted copies",
+      "metrics": {
+        "stop_named": 15,
+        "stop_cases": 15,
+        "stop_as_error": 12,
+        "silent_named": 4,
+        "silent_cases": 4
+      }
+    },
+    {
+      "id": "bench-harness",
+      "date": "2026-10-09",
+      "title": "Benchmark and audit scripts published, portable and path-free",
+      "description": "The benchmark and audit scripts read every location (models, engines, work folder) from one configuration, never from a default path, and the result files contain no absolute paths, so the benchmark can be repeated on another machine with its own models. The pilot table of results was published with them.",
+      "category": "tooling",
+      "evidence": [
+        "bench/README.md",
+        "bench/config.py",
+        "results/pilot_table.md"
+      ],
+      "source": "git commit fde6f73 (the harness itself was written on 2026-10-08, per the file times of its first results)",
+      "commits": [
+        "fde6f73"
+      ],
+      "time": "10:30"
+    },
+    {
+      "id": "ledger",
+      "date": "2026-10-09",
+      "title": "Evolution ledger and dashboard",
+      "description": "One folder with a dated snapshot per state of the tool (rules, tests, audit, benchmark, models), a curated list of milestones and this dashboard, so the progress can be shown as a historical record. Past states were reconstructed only from files that exist; what was never recorded is marked as such.",
+      "category": "tooling",
+      "evidence": [
+        "evolution/ledger/",
+        "bench/snapshot.py"
+      ],
+      "source": "this folder"
+    }
+  ]
+}

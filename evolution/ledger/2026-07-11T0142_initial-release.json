@@ -1,0 +1,87 @@
+{
+ "schema": 1,
+ "id": "2026-07-11T0142_initial-release",
+ "label": "initial release",
+ "version": "",
+ "taken_at": "2026-07-11T01:42",
+ "kind": "backfill",
+ "note": "First public version: a single page that checks SWAT, SWAT-MODFLOW and MODFLOW input files with the original generic rules.",
+ "backfill_note": "Rule counts are counted in index.html as committed then. No tests, audit or benchmark existed or were recorded for this state.",
+ "git": {
+  "commit": "e35bfd0",
+  "message": "Initial release: Hydro-Model Diagnostic Assistant",
+  "commit_date": "2026-07-11T01:44",
+  "branch": "not recorded",
+  "dirty": null,
+  "in_main": null,
+  "source": "commit e35bfd0, read from git history"
+ },
+ "rules": {
+  "status": "counted",
+  "source": "index.html at commit e35bfd0",
+  "families": {
+   "swat_plus": {
+    "rules": 5,
+    "error_calls": 3,
+    "warning_calls": 5,
+    "name": "SWAT+"
+   },
+   "swat2012": {
+    "rules": 2,
+    "error_calls": 3,
+    "warning_calls": 1,
+    "name": "SWAT2012"
+   },
+   "swat_mf": {
+    "rules": 3,
+    "error_calls": 1,
+    "warning_calls": 3,
+    "name": "SWAT-MODFLOW"
+   },
+   "modflow": {
+    "rules": 3,
+    "error_calls": 2,
+    "warning_calls": 3,
+    "name": "MODFLOW (NWT/2005)"
+   },
+   "generic": {
+    "rules": 2,
+    "error_calls": 0,
+    "warning_calls": 2,
+    "name": "Generic (any model)"
+   }
+  },
+  "total": 15,
+  "error_calls": 9,
+  "warning_calls": 14,
+  "note": "a rule is a function in a RULES array; error/warning calls are finding('error'|'warning', ...) calls with a literal severity, so a rule can hold several"
+ },
+ "tests": {
+  "status": "not recorded",
+  "reason": "past state: tests were not run at that time"
+ },
+ "audit": {
+  "status": "not recorded",
+  "reason": "no audit result exists for this point in time"
+ },
+ "benchmark": {
+  "status": "not recorded",
+  "reason": "no benchmark result for this point in time"
+ },
+ "inventory": {
+  "status": "not recorded"
+ },
+ "provenance": {
+  "measured_when_taken": [],
+  "reconstructed_from_saved_files": [
+   "git commit",
+   "rule counts"
+  ],
+  "not_recorded": [
+   "benchmark matrix",
+   "model inventory",
+   "precision audit",
+   "test results"
+  ]
+ }
+}

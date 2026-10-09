@@ -1,0 +1,93 @@
+{
+ "schema": 1,
+ "id": "2026-10-08T1729_multi-model-merge",
+ "label": "multi-model merge",
+ "version": "",
+ "taken_at": "2026-10-08T17:29",
+ "kind": "backfill",
+ "note": "Merge of the multi-model work: the tool identifies the model, version and coupling before checking, with precision-audited rules and new MODFLOW 6 and name-file checks.",
+ "backfill_note": "Rule counts are counted in index.html as committed. No test or audit result was saved for this moment (the audit that took false alarms from 138 to 0 is recorded as a milestone from the author's notes).",
+ "git": {
+  "commit": "3145c5e",
+  "message": "Merge multi-model: identify model/version/coupling, precision-audited rules, new checks",
+  "commit_date": "2026-10-08T17:29",
+  "branch": "not recorded",
+  "dirty": null,
+  "in_main": null,
+  "source": "commit 3145c5e, read from git history"
+ },
+ "rules": {
+  "status": "counted",
+  "source": "index.html at commit 3145c5e",
+  "families": {
+   "swat_plus": {
+    "rules": 7,
+    "error_calls": 5,
+    "warning_calls": 5,
+    "name": "SWAT+"
+   },
+   "swat2012": {
+    "rules": 3,
+    "error_calls": 4,
+    "warning_calls": 1,
+    "name": "SWAT2012"
+   },
+   "swat_mf": {
+    "rules": 4,
+    "error_calls": 1,
+    "warning_calls": 3,
+    "name": "SWAT-MODFLOW"
+   },
+   "modflow": {
+    "rules": 3,
+    "error_calls": 1,
+    "warning_calls": 3,
+    "name": "MODFLOW (NWT/2005)"
+   },
+   "generic": {
+    "rules": 2,
+    "error_calls": 0,
+    "warning_calls": 2,
+    "name": "Generic (any model)"
+   },
+   "modflow6": {
+    "rules": 2,
+    "error_calls": 2,
+    "warning_calls": 0,
+    "name": "MODFLOW 6"
+   }
+  },
+  "total": 21,
+  "error_calls": 13,
+  "warning_calls": 14,
+  "note": "a rule is a function in a RULES array; error/warning calls are finding('error'|'warning', ...) calls with a literal severity, so a rule can hold several"
+ },
+ "tests": {
+  "status": "not recorded",
+  "reason": "past state: tests were not run at that time"
+ },
+ "audit": {
+  "status": "not recorded",
+  "reason": "no audit result exists for this point in time"
+ },
+ "benchmark": {
+  "status": "not recorded",
+  "reason": "no benchmark result for this point in time"
+ },
+ "inventory": {
+  "status": "not recorded"
+ },
+ "provenance": {
+  "measured_when_taken": [],
+  "reconstructed_from_saved_files": [
+   "git commit",
+   "rule counts"
+  ],
+  "not_recorded": [
+   "benchmark matrix",
+   "model inventory",
+   "precision audit",
+   "test results"
+  ]
+ }
+}

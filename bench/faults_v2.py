@@ -875,6 +875,18 @@ FINDINGS = {
     "AM02_grid2sa_deleted": ("expectation_wrong", "apexmf.exe regenerates MODFLOW/apexmf_grid2sa.txt at start from link_grid_sa ('Preparing APEX-MODFLOW linkage'); the deleted file is rewritten and the results are identical. Real inputs are the link_* tables (AM12-AM14)."),
     "AM03_sa2grid_count": ("expectation_wrong", "apexmf_sa2grid.txt is regenerated from link_sa_grid at start; the edited count is overwritten and the results are identical."),
     "AM04_river2grid_count": ("expectation_wrong", "apexmf_river2grid.txt is regenerated from link_river_grid at start; the edited count is overwritten and the results are identical."),
+    "AM14_link_sa_grid_count": ("expectation_wrong", "link_sa_grid announcing 12000 records while 9956 are listed is accepted; results identical to the base run."),
+    "AM09_upw_hk_negative": ("misspecified_fixed", "The UPW parameter value is overridden by mf_1000.pval, so the edit had no effect. Re-specified as AM15 (edit in the PVAL file), which does change the run."),
+    "SM06_upw_hk_negative": ("misspecified_fixed", "The UPW parameter value is overridden by mf_1000.pval, so the edit had no effect. Re-specified as SM15 (edit in the PVAL file), which breaks the run."),
+    "SM09_oc_unit_unknown": ("real_finding", "Saving heads to a unit missing from modflow.mfn is accepted without error and results are identical to the base run."),
+    "AP09_nbyr_exceeds_weather": ("expectation_wrong", "APEX accepted NBYR=99 (log shows YEAR 99 OF 99) and finished; results differ. No error for a simulation far longer than the daily weather record."),
+    "SW02_idal_400": ("real_finding", "IDAL=400 is accepted; the output has a different number of rows (shape differs), no error."),
+    "SW06_nyskip_gt_nbyr": ("expectation_wrong", "NYSKIP larger than NBYR changes nothing in output.rch, output.sub or output.std."),
+    "SW15_epco_percent": ("expectation_wrong", "EPCO=100 in every .hru file: results identical to the base run."),
+    "SW16_bsn_epco_percent": ("expectation_wrong", "EPCO=100 in basins.bsn also gives identical results. A scratch run with EPCO=0.5 in basins.bsn was identical too, so EPCO has no effect in this model/engine; this fault cannot test a silent unit error. Mechanism (clamping or inactive parameter) not determined."),
+    "SP01_hru_soil_unknown": ("real_finding", "An HRU naming a soil that soils.sol does not define does not stop SWAT+: the run finishes and a few water-balance values differ (3 values in basin_wb_yr, tiny relative change); diagnostics.out shows no extra 'file not found' line."),
+    "SPD03_case_station_files": ("real_finding", "Decoy that was NOT benign: upper-case .PCP/.TMP names in weather-sta.cli (pcp.cli unchanged) raise the 'file not found' lines in diagnostics.out from 1 to 259 and change results (max relative change 13.2). The engine looks stations up by exact name."),
+    "SP08_codes_pet_file_null": ("real_finding", "codes.bsn pet=3 with pet_file null is accepted and results are identical to the base run."),
 }
 
 FAMILY = {"swatplus_p29": "SWAT+", "swat2012": "SWAT2012", "swatmf": "SWAT-MODFLOW", "mf6": "MODFLOW 6", "apex": "APEX", "apexmf": "APEX-MODFLOW"}

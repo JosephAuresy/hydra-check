@@ -1,0 +1,565 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hydra Check: evolution</title>
+<meta name="description" content="Historical record of Hydra Check: milestones, tests, rules, precision audit and injected-fault benchmark, snapshot by snapshot.">
+<style>
+:root {
+  --bg: #f7f7f4; --surface: #ffffff; --ink: #1b1f24; --ink2: #424b57; --muted: #5f6977; --line: #dfe2e6; --accent: #1b5fa6; --accent-bg: #e6eef8;
+  --c1: #0072b2; --c2: #e69f00; --c3: #009e73; --c4: #d55e00; --c5: #cc79a7; --c6: #3aa5e0; --c7: #7a828d;
+  --v-error-bg: #dcf2e4; --v-error-fg: #11472a; --v-error-bd: #2e8b57;
+  --v-warn-bg: #e0f0f7; --v-warn-fg: #0a4560; --v-warn-bd: #2b87a8;
+  --v-else-bg: #fcefcf; --v-else-fg: #65450a; --v-else-bd: #c98a00;
+  --v-abst-bg: #ebedf0; --v-abst-fg: #424b57; --v-abst-bd: #8a94a1;
+  --v-silent-bg: #fadfdc; --v-silent-fg: #741d17; --v-silent-bd: #c8453a;
+  --shadow: 0 1px 2px rgba(0,0,0,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0e1217; --surface: #161b22; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #7ab4f2; --accent-bg: #172a40;
+    --c1: #4aa8e6; --c2: #f0b429; --c3: #2ec99c; --c4: #f07d3c; --c5: #e39cc3; --c6: #7cc4f0; --c7: #98a1ad;
+    --v-error-bg: #153322; --v-error-fg: #9fe3b9; --v-error-bd: #3aa66a;
+    --v-warn-bg: #12303d; --v-warn-fg: #9fd6ea; --v-warn-bd: #3c9ec0;
+    --v-else-bg: #3a2e0e; --v-else-fg: #f2d07f; --v-else-bd: #d19a1a;
+    --v-abst-bg: #232a33; --v-abst-fg: #b9c1cc; --v-abst-bd: #7b8592;
+    --v-silent-bg: #3e1c1a; --v-silent-fg: #f5aaa4; --v-silent-bd: #d9574c;
+    --shadow: none;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0e1217; --surface: #161b22; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #7ab4f2; --accent-bg: #172a40;
+  --c1: #4aa8e6; --c2: #f0b429; --c3: #2ec99c; --c4: #f07d3c; --c5: #e39cc3; --c6: #7cc4f0; --c7: #98a1ad;
+  --v-error-bg: #153322; --v-error-fg: #9fe3b9; --v-error-bd: #3aa66a;
+  --v-warn-bg: #12303d; --v-warn-fg: #9fd6ea; --v-warn-bd: #3c9ec0;
+  --v-else-bg: #3a2e0e; --v-else-fg: #f2d07f; --v-else-bd: #d19a1a;
+  --v-abst-bg: #232a33; --v-abst-fg: #b9c1cc; --v-abst-bd: #7b8592;
+  --v-silent-bg: #3e1c1a; --v-silent-fg: #f5aaa4; --v-silent-bd: #d9574c;
+  --shadow: none;
+}
+* { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body { margin: 0; background: var(--bg); color: var(--ink); font: 16px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+a { color: var(--accent); }
+code, .mono { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: .9em; }
+.wrap { max-width: 1040px; margin: 0 auto; padding: 0 16px; }
+header.top { border-bottom: 1px solid var(--line); background: var(--surface); }
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding-top: 12px; padding-bottom: 12px; flex-wrap: wrap; }
+.brand { font-weight: 700; letter-spacing: .01em; }
+.brand span { color: var(--muted); font-weight: 400; }
+nav { display: flex; gap: 4px 14px; flex-wrap: wrap; font-size: .9rem; }
+nav a { text-decoration: none; color: var(--ink2); padding: 4px 0; }
+nav a:hover { color: var(--accent); text-decoration: underline; }
+button { font: inherit; color: inherit; }
+.btn { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; cursor: pointer; min-height: 36px; }
+.btn:hover { border-color: var(--accent); }
+.btn:focus-visible, a:focus-visible, summary:focus-visible, .rowbtn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+section { padding: 36px 0 8px; }
+h1 { font-size: clamp(1.5rem, 4.2vw, 2.1rem); line-height: 1.2; margin: 0 0 12px; }
+h2 { font-size: 1.35rem; margin: 0 0 6px; }
+h3 { font-size: 1.02rem; margin: 20px 0 6px; }
+.lead { font-size: 1.08rem; color: var(--ink2); max-width: 70ch; margin: 0 0 20px; }
+.sub { color: var(--muted); margin: 0 0 16px; max-width: 75ch; font-size: .95rem; }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; margin-top: 8px; }
+.tile { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 14px 12px; box-shadow: var(--shadow); }
+.tile .k { font-size: .82rem; color: var(--muted); }
+.tile .n { font-size: 1.9rem; font-weight: 700; line-height: 1.15; margin: 2px 0; font-variant-numeric: tabular-nums; }
+.tile .n small { font-size: .95rem; font-weight: 500; color: var(--ink2); }
+.tile .d { font-size: .82rem; color: var(--ink2); }
+.tile .asof { font-size: .75rem; color: var(--muted); margin-top: 6px; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 10px; padding: 14px 16px; box-shadow: var(--shadow); }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin: 8px 0 16px; }
+.chip { border: 1px solid var(--line); background: var(--surface); border-radius: 999px; padding: 4px 12px; cursor: pointer; font-size: .88rem; min-height: 34px; }
+.chip[aria-pressed="true"] { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+/* timeline */
+.tl { list-style: none; margin: 0; padding: 0 0 0 18px; border-left: 2px solid var(--line); }
+.tl li { position: relative; padding: 0 0 18px 16px; }
+.tl li::before { content: ""; position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg); }
+.tl .when { font-size: .82rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tl h3 { margin: 2px 0 4px; font-size: 1.05rem; }
+.tl p { margin: 0 0 6px; max-width: 75ch; color: var(--ink2); }
+.badge { display: inline-block; font-size: .72rem; border-radius: 4px; padding: 1px 7px; border: 1px solid var(--line); color: var(--ink2); margin-right: 6px; vertical-align: middle; white-space: nowrap; }
+.badge.cat { background: var(--accent-bg); color: var(--accent); border-color: transparent; font-weight: 600; text-transform: uppercase; letter-spacing: .03em; }
+.badge.ok { color: var(--v-error-fg); background: var(--v-error-bg); border-color: var(--v-error-bd); }
+.badge.pend { white-space: normal; color: var(--v-else-fg); background: var(--v-else-bg); border-color: var(--v-else-bd); }
+.ev { font-size: .85rem; color: var(--muted); margin: 0; }
+.ev b { font-weight: 600; color: var(--ink2); }
+.empty { color: var(--muted); font-style: italic; }
+/* charts */
+.charts { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 460px), 1fr)); gap: 16px; }
+.chart h3 { margin-top: 0; }
+.chart .note { font-size: .82rem; color: var(--muted); margin: 6px 0 0; }
+.chart svg { display: block; width: 100%; height: auto; overflow: visible; }
+svg text { font: 12px system-ui, sans-serif; fill: var(--ink2); }
+svg text.muted { fill: var(--muted); }
+svg text.val { fill: var(--ink); font-weight: 600; font-variant-numeric: tabular-nums; }
+svg .track { fill: var(--line); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .82rem; color: var(--ink2); margin-top: 8px; }
+.legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+/* matrix */
+.mwrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; background: var(--surface); }
+table.matrix { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 640px; font-size: .88rem; }
+.matrix th, .matrix td { padding: 6px 10px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: middle; }
+.matrix thead th { position: sticky; top: 0; background: var(--surface); font-weight: 600; font-size: .8rem; vertical-align: bottom; z-index: 1; }
+.matrix thead th small { display: block; font-weight: 400; color: var(--muted); font-size: .72rem; }
+.matrix td.case, .matrix th.case { position: sticky; left: 0; background: var(--surface); z-index: 2; min-width: 180px; max-width: 230px; border-right: 1px solid var(--line); }
+.matrix thead th.case { z-index: 3; }
+.matrix tr.grp td { background: var(--bg); color: var(--muted); font-size: .76rem; text-transform: uppercase; letter-spacing: .04em; font-weight: 600; }
+.rowbtn { all: unset; cursor: pointer; display: block; width: 100%; }
+.rowbtn .id { font-weight: 600; font-size: .82rem; display: block; overflow-wrap: anywhere; }
+.rowbtn .ft { color: var(--ink2); font-size: .78rem; display: block; line-height: 1.3; }
+.matrix tr.row:hover td { background: color-mix(in srgb, var(--accent-bg) 55%, var(--surface)); }
+.matrix tr.row:hover td.case { background: color-mix(in srgb, var(--accent-bg) 55%, var(--surface)); }
+.v { display: inline-block; font-size: .72rem; font-weight: 700; letter-spacing: .03em; padding: 2px 8px; border-radius: 4px; border: 1px solid; white-space: nowrap; }
+.v-ERROR { background: var(--v-error-bg); color: var(--v-error-fg); border-color: var(--v-error-bd); }
+.v-WARN { background: var(--v-warn-bg); color: var(--v-warn-fg); border-color: var(--v-warn-bd); }
+.v-ELSEWHERE { background: var(--v-else-bg); color: var(--v-else-fg); border-color: var(--v-else-bd); }
+.v-ABSTAIN { background: repeating-linear-gradient(45deg, var(--v-abst-bg), var(--v-abst-bg) 4px, transparent 4px, transparent 7px); color: var(--v-abst-fg); border-color: var(--v-abst-bd); }
+.v-SILENT { background: var(--v-silent-bg); color: var(--v-silent-fg); border-color: var(--v-silent-bd); }
+.v-none { color: var(--muted); border-style: dashed; border-color: var(--line); }
+.v-falsealarm { background: var(--v-silent-bg); color: var(--v-silent-fg); border-color: var(--v-silent-bd); }
+.v-ctl { background: transparent; color: var(--ink2); border-color: var(--line); }
+.eng { font-size: .76rem; color: var(--ink2); white-space: nowrap; }
+tr.detail td { background: var(--bg); }
+tr.detail .dbox { position: sticky; left: 0; width: calc(var(--mw, 320px) - 24px); padding: 4px 4px 8px; font-size: .86rem; color: var(--ink2); }
+tr.detail dl { margin: 6px 0 0; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; }
+tr.detail dt { font-weight: 600; }
+tr.detail dd { margin: 0; overflow-wrap: anywhere; }
+.keyrow { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; font-size: .82rem; color: var(--ink2); margin: 0 0 10px; }
+.keyrow span.kv { display: inline-flex; gap: 6px; align-items: center; }
+.opts { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; margin: 0 0 10px; font-size: .9rem; }
+.opts label { display: inline-flex; gap: 6px; align-items: center; cursor: pointer; min-height: 32px; }
+/* bars for models */
+.hbars { display: grid; grid-template-columns: minmax(110px, 38%) 1fr auto; gap: 6px 10px; align-items: center; font-size: .88rem; }
+.hbars .bar { height: 12px; background: var(--line); border-radius: 3px; position: relative; }
+.hbars .bar i { position: absolute; left: 0; top: 0; bottom: 0; background: var(--c1); border-radius: 3px; }
+.hbars .num { font-variant-numeric: tabular-nums; font-weight: 600; }
+.grid3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 300px), 1fr)); gap: 16px; }
+.corr { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; }
+.corr .card p { margin: 4px 0; font-size: .92rem; color: var(--ink2); }
+.corr .card b { color: var(--ink); }
+table.chg { border-collapse: collapse; width: 100%; font-size: .86rem; }
+table.chg th, table.chg td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.snap { margin: 0 0 10px; }
+.snap summary { cursor: pointer; font-weight: 600; }
+.snap .meta { font-size: .82rem; color: var(--muted); font-weight: 400; margin-left: 6px; }
+.snap .pv { margin: 8px 0 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.pv .m { border-color: var(--v-error-bd); background: var(--v-error-bg); color: var(--v-error-fg); }
+.pv .r { border-color: var(--v-else-bd); background: var(--v-else-bg); color: var(--v-else-fg); }
+.pv .n { border-style: dashed; color: var(--muted); }
+.snap p { margin: 8px 0 0; font-size: .9rem; color: var(--ink2); max-width: 80ch; }
+pre.cmd { background: var(--bg); border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; overflow-x: auto; margin: 6px 0 12px; font-size: .86rem; }
+.limits { border-left: 4px solid var(--v-else-bd); }
+.limits ul { margin: 6px 0 0; padding-left: 20px; }
+.limits li { margin: 4px 0; max-width: 80ch; }
+footer { padding: 28px 0 48px; color: var(--muted); font-size: .85rem; }
+@media (max-width: 560px) {
+  section { padding-top: 28px; }
+  .tile .n { font-size: 1.6rem; }
+  tr.detail dl { grid-template-columns: 1fr; }
+  .matrix td.case, .matrix th.case { min-width: 138px; max-width: 150px; padding-left: 8px; padding-right: 6px; }
+  .rowbtn .ft { font-size: .72rem; }
+}
+@media print { header.top .btn, nav { display: none; } }
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand">Hydra Check <span>/ evolution</span></div>
+    <nav aria-label="Sections">
+      <a href="#story">Summary</a><a href="#timeline">Milestones</a><a href="#numbers">Numbers</a><a href="#matrix">Benchmark matrix</a>
+      <a href="#models">Models</a><a href="#corrections">Corrections</a><a href="#snapshots">Snapshots</a><a href="#add">Add a snapshot</a><a href="#limits">Limits</a>
+    </nav>
+    <button class="btn" id="themeBtn" type="button" aria-label="Switch colour theme">Theme: auto</button>
+  </div>
+</header>
+
+<main class="wrap">
+  <section id="story">
+    <h1 id="heroTitle">Hydra Check: how it got here</h1>
+    <p class="lead" id="heroText">Loading...</p>
+    <div class="tiles" id="tiles" aria-live="polite"></div>
+  </section>
+
+  <section id="timeline">
+    <h2>Milestones</h2>
+    <p class="sub">The most relevant steps in order. Each says where its facts come from (a git commit, a saved result file, or the author's notes) and which snapshot or test shows it.</p>
+    <div class="chips" id="catChips" role="group" aria-label="Filter milestones by category"></div>
+    <ol class="tl" id="tl"></ol>
+  </section>
+
+  <section id="numbers">
+    <h2>How the numbers moved</h2>
+    <p class="sub">One row per snapshot. A row that says "not recorded" is a state for which no honest number exists; it is left empty on purpose, not filled in.</p>
+    <div class="charts">
+      <div class="card chart"><h3>Tests passing</h3><div id="chTests"></div><p class="note">Cheap Node suites run at snapshot time. Bar = passed, outline = total.</p></div>
+      <div class="card chart"><h3>Rules per family</h3><div id="chRules"></div><div class="legend" id="lgRules"></div><p class="note">A rule is one check function in the page's rule lists, counted in index.html.</p></div>
+      <div class="card chart"><h3>Benchmark: did the tool name the cause?</h3><div id="chBench"></div><div class="legend" id="lgBench"></div><p class="note">Faults that stop the engine, and faults the engine survives but that change results. Same 22 faulted copies each time.</p></div>
+      <div class="card chart"><h3>Audit: error findings on models that work</h3><div id="chAudit"></div><p class="note" id="auditNote"></p></div>
+    </div>
+  </section>
+
+  <section id="matrix">
+    <h2>Benchmark matrix</h2>
+    <p class="sub">Each row is one injected fault (or one unmodified control model), each column a snapshot. The cell is what the tool said about the faulted files before any run. Select a row to see what the engine did and the tool's own words at each snapshot.</p>
+    <div class="keyrow" id="mkey"></div>
+    <div class="opts">
+      <label><input type="checkbox" id="onlyChanged"> Only rows whose verdict changed</label>
+      <label><input type="checkbox" id="hideControls"> Hide controls</label>
+    </div>
+    <div class="mwrap" id="matrixBox" tabindex="0" aria-label="Benchmark matrix (scrolls sideways on narrow screens)"></div>
+  </section>
+
+  <section id="models">
+    <h2>Models audited</h2>
+    <p class="sub" id="modelsSub"></p>
+    <div class="grid3" id="modelsGrid"></div>
+  </section>
+
+  <section id="corrections">
+    <h2>Corrections made to the tool</h2>
+    <p class="sub">Each correction with the measured reason, from the milestones; below it, every verdict that changed between two benchmark snapshots.</p>
+    <div class="corr" id="corrList"></div>
+    <h3>Verdicts that changed between benchmark snapshots</h3>
+    <div class="card" id="chgBox"></div>
+  </section>
+
+  <section id="snapshots">
+    <h2>Snapshots</h2>
+    <p class="sub">What each snapshot measured at the time, what was reconstructed afterwards from saved files, and what was never recorded.</p>
+    <div id="snapList"></div>
+  </section>
+
+  <section id="add">
+    <h2>How to add a snapshot</h2>
+    <div class="card">
+      <p style="margin-top:0">From the repository root, after the rules changed (and, if you want the benchmark column to be current, after <code>bench/rescore.py</code>, or use <code>--rescore</code> which asks the current rules again without writing anything in the work folder):</p>
+<pre class="cmd">python bench/snapshot.py --label "after mf6 rules" --note "what changed" --rescore</pre>
+      <p>To see what is already there:</p>
+<pre class="cmd">python bench/snapshot.py --list</pre>
+      <p style="margin-bottom:0">This writes one new file in <code>evolution/ledger/</code> (never overwrites one), refreshes <code>evolution/data.js</code> and prints a summary. Commit the new ledger file and <code>data.js</code>. New milestones go in <code>evolution/milestones.json</code>; then run <code>python bench/snapshot.py --regen</code>.</p>
+    </div>
+  </section>
+
+  <section id="limits">
+    <h2>Limits of this evidence</h2>
+    <div class="card limits">
+      <ul>
+        <li><b>Development evidence, not a validation.</b> The numbers show that the fixes did what they were written to do on the cases that exposed the problems.</li>
+        <li><b>A pilot of 22 faults</b> (plus 6 unmodified controls) on six base models, one per engine. "14 of 15" is a small count, not a rate with a confidence interval, and coverage is uneven across engines.</li>
+        <li><b>Rules were tuned after seeing the results.</b> The "before" column is the first version of the rules, the later columns the improved ones; the improvements targeted the failures the first run exposed, so before and after is not a blind test. A fair test needs new faults and new base models that the rules never saw.</li>
+        <li><b>Faults are chosen, not sampled</b> from the real distribution of user errors, and engine behaviour is what one run on one machine showed.</li>
+        <li><b>The audit is on models that ran.</b> An error on a working model is a false-alarm candidate; the figures here are raw counts of error findings, and the 138 to 0 figures are the author's adjudicated result, quoted from the commit message.</li>
+        <li><b>Past snapshots are reconstructions.</b> They use only files that exist (git history, saved result files). Whatever was not saved is marked "not recorded".</li>
+      </ul>
+    </div>
+  </section>
+</main>
+<footer><div class="wrap" id="foot"></div></footer>
+
+<script src="data.js"></script>
+<script>
+(function () {
+"use strict";
+var D = window.EVOLUTION_DATA;
+var $ = function (id) { return document.getElementById(id); };
+function esc(s) { return String(s == null ? "" : s).replace(/[&<>"']/g, function (c) { return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]; }); }
+function pct(a, b) { return b ? a / b : 0; }
+
+/* ---------- theme ---------- */
+var themeBtn = $("themeBtn");
+function applyTheme(t) {
+  if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
+  themeBtn.textContent = "Theme: " + (t === "light" || t === "dark" ? t : "auto");
+}
+var theme = "auto";
+try { theme = localStorage.getItem("hc-evo-theme") || "auto"; } catch (e) {}
+applyTheme(theme);
+themeBtn.addEventListener("click", function () {
+  theme = theme === "auto" ? "light" : theme === "light" ? "dark" : "auto";
+  applyTheme(theme);
+  try { localStorage.setItem("hc-evo-theme", theme); } catch (e) {}
+});
+
+if (!D || !D.snapshots) {
+  $("heroText").textContent = "evolution/data.js was not found. Run: python bench/snapshot.py --regen";
+  return;
+}
+
+var snaps = D.snapshots.slice().sort(function (a, b) { return (a.taken_at + a.id) < (b.taken_at + b.id) ? -1 : 1; });
+var miles = D.milestones || [];
+var CATS = (D.milestones_meta && D.milestones_meta.categories) || {};
+function dt(s) { return s.replace("T", " "); }
+function snapLabel(s) { return s.taken_at.slice(0, 10) + " " + s.label; }
+function last(arr, pred) { for (var i = arr.length - 1; i >= 0; i--) if (pred(arr[i])) return arr[i]; return null; }
+function hasRules(s) { return s.rules && s.rules.status === "counted"; }
+function hasTests(s) { return s.tests && s.tests.suites && s.tests.suites_run > 0; }
+function hasBench(s) { return s.benchmark && s.benchmark.status === "read"; }
+function hasAudit(s) { return s.audit && s.audit.status === "read"; }
+function hasInv(s) { return s.inventory && s.inventory.status === "read"; }
+var benchSnaps = snaps.filter(hasBench);
+
+/* ---------- hero ---------- */
+(function () {
+  var first = snaps[0], lastS = snaps[snaps.length - 1];
+  $("heroText").textContent = "Hydra Check reads the input files of a hydrologic model before it is run and says what looks wrong. This page is its historical record: " +
+    snaps.length + " dated snapshots from " + first.taken_at.slice(0, 10) + " to " + lastS.taken_at.slice(0, 10) + " and " + miles.length + " milestones, showing what was tested, what was found, and what was corrected.";
+  var tiles = [];
+  var sR = last(snaps, hasRules), sT = last(snaps, hasTests), sB = last(snaps, hasBench), sA = last(snaps, hasAudit);
+  function tile(k, n, d, s) { tiles.push('<div class="tile"><div class="k">' + esc(k) + '</div><div class="n">' + n + '</div><div class="d">' + d + '</div><div class="asof">' + (s ? "as of " + esc(snapLabel(s)) : "not recorded") + "</div></div>"); }
+  if (sB) {
+    var g = sB.benchmark.groups, b0 = benchSnaps[0].benchmark.groups;
+    tile("Engine-stopping faults: cause named", g.stop.cause_named + "<small>/" + g.stop.cases + "</small>", "as an error in " + g.stop.as_error + "/" + g.stop.cases + ". First run: " + b0.stop.cause_named + "/" + b0.stop.cases + " (error " + b0.stop.as_error + ").", sB);
+    tile("Silent-damage faults: cause named", g.silent_damage.cause_named + "<small>/" + g.silent_damage.cases + "</small>", "Faults the run survives but that change results. First run: " + b0.silent_damage.cause_named + "/" + b0.silent_damage.cases + ".", sB);
+    tile("False alarms on controls", sB.benchmark.control_false_alarms + "<small>/" + sB.benchmark.controls + "</small>", "Unmodified working models that got an error.", sB);
+  }
+  if (sT) tile("Tests passing", sT.tests.passed + "<small>/" + sT.tests.total + "</small>", "in " + sT.tests.suites_run + " suites run at snapshot time.", sT);
+  if (sR) tile("Rules", sR.rules.total, "in " + Object.keys(sR.rules.families).length + " families (first release: " + (snaps.filter(hasRules)[0].rules.total) + ").", sR);
+  if (sA) tile("Working models with an error finding", sA.audit.working_with_error + "<small>/" + sA.audit.working + "</small>", "Raw audit count. Author's adjudicated false alarms: 138 at first audit, 0 after the fixes.", sA);
+  $("tiles").innerHTML = tiles.join("");
+})();
+
+/* ---------- timeline ---------- */
+var activeCat = "all";
+function gitBadge(m) {
+  var g = m.git_state;
+  if (!g) return m.state_note ? '<span class="badge pend">' + esc(m.state_note) + "</span>" : "";
+  if (g.in_published_branch === true) return '<span class="badge ok">in main (published branch)</span>';
+  if (g.in_working_branch === true) return '<span class="badge pend">pending integration: merged in the working branch, not yet in main (checked ' + esc(dt(g.checked)) + ")</span>";
+  if (g.in_working_branch === false) return '<span class="badge pend">pending integration: not yet merged (checked ' + esc(dt(g.checked)) + ")</span>";
+  return "";
+}
+function renderTimeline() {
+  var items = miles.filter(function (m) { return activeCat === "all" || m.category === activeCat; });
+  if (!items.length) { $("tl").innerHTML = '<li class="empty">No milestones in this category.</li>'; return; }
+  $("tl").innerHTML = items.map(function (m) {
+    return '<li><div class="when">' + esc(m.date) + (m.time ? " " + esc(m.time) : "") + '</div><h3>' + esc(m.title) + "</h3>" +
+      '<p><span class="badge cat">' + esc(CATS[m.category] || m.category) + "</span>" + gitBadge(m) + "</p>" +
+      "<p>" + esc(m.description) + "</p>" +
+      '<p class="ev"><b>Evidence:</b> ' + esc((m.evidence || []).join("; ")) + '<br><b>Source:</b> ' + esc(m.source || "") + "</p></li>";
+  }).join("");
+}
+(function () {
+  var cats = ["all"].concat(Object.keys(CATS).filter(function (c) { return miles.some(function (m) { return m.category === c; }); }));
+  $("catChips").innerHTML = cats.map(function (c) { return '<button type="button" class="chip" data-c="' + c + '" aria-pressed="' + (c === "all") + '">' + esc(c === "all" ? "All" : CATS[c]) + "</button>"; }).join("");
+  $("catChips").addEventListener("click", function (e) {
+    var b = e.target.closest(".chip"); if (!b) return;
+    activeCat = b.getAttribute("data-c");
+    Array.prototype.forEach.call($("catChips").children, function (x) { x.setAttribute("aria-pressed", String(x === b)); });
+    renderTimeline();
+  });
+  renderTimeline();
+})();
+
+/* ---------- charts ---------- */
+var FAM = [["swat_plus", "SWAT+", "--c1"], ["swat2012", "SWAT2012", "--c2"], ["swat_mf", "SWAT-MODFLOW", "--c3"], ["modflow", "MODFLOW (NWT/2005)", "--c4"], ["modflow6", "MODFLOW 6", "--c5"], ["apex", "APEX / APEX-MODFLOW", "--c6"], ["generic", "Generic", "--c7"]];
+function trunc(s, n) { return s.length > n ? s.slice(0, Math.max(1, n - 1)) + "…" : s; }
+function rowLabel(s, y, labelW) {
+  var n = Math.max(8, Math.floor(labelW / 6.4));
+  return '<text class="muted" x="0" y="' + (y - 3) + '">' + esc(s.taken_at.slice(0, 10)) + '</text><text x="0" y="' + (y + 11) + '">' + esc(trunc(s.label, n)) + "<title>" + esc(snapLabel(s)) + "</title></text>";
+}
+function widthOf(el) { return Math.max(260, Math.floor(el.getBoundingClientRect().width || el.clientWidth || 460)); }
+function svgWrap(w, h, inner) { return '<svg role="img" width="' + w + '" height="' + h + '" viewBox="0 0 ' + w + " " + h + '">' + inner + "</svg>"; }
+
+function chartTests() {
+  var el = $("chTests"), W = widthOf(el), labelW = Math.min(190, Math.floor(W * 0.4)), rowH = 38, out = [];
+  var maxT = Math.max.apply(null, [1].concat(snaps.filter(hasTests).map(function (s) { return s.tests.total; })));
+  var bw = W - labelW - 70;
+  snaps.forEach(function (s, i) {
+    var y = i * rowH + 16;
+    out.push(rowLabel(s, y, labelW));
+    if (hasTests(s)) {
+      var t = s.tests, x0 = labelW + 6;
+      out.push('<rect x="' + x0 + '" y="' + (y - 10) + '" width="' + (bw * t.total / maxT) + '" height="18" rx="3" fill="none" stroke="var(--c3)" stroke-width="1.5"/>');
+      out.push('<rect x="' + x0 + '" y="' + (y - 10) + '" width="' + (bw * t.passed / maxT) + '" height="18" rx="3" fill="var(--c3)"><title>' + t.passed + " of " + t.total + " passed in " + t.suites_run + " suites</title></rect>");
+      out.push('<text class="val" x="' + (x0 + bw * t.total / maxT + 6) + '" y="' + (y + 4) + '">' + t.passed + "/" + t.total + "</text>");
+    } else out.push('<text class="muted" x="' + (labelW + 6) + '" y="' + (y + 4) + '">not recorded</text>');
+  });
+  el.innerHTML = svgWrap(W, snaps.length * rowH + 4, out.join(""));
+}
+function chartRules() {
+  var el = $("chRules"), W = widthOf(el), labelW = Math.min(190, Math.floor(W * 0.4)), rowH = 38, out = [];
+  var maxT = Math.max.apply(null, [1].concat(snaps.filter(hasRules).map(function (s) { return s.rules.total; })));
+  var bw = W - labelW - 50;
+  snaps.forEach(function (s, i) {
+    var y = i * rowH + 16;
+    out.push(rowLabel(s, y, labelW));
+    if (hasRules(s)) {
+      var x = labelW + 6;
+      FAM.forEach(function (f) {
+        var fam = s.rules.families[f[0]]; if (!fam || !fam.rules) return;
+        var w = bw * fam.rules / maxT;
+        out.push('<rect x="' + x + '" y="' + (y - 10) + '" width="' + Math.max(1, w - 2) + '" height="18" fill="var(' + f[2] + ')"><title>' + esc(f[1]) + ": " + fam.rules + "</title></rect>");
+        if (w >= 18) out.push('<text x="' + (x + (w - 2) / 2) + '" y="' + (y + 4) + '" text-anchor="middle" style="fill:#fff;font-weight:700;font-size:11px">' + fam.rules + "</text>");
+        x += w;
+      });
+      out.push('<text class="val" x="' + (x + 4) + '" y="' + (y + 4) + '">' + s.rules.total + "</text>");
+    } else out.push('<text class="muted" x="' + (labelW + 6) + '" y="' + (y + 4) + '">not recorded</text>');
+  });
+  el.innerHTML = svgWrap(W, snaps.length * rowH + 4, out.join(""));
+  $("lgRules").innerHTML = FAM.filter(function (f) { return snaps.some(function (s) { return hasRules(s) && s.rules.families[f[0]]; }); }).map(function (f) { return '<span><i style="background:var(' + f[2] + ')"></i>' + esc(f[1]) + "</span>"; }).join("");
+}
+function chartBench() {
+  var el = $("chBench"), W = widthOf(el), labelW = Math.min(190, Math.floor(W * 0.38)), rowH = 66, out = [];
+  var bw = W - labelW - 56;
+  var series = [["stop", "cause_named", "Stop faults: cause named", "--c1"], ["stop", "as_error", "Stop faults: as an error", "--c4"], ["silent_damage", "cause_named", "Silent-damage faults: cause named", "--c3"]];
+  benchSnaps.forEach(function (s, i) {
+    var y = i * rowH + 16;
+    out.push(rowLabel(s, y + 8, labelW));
+    series.forEach(function (sr, k) {
+      var g = s.benchmark.groups[sr[0]], v = g[sr[1]], by = y - 10 + k * 20, x0 = labelW + 6;
+      out.push('<rect class="track" x="' + x0 + '" y="' + by + '" width="' + bw + '" height="14" rx="3"/>');
+      out.push('<rect x="' + x0 + '" y="' + by + '" width="' + Math.max(v ? 2 : 0, bw * pct(v, g.cases)) + '" height="14" rx="3" fill="var(' + sr[3] + ')"><title>' + esc(sr[2]) + ": " + v + " of " + g.cases + "</title></rect>");
+      out.push('<text class="val" x="' + (x0 + bw + 6) + '" y="' + (by + 11) + '">' + v + "/" + g.cases + "</text>");
+    });
+  });
+  if (!benchSnaps.length) out.push('<text class="muted" x="0" y="20">no benchmark recorded yet</text>');
+  el.innerHTML = svgWrap(W, Math.max(1, benchSnaps.length) * rowH + 4, out.join(""));
+  $("lgBench").innerHTML = series.map(function (sr) { return '<span><i style="background:var(' + sr[3] + ')"></i>' + esc(sr[2]) + "</span>"; }).join("");
+}
+function chartAudit() {
+  var el = $("chAudit"), W = widthOf(el), pts = [];
+  miles.forEach(function (m) {
+    if (m.metrics && m.metrics.audit_false_alarms != null)
+      pts.push({ t: m.date + " " + (m.time || "00:00"), label: m.date + " " + (m.metrics.audit_false_alarms ? "first audit" : "after fixes"), kind: "false", v: m.metrics.audit_false_alarms, sub: "false alarms (author's audit, commit message)" });
+  });
+  snaps.filter(hasAudit).forEach(function (s) {
+    pts.push({ t: s.taken_at.replace("T", " "), label: s.taken_at.slice(0, 10) + " " + s.label, kind: "raw", v: s.audit.error_findings_on_working, models: s.audit.working_with_error, work: s.audit.working, sub: "error findings on working models (raw, " + s.audit.working_with_error + " of " + s.audit.working + " models; not re-adjudicated)" });
+  });
+  pts.sort(function (a, b) { return a.t < b.t ? -1 : 1; });
+  var labelW = Math.min(190, Math.floor(W * 0.4)), rowH = 44, bw = W - labelW - 70, mx = Math.max.apply(null, [1].concat(pts.map(function (p) { return p.v; }))), out = [];
+  pts.forEach(function (p, i) {
+    var y = i * rowH + 18, x0 = labelW + 6, w = bw * p.v / mx;
+    out.push('<text class="muted" x="0" y="' + (y - 3) + '">' + esc(trunc(p.label, Math.floor(labelW / 6.4))) + "</text>");
+    out.push('<text x="0" y="' + (y + 11) + '" class="muted">' + (p.kind === "false" ? "false alarms" : "raw error findings") + "</text>");
+    if (p.kind === "false") out.push('<rect x="' + x0 + '" y="' + (y - 10) + '" width="' + Math.max(p.v ? 2 : 0, w) + '" height="18" rx="3" fill="var(--c4)"><title>' + esc(p.sub) + "</title></rect>");
+    else out.push('<rect x="' + (x0 + 1) + '" y="' + (y - 9) + '" width="' + Math.max(2, w - 2) + '" height="16" rx="3" fill="none" stroke="var(--c4)" stroke-width="2" stroke-dasharray="4 3"><title>' + esc(p.sub) + "</title></rect>");
+    out.push('<text class="val" x="' + (x0 + Math.max(2, w) + 6) + '" y="' + (y + 4) + '">' + p.v + "</text>");
+  });
+  if (!pts.length) out.push('<text class="muted" x="0" y="20">no audit recorded yet</text>');
+  el.innerHTML = svgWrap(W, Math.max(1, pts.length) * rowH + 4, out.join(""));
+  var ra = last(snaps, hasAudit);
+  $("auditNote").textContent = "Solid bar: false alarms after review (author's audit of 141 working models, from the commit message). Dashed bar: raw count of error findings on working models in the latest saved audit" +
+    (ra ? " (" + ra.audit.working_with_error + " of " + ra.audit.working + " models; the new checks for unsorted station lists and missing files also fire on some working models, which the tests list as expected true positives for part of them). These raw findings were not re-adjudicated." : ".");
+}
+function drawCharts() { chartTests(); chartRules(); chartBench(); chartAudit(); }
+drawCharts();
+var rt; window.addEventListener("resize", function () { clearTimeout(rt); rt = setTimeout(function () { drawCharts(); if (typeof setMW === "function") setMW(); }, 120); });
+
+/* ---------- benchmark matrix ---------- */
+var FAMN = { apex: "APEX", apexmf: "APEX-MODFLOW", mf6: "MODFLOW 6", swat2012: "SWAT2012", swatmf: "SWAT-MODFLOW", swatplus_p29: "SWAT+" };
+var ENG = { BROKE: "run stopped", OK: "run finished", CHANGED: "finished, results changed", "NO-EFFECT": "finished, no change" };
+var VTIP = { ERROR: "The tool raised an error that names the fault.", WARN: "A warning or note that names the fault.", ELSEWHERE: "The tool said something, but not about this fault.", ABSTAIN: "No rules for this model family; nothing relevant found.", SILENT: "The tool has rules for the family and said nothing." };
+var cases = {}, order = [];
+benchSnaps.forEach(function (s) { s.benchmark.cases.forEach(function (c) { if (!cases[c.id]) { cases[c.id] = { meta: c, by: {} }; order.push(c.id); } cases[c.id].meta = c; cases[c.id].by[s.id] = c; }); });
+order.sort(function (a, b) { var A = cases[a].meta, B = cases[b].meta; if (A.is_control !== B.is_control) return A.is_control ? 1 : -1; return A.family === B.family ? (a < b ? -1 : 1) : ((FAMN[A.family] || A.family) < (FAMN[B.family] || B.family) ? -1 : 1); });
+function vcell(c, isCtl) {
+  if (!c) return '<span class="v v-none">no data</span>';
+  var v = c.verdict;
+  if (v === "-") return '<span class="v v-none" title="no answer">no answer</span>';
+  if (isCtl) return v === "ERROR" ? '<span class="v v-falsealarm" title="An unmodified working model got an error: a false alarm.">ERROR (false alarm)</span>' : '<span class="v v-ctl" title="' + esc(VTIP[v] || "") + '">' + v + "</span>";
+  return '<span class="v v-' + v + '" title="' + esc(VTIP[v] || "") + '">' + v + "</span>";
+}
+function changedRow(id) { var vs = benchSnaps.map(function (s) { var c = cases[id].by[s.id]; return c ? c.verdict : null; }); return vs.some(function (v) { return v !== vs[0]; }); }
+var open = {};
+function renderMatrix() {
+  var onlyCh = $("onlyChanged").checked, noCtl = $("hideControls").checked;
+  if (!benchSnaps.length) { $("matrixBox").innerHTML = '<p class="empty" style="padding:12px">No benchmark recorded yet.</p>'; return; }
+  var h = ['<table class="matrix"><thead><tr><th class="case" scope="col">Fault (base model)</th><th scope="col">Engine</th>'];
+  benchSnaps.forEach(function (s) {
+    var g = s.benchmark.groups;
+    h.push('<th scope="col">' + esc(s.taken_at.slice(5, 10)) + "<br>" + esc(trunc(s.label, 26)) + "<small>stop: " + g.stop.cause_named + "/" + g.stop.cases + " named, " + g.stop.as_error + " as error</small><small>silent: " + g.silent_damage.cause_named + "/" + g.silent_damage.cases + "</small></th>");
+  });
+  h.push("</tr></thead><tbody>");
+  var lastGrp = null;
+  order.forEach(function (id) {
+    var m = cases[id].meta, ctl = m.is_control;
+    if (onlyCh && !changedRow(id)) return;
+    if (noCtl && ctl) return;
+    var grp = ctl ? "Unmodified controls (any error here is a false alarm)" : "Injected faults";
+    if (grp !== lastGrp) { h.push('<tr class="grp"><td colspan="' + (2 + benchSnaps.length) + '">' + esc(grp) + "</td></tr>"); lastGrp = grp; }
+    var isOpen = !!open[id];
+    h.push('<tr class="row"><td class="case"><button type="button" class="rowbtn" data-id="' + esc(id) + '" aria-expanded="' + isOpen + '" aria-controls="d_' + esc(id) + '"><span class="id">' + (isOpen ? "▾ " : "▸ ") + esc(id) + '</span><span class="ft">' + esc(m.fault) + " (" + esc(FAMN[m.family] || m.family) + ")</span></button></td>");
+    h.push('<td><span class="eng">' + esc(ENG[m.engine] || m.engine) + "</span></td>");
+    benchSnaps.forEach(function (s) { h.push("<td>" + vcell(cases[id].by[s.id], ctl) + "</td>"); });
+    h.push("</tr>");
+    if (isOpen) {
+      var d = ['<tr class="detail" id="d_' + esc(id) + '"><td colspan="' + (2 + benchSnaps.length) + '"><div class="dbox"><dl>'];
+      d.push("<dt>Fault</dt><dd>" + esc(m.fault) + " (base: " + esc(FAMN[m.family] || m.family) + ", expected from the fault design: " + esc(m.expected || "n/a") + ")</dd>");
+      d.push("<dt>What the engine did</dt><dd>" + esc(ENG[m.engine] || m.engine) + " (" + esc(m.engine) + ")</dd>");
+      benchSnaps.forEach(function (s) {
+        var c = cases[id].by[s.id];
+        d.push("<dt>" + esc(snapLabel(s)) + "</dt><dd>" + (c ? vcell(c, ctl) + " " + esc(c.evidence || "(the tool listed nothing)") + ' <span class="empty">[' + esc(c.answer_from || "") + "]</span>" + (c.verdict_after_run ? ' <span class="empty">After the run the tool said: ' + esc(c.verdict_after_run) + ".</span>" : "") : "no data") + "</dd>");
+      });
+      d.push("</dl></div></td></tr>");
+      h.push(d.join(""));
+    }
+  });
+  h.push("</tbody></table>");
+  $("matrixBox").innerHTML = h.join("");
+  setMW();
+}
+function setMW() { $("matrixBox").style.setProperty("--mw", $("matrixBox").clientWidth + "px"); }
+$("matrixBox").addEventListener("click", function (e) { var b = e.target.closest(".rowbtn"); if (!b) return; var id = b.getAttribute("data-id"); open[id] = !open[id]; renderMatrix(); var nb = $("matrixBox").querySelector('.rowbtn[data-id="' + id + '"]'); if (nb) nb.focus(); });
+$("onlyChanged").addEventListener("change", renderMatrix);
+$("hideControls").addEventListener("change", renderMatrix);
+$("mkey").innerHTML = ["ERROR", "WARN", "ELSEWHERE", "ABSTAIN", "SILENT"].map(function (v) { return '<span class="kv"><span class="v v-' + v + '">' + v + "</span>" + esc(VTIP[v].replace(/^The tool |^A |^No /, function (m) { return m; })) + "</span>"; }).join("");
+renderMatrix();
+
+/* ---------- models ---------- */
+(function () {
+  var s = last(snaps, hasInv), a = last(snaps, hasAudit), out = [];
+  if (!s) { $("modelsSub").textContent = "No model inventory recorded yet."; }
+  else {
+    $("modelsSub").textContent = s.inventory.folders_audited + " model folders were audited in the latest audit (" + (a ? a.audit.working + " working: ran to completion or published/reference models; " + a.audit.no_success_marker + " with no success marker, reported apart" : "") + "). Folders are named by collection and family only; no paths are stored.";
+    var bars = function (title, obj) {
+      var keys = Object.keys(obj).sort(function (x, y) { return obj[y] - obj[x]; }), mx = Math.max.apply(null, keys.map(function (k) { return obj[k]; }));
+      return '<div class="card"><h3 style="margin-top:0">' + esc(title) + '</h3><div class="hbars">' + keys.map(function (k) { return "<span>" + esc(k) + '</span><span class="bar"><i style="width:' + (100 * obj[k] / mx) + '%"></i></span><span class="num">' + obj[k] + "</span>"; }).join("") + "</div></div>";
+    };
+    out.push(bars("By collection", s.inventory.by_collection), bars("By model family", s.inventory.by_family), bars("By coupling detected", s.inventory.by_coupling));
+  }
+  var bs = last(snaps, hasBench);
+  if (bs) {
+    var by = {}; bs.benchmark.cases.forEach(function (c) { if (!c.is_control) by[FAMN[c.family] || c.family] = (by[FAMN[c.family] || c.family] || 0) + 1; });
+    var keys = Object.keys(by).sort(function (x, y) { return by[y] - by[x]; }), mx = Math.max.apply(null, keys.map(function (k) { return by[k]; }));
+    out.push('<div class="card"><h3 style="margin-top:0">Benchmark: injected faults per base model</h3><div class="hbars">' + keys.map(function (k) { return "<span>" + esc(k) + '</span><span class="bar"><i style="width:' + (100 * by[k] / mx) + '%"></i></span><span class="num">' + by[k] + "</span>"; }).join("") + '</div><p class="note" style="font-size:.82rem;color:var(--muted);margin:8px 0 0">One working base model per engine, six in all, each also run once unmodified as a control.</p></div>');
+  }
+  $("modelsGrid").innerHTML = out.join("") || '<p class="empty">Nothing recorded.</p>';
+})();
+
+/* ---------- corrections ---------- */
+(function () {
+  var cs = miles.filter(function (m) { return m.correction; });
+  $("corrList").innerHTML = cs.map(function (m) {
+    return '<div class="card"><div class="when" style="font-size:.82rem;color:var(--muted)">' + esc(m.date) + (m.time ? " " + esc(m.time) : "") + "</div><p style=\"margin:2px 0\"><b>" + esc(m.title) + "</b> " + gitBadge(m) + "</p><p><b>What was corrected:</b> " + esc(m.correction.fixed) + "</p><p><b>Measured reason:</b> " + esc(m.correction.measured_reason) + "</p><p class=\"ev\"><b>Source:</b> " + esc(m.source || "") + "</p></div>";
+  }).join("") || '<p class="empty">No corrections recorded.</p>';
+  var rows = [];
+  for (var i = 1; i < benchSnaps.length; i++) {
+    var a = benchSnaps[i - 1], b = benchSnaps[i];
+    order.forEach(function (id) {
+      var ca = cases[id].by[a.id], cb = cases[id].by[b.id];
+      if (ca && cb && ca.verdict !== cb.verdict) rows.push("<tr><td>" + esc(a.taken_at.slice(5, 10) + " " + trunc(a.label, 22) + " → " + b.taken_at.slice(5, 10) + " " + trunc(b.label, 22)) + "</td><td>" + esc(id) + "<br><span class=\"empty\">" + esc(cb.fault) + "</span></td><td>" + vcell(ca, cb.is_control) + " → " + vcell(cb, cb.is_control) + "</td></tr>");
+    });
+  }
+  $("chgBox").innerHTML = rows.length ? '<div style="overflow-x:auto"><table class="chg"><thead><tr><th>Between</th><th>Case</th><th>Verdict</th></tr></thead><tbody>' + rows.join("") + "</tbody></table></div>" : '<span class="empty">No verdict changed between the recorded benchmark snapshots.</span>';
+})();
+
+/* ---------- snapshots ---------- */
+$("snapList").innerHTML = snaps.slice().reverse().map(function (s) {
+  var pv = s.provenance || {}, g = s.git || {};
+  function chips(list, cls, pre) { return (list || []).map(function (x) { return '<span class="badge ' + cls + '">' + pre + esc(x) + "</span>"; }).join(""); }
+  return '<details class="snap card"><summary>' + esc(s.label) + '<span class="meta">' + esc(dt(s.taken_at)) + " · " + (s.kind === "backfill" ? "reconstructed afterwards" : "measured at the time") + " · commit " + esc(g.commit || "not recorded") + "</span></summary>" +
+    '<div class="pv">' + chips(pv.measured_when_taken, "m", "measured: ") + chips(pv.reconstructed_from_saved_files, "r", "reconstructed: ") + chips(pv.not_recorded, "n", "not recorded: ") + "</div>" +
+    (s.note ? "<p><b>What changed:</b> " + esc(s.note) + "</p>" : "") + (s.backfill_note ? "<p><b>How this was reconstructed:</b> " + esc(s.backfill_note) + "</p>" : "") +
+    (g.message ? "<p><b>Commit:</b> " + esc(g.message) + (g.dirty ? " (the working tree had uncommitted changes)" : "") + "</p>" : "") +
+    (s.audit && s.audit.status === "read" ? "<p><b>Audit result file saved:</b> " + esc(dt(s.audit.result_file_time)) + " (read, not re-run).</p>" : "") +
+    (hasBench(s) ? "<p><b>Benchmark answers from:</b> " + esc(s.benchmark.source_file) + " (saved " + esc(dt(s.benchmark.source_file_time)) + ")" + (s.benchmark.rescored_now ? ", re-asked of the current rules on the saved faulted copies" : "") + (s.benchmark.possibly_stale ? ". <b>Warning:</b> " + esc(s.benchmark.stale_note) : "") + ".</p>" : "") + "</details>";
+}).join("");
+
+$("foot").textContent = "Generated from evolution/ledger/ (" + snaps.length + " snapshots) and evolution/milestones.json by bench/snapshot.py. Everything on this page is read from those files; nothing is computed from outside them.";
+})();
+</script>
+</body>
+</html>

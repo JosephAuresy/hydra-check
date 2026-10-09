@@ -1,0 +1,389 @@
+{
+ "schema": 1,
+ "id": "2026-10-08T1635_before-improvements",
+ "label": "before improvements",
+ "version": "",
+ "taken_at": "2026-10-08T16:35",
+ "kind": "backfill",
+ "note": "First execution of the 22 injected faults (plus 6 unmodified controls) on the real engines, scored against the tool exactly as it was before any rule was changed because of these results.",
+ "backfill_note": "Benchmark matrix reconstructed from the saved first-run result file (run and tool answers were written at the time of the run). Which commit this tool state corresponds to was not recorded, so rule counts are not recorded; no tests or audit were saved for this moment.",
+ "git": {
+  "commit": "not recorded",
+  "message": "",
+  "commit_date": "",
+  "branch": "not recorded",
+  "dirty": null,
+  "in_main": null,
+  "source": "the committed state this snapshot describes was not recorded"
+ },
+ "rules": {
+  "status": "not recorded"
+ },
+ "tests": {
+  "status": "not recorded",
+  "reason": "past state: tests were not run at that time"
+ },
+ "audit": {
+  "status": "not recorded",
+  "reason": "no audit result exists for this point in time"
+ },
+ "benchmark": {
+  "status": "read",
+  "source_file": "results_BEFORE_improvements.json",
+  "tool_field": "tool",
+  "source_file_time": "2026-10-08T16:35",
+  "rescored_now": false,
+  "answers_re_asked": 0,
+  "answers_from_saved_file": 28,
+  "effect_file": "effect.json",
+  "fault_cases": 22,
+  "controls": 6,
+  "control_false_alarms": 0,
+  "groups": {
+   "stop": {
+    "label": "faults that stop the engine",
+    "cases": 15,
+    "cause_named": 8,
+    "as_error": 3
+   },
+   "silent_damage": {
+    "label": "faults the run survives that change results",
+    "cases": 4,
+    "cause_named": 2,
+    "as_error": 2
+   },
+   "no_effect": {
+    "label": "faults the run survives with no effect on results",
+    "cases": 2,
+    "cause_named": 2,
+    "as_error": 0
+   }
+  },
+  "cases": [
+   {
+    "id": "A01_missing_soil",
+    "family": "apex",
+    "fault": "HOUSTON.SOL deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "OK",
+    "verdict": "ABSTAIN",
+    "evidence": "No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "A02_empty_apexcont",
+    "family": "apex",
+    "fault": "APEXCONT.DAT truncated to 0 bytes",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "ABSTAIN",
+    "evidence": "No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "AM01_link_missing",
+    "family": "apexmf",
+    "fault": "apexmf_link.txt deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "ABSTAIN",
+    "evidence": "No APEX rules exist yet: this tool identified the model, but only the generic file checks ran. The APEX-MODFLOW coupling is not checked yet.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_apex",
+    "family": "apex",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "ABSTAIN",
+    "evidence": "No APEX rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_apexmf",
+    "family": "apexmf",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "ABSTAIN",
+    "evidence": "No APEX rules exist yet: this tool identified the model, but only the generic file checks ran. The APEX-MODFLOW coupling is not checked yet.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_mf6",
+    "family": "mf6",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "SILENT",
+    "evidence": "No MODFLOW 6 rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_swat2012",
+    "family": "swat2012",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "SILENT",
+    "evidence": "SWAT2012 rule set.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_swatmf",
+    "family": "swatmf",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "SILENT",
+    "evidence": "SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "C_swatplus_p29",
+    "family": "swatplus_p29",
+    "fault": "unmodified base (control)",
+    "is_control": true,
+    "expected": "ok",
+    "engine": "OK",
+    "verdict": "ELSEWHERE",
+    "evidence": "warning: gwflow input files exist but the module is switched off (codes.bsn has gwflow = 0).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "F01_tdis_nper_mismatch",
+    "family": "mf6",
+    "fault": "NPER says 6 periods but 5 are defined",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "SILENT",
+    "evidence": "No MODFLOW 6 rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "F02_missing_npf",
+    "family": "mf6",
+    "fault": "gwf.npf deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "SILENT",
+    "evidence": "No MODFLOW 6 rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "F03_outer_maximum_one",
+    "family": "mf6",
+    "fault": "OUTER_MAXIMUM 1 and a tiny closure: cannot converge",
+    "is_control": false,
+    "expected": "unknown",
+    "engine": "BROKE",
+    "verdict": "SILENT",
+    "evidence": "No MODFLOW 6 rules exist yet: this tool identified the model, but only the generic file checks ran.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "M01_mfn_low_units",
+    "family": "swatmf",
+    "fault": "low Fortran unit numbers in modflow.mfn",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "WARN",
+    "evidence": "warning: Low file-unit numbers in modflow.mfn | DIS → unit 12 (line 5) · BAS6 → unit 13 (line 6) | SWAT-MODFLOW reserves low Fortran unit numbers; conflicts cause silent crashes at startup (period 1, day 1).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "M02_dis_short_perlen",
+    "family": "swatmf",
+    "fault": "MODFLOW time (sum PERLEN) shorter than the SWAT period",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "ERROR",
+    "evidence": "error: MODFLOW time is shorter than the SWAT period | mf_1000.dis | The stress periods in the DIS file add up to 100 days (1 period, PERLEN summed), but SWAT simulates ≈730 days. SWAT-MODFLOW advances MODFLOW one day at a time through the stress …",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "M03_link_missing",
+    "family": "swatmf",
+    "fault": "swatmf_link.txt deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "WARN",
+    "evidence": "warning: swatmf_link.txt not found | swatmf_link.txt | The link file controls coupling outputs and options; without it the exchange is not configured.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "M04_package_missing",
+    "family": "swatmf",
+    "fault": "mf_1000.upw named in modflow.mfn is deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "SILENT",
+    "evidence": "SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P02_gwflow_flag_on",
+    "family": "swatplus_p29",
+    "fault": "codes.bsn gwflow=1 while file.cio connects aquifer.con (gwflow files present)",
+    "is_control": false,
+    "expected": "unknown",
+    "engine": "NO-EFFECT",
+    "verdict": "WARN",
+    "evidence": "warning: codes.bsn says gwflow = 1 but file.cio does not connect gwflow.con. The two disagree. (+1 more)",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P03_end_before_start",
+    "family": "swatplus_p29",
+    "fault": "time.sim end year before start year",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "ERROR",
+    "evidence": "error: Simulation end date is before the start date | time.sim | Parsed: start day 0, year 2020 → end day 0, year 1999. The model will stop on day 1.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P04_missing_climate",
+    "family": "swatplus_p29",
+    "fault": "a precipitation file named in weather-sta.cli is deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "CHANGED",
+    "verdict": "ERROR",
+    "evidence": "error: Weather files referenced but not found | weather-sta.cli → GHCND_US1TXVV0014.pcp | The station file points to climate files that are not in the folder — the run aborts while reading weather.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P05_soil_numeric_null",
+    "family": "swatplus_p29",
+    "fault": "null in a numeric soil column (bd)",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "CHANGED",
+    "verdict": "ERROR",
+    "evidence": "error: Null/NaN fields inside soils.sol | soils.sol — line 4: bd = null | A numeric soil property holds null or NaN. This is the most common cause of the floating invalid (error 65) crash: the model computes with an undefined number and aborts. (…",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P06_empty_time_sim",
+    "family": "swatplus_p29",
+    "fault": "time.sim truncated to 0 bytes",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "WARN",
+    "evidence": "warning: Empty (0-byte) files that the model reads | time.sim | These files are named as inputs by the control files but contain nothing. An empty input file usually means an interrupted write by the GUI/editor and causes end-of-file crashes.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P07_unsorted_pcp_cli",
+    "family": "swatplus_p29",
+    "fault": "stations in pcp.cli no longer sorted",
+    "is_control": false,
+    "expected": "silent",
+    "engine": "CHANGED",
+    "verdict": "ELSEWHERE",
+    "evidence": "warning: gwflow input files exist but the module is switched off (codes.bsn has gwflow = 0).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P08_hru_rows_short",
+    "family": "swatplus_p29",
+    "fault": "hru-data.hru rows lose their last field",
+    "is_control": false,
+    "expected": "unknown",
+    "engine": "CHANGED",
+    "verdict": "ELSEWHERE",
+    "evidence": "warning: gwflow input files exist but the module is switched off (codes.bsn has gwflow = 0).",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "P09_codes_rev62_layout",
+    "family": "swatplus_p29",
+    "fault": "rev-62 column layout in codes.bsn read by a rev-61 engine",
+    "is_control": false,
+    "expected": "unknown",
+    "engine": "NO-EFFECT",
+    "verdict": "WARN",
+    "evidence": "warning: gwflow input files exist but the module is switched off (codes.bsn has gwflow = 0). (+1 more)",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "W01_nbyr_exceeds_climate",
+    "family": "swat2012",
+    "fault": "NBYR=60 but the climate record is ~33 years",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "WARN",
+    "evidence": "warning: Climate file may not cover the simulation period | pcp1.pcp | file.cio asks for 60 year(s) starting 1980; pcp1.pcp contains 33 year(s) [1980–2012]. A shorter climate record makes SWAT stop or fill with generator data.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "W02_sol_null",
+    "family": "swat2012",
+    "fault": "null bulk density in a .sol file",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "ERROR",
+    "evidence": "error: Null values in soil (.sol) files | 000010001.sol | Null soil properties are a classic cause of runtime crashes and of implausible water-balance output.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "W03_missing_sol",
+    "family": "swat2012",
+    "fault": "a .sol file named by .sub/.hru is deleted",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "SILENT",
+    "evidence": "SWAT2012 rule set.",
+    "answer_from": "saved file"
+   },
+   {
+    "id": "W04_empty_sol",
+    "family": "swat2012",
+    "fault": "a .sol file truncated to 0 bytes",
+    "is_control": false,
+    "expected": "crash",
+    "engine": "BROKE",
+    "verdict": "WARN",
+    "evidence": "warning: Empty (0-byte) files that the model reads | 000010001.sol | These files are named as inputs by the control files but contain nothing. An empty input file usually means an interrupted write by the GUI/editor and causes end-of-file crashes.",
+    "answer_from": "saved file"
+   }
+  ]
+ },
+ "inventory": {
+  "status": "not recorded"
+ },
+ "provenance": {
+  "measured_when_taken": [],
+  "reconstructed_from_saved_files": [
+   "benchmark matrix (from the saved result file)"
+  ],
+  "not_recorded": [
+   "git commit",
+   "model inventory",
+   "precision audit",
+   "rule counts",
+   "test results"
+  ]
+ }
+}
