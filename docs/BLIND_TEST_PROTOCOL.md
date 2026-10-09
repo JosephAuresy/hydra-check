@@ -65,4 +65,4 @@ Limits that must accompany any number from it:
 
 ## Amendments
 
-(none yet)
+* **2026-10-09, before any score was seen:** round 2 finished its engine runs and showed that one decoy, SPD03 (upper-case `.PCP` in weather-sta.cli), is not benign: SWAT+ finished with changed results. The false-alarm rate is therefore computed only on decoys the engine confirmed benign (finished with identical results); decoys that turned out not benign are listed apart, with whether the tool flagged them. This changes only the aggregation in `bench/score_v2.py`. The scoring run had already been started with the previous aggregation text when this amendment was committed; per-case data (verdicts, new flags) do not depend on it, and the summary is regenerated from the saved per-case file.

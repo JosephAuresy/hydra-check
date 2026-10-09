@@ -128,10 +128,13 @@ def summarize(rows):
             if F:
                 print("      %-14s named %s" % (f, frac(sum(named(r) for r in F), len(F))))
     D = [r for r in rows if r["decoy"]]
-    print("\nDECOYS (benign edits): %d" % len(D))
-    print("   false alarm = a NEW ERROR/WARN that the unmodified base does not raise: %s" % frac(sum(bool(r["new_flags"]) for r in D), len(D)))
-    stopped = [r["id"] for r in D if r["outcome"] in ("BROKE", "TIMEOUT")]
-    print("   decoys on which the ENGINE itself stopped (the edit was not benign): %s" % (", ".join(stopped) or "none"))
+    benign = [r for r in D if r["outcome"] in ("NO-EFFECT", "OK")]
+    notbenign = [r for r in D if r not in benign]
+    print("\nDECOYS (benign edits): %d, of which the engine confirmed benign (finished, identical results): %d" % (len(D), len(benign)))
+    print("   false alarm = a NEW ERROR/WARN that the unmodified base does not raise, on a confirmed-benign decoy: %s" % frac(sum(bool(r["new_flags"]) for r in benign), len(benign)))
+    print("   decoys that turned out NOT benign (engine stopped or results changed), reported apart; tool flagged = a new ERROR/WARN:")
+    for r in notbenign:
+        print("      %-28s engine %-9s tool flagged: %s   %s" % (r["id"], r["outcome"], "yes" if r["new_flags"] else "no", r["title"]))
     print("\ncases the tool missed on stopped runs (SILENT, ELSEWHERE or ABSTAIN):")
     for r in rows:
         if not r["decoy"] and r["outcome"] in ("BROKE", "TIMEOUT") and not named(r):
