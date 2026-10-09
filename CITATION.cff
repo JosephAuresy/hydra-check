@@ -11,7 +11,7 @@ authors:
     affiliation: "Texas Tech University"
 date-released: "2026-07-10"
 license: MIT
-repository-code: "https://github.com/JosephAuresy/hydro-diagnostic-assistant"
+repository-code: "https://github.com/JosephAuresy/hydra-check"
 preferred-citation:
   type: article
   title: "A Cross-Model Taxonomy of Implementation Failures in Hydrological Modeling Frameworks: Empirical Foundations for a Knowledge-Grounded Diagnostic Assistant"

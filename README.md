@@ -6,7 +6,7 @@ A free, private, in-browser pre-run checker. It first works out **what you gave 
 Paste an error message or drop your model folder, and get an instant diagnosis — no upload,
 no account, no server.
 
-**Live tool:** https://JosephAuresy.github.io/hydro-diagnostic-assistant/
+**Live tool:** https://JosephAuresy.github.io/hydra-check/
 
 ## What this is
 
@@ -53,8 +53,8 @@ No build step. Open [`index.html`](index.html) directly in any browser, or visit
 GitHub Pages link above. To run it locally instead of via the web:
 
 ```bash
-git clone https://github.com/JosephAuresy/hydro-diagnostic-assistant.git
-cd hydro-diagnostic-assistant
+git clone https://github.com/JosephAuresy/hydra-check.git
+cd hydra-check
 # then just open index.html in your browser — no server required
 ```
 
