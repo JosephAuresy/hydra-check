@@ -92,6 +92,11 @@
              padding:6px 12px; border-radius:7px; font-size:12px; cursor:pointer; margin-top:8px; }
   .viewbtn:hover { background:var(--accent-bg); }
   .viewer-wrap { margin-top:10px; }
+  .autofix { margin-top:10px; padding:10px 12px; border:0.5px solid var(--border); border-radius:8px; background:var(--surface); }
+  .autofix .afhead { font-size:13px; font-weight:500; color:var(--green); margin-bottom:4px; }
+  .autofix .afrow { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; font-size:13px; margin:4px 0; }
+  .autofix .afrow .viewbtn { margin-top:0; }
+  .autofix .afnote { font-size:12px; color:var(--muted); margin-top:6px; }
   .viewer { background:var(--surface-1); border:0.5px solid var(--border); border-radius:8px;
             font-family:ui-monospace,Consolas,monospace; font-size:12px;
             max-height:320px; overflow:auto; }
@@ -1337,8 +1342,8 @@ const looksTexty = name => TEXT_EXT.test(name) || !/\./.test(name.split("/").pop
 
 function esc(s){ return String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
 
-function finding(sev, title, where, detail, fix, attr, fileHint, hlPattern){
-  return {sev, title, where, detail, fix, attr, fileHint: fileHint||null, hlPattern: hlPattern||null};
+function finding(sev, title, where, detail, fix, attr, fileHint, hlPattern, autofix){
+  return {sev, title, where, detail, fix, attr, fileHint: fileHint||null, hlPattern: hlPattern||null, autofix: autofix||null};
 }
 
 /* Render a file's content with line numbers, highlighting lines matching a pattern. */
@@ -1357,6 +1362,35 @@ function fileSnippetHTML(fileKey, patternSrc){
 }
 
 let viewerCounter = 0;
+const FIXREG = {};
+let fixCounter = 0;
+/* "Download fixed file": the rule already computed the corrected text, so the summary shown is exactly what the download contains. */
+function fixHTML(f){
+  const a = f.autofix; if(!a) return "";
+  let h = '<div class="autofix">';
+  if(a.files.length){
+    h += '<div class="afhead">A corrected copy can be made for you</div>';
+    a.files.forEach(x=>{
+      const id = "fx_" + (fixCounter++);
+      FIXREG[id] = x;
+      h += `<div class="afrow"><span><b>${esc(x.name)}</b>: ${esc(x.summary)}</span>` +
+           `<button class="viewbtn fixbtn" data-fix="${id}">${a.files.length===1 ? "Download fixed file" : "Download fixed "+esc(x.name)}</button></div>`;
+    });
+    h += '<div class="afnote">This is a corrected <b>copy</b>: your original is not changed and nothing was uploaded. Put it in a <b>copy</b> of your model folder (replace the file of the same name), then drop that folder here again to re-check.</div>';
+  }
+  if(a.note) h += `<div class="afnote">${esc(a.note)}</div>`;
+  return h + '</div>';
+}
+document.addEventListener("click", e=>{
+  const b = e.target.closest(".fixbtn");
+  if(!b || !FIXREG[b.dataset.fix]) return;
+  const x = FIXREG[b.dataset.fix];
+  const url = URL.createObjectURL(new Blob([x.text], {type:"text/plain;charset=utf-8"}));
+  const a = document.createElement("a");
+  a.href = url; a.download = x.name;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(()=>URL.revokeObjectURL(url), 2000);
+});
 function renderFindings(list, el){
   if(!list.length){
     el.innerHTML = '<div class="finding ok"><span class="head">No known error signatures detected</span>'+
@@ -1377,6 +1411,7 @@ function renderFindings(list, el){
       <div>${f.detail}</div>
       ${f.fix ? `<div class="fix"><b>Fix:</b> ${f.fix}</div>`:""}
       ${f.attr ? `<div class="attr">${esc(f.attr)}</div>`:""}
+      ${fixHTML(f)}
       ${canView ? `<button class="viewbtn" data-toggle="${vid}" data-file="${esc(f.fileHint)}" data-pat="${esc(f.hlPattern||'')}">Show me in the file</button>
       <div class="viewer-wrap" id="${vid}" style="display:none;"></div>` : ""}
     </div>`;
@@ -1618,6 +1653,134 @@ function checkNameFile(out, nam, attr){
       nam, missing[0].replace(/[.*+?^${}()|[\]\\]/g,"\\$&")));
 }
 
+/* ═════════════════════ automatic fixes ═════════════════════
+   Offered only where one mechanical correction is safe. A fixer returns {text, summary} (a corrected COPY of the file),
+   {note} when it declines for a reason the user should hear, or null. Nothing is applied: the page offers a download. */
+function originalName(key){
+  let found = key;
+  FILENAMES.forEach(p=>{ const b = p.split(/[\\/]/).pop(); if(b.toLowerCase()===key) found = b; });
+  return found;
+}
+function autofixOf(items){        /* items: [{key, res}] -> what the finding carries, or null */
+  const files = [], notes = [];
+  items.forEach(it=>{
+    const r = it.res; if(!r) return;
+    if(r.text!=null) files.push({name: originalName(it.key), text: r.text, summary: r.summary});
+    else if(r.note) notes.push(r.note);
+  });
+  return files.length || notes.length ? {files, note: notes.join(" ")} : null;
+}
+/* Split keeping each line's own ending, so CRLF / LF / a missing final newline all survive: even indexes are lines, odd are endings. */
+const splitKeep = t => t.split(/(\r?\n)/);
+
+function fixCliSorted(text){
+  if(text.indexOf("�")>=0) return null;
+  const parts = splitKeep(text), at = [];
+  for(let i=4;i<parts.length;i+=2) if(parts[i].trim()) at.push(i);        /* station lines: everything after the two header lines */
+  if(at.length<2) return null;
+  const lines = at.map(i=>parts[i]);
+  const sorted = lines.slice().sort((a,b)=>{ const x=a.trim(), y=b.trim(); return x<y ? -1 : x>y ? 1 : 0; });
+  let off = 0;
+  lines.forEach((l,k)=>{ if(l.trim()!==sorted[k].trim()) off++; });
+  if(!off) return null;
+  at.forEach((i,k)=>{ parts[i] = sorted[k]; });
+  return {text: parts.join(""), summary: `${off} station line${off===1?"":"s"} reordered (of ${lines.length}), alphabetical order; the two header lines are unchanged`};
+}
+
+const DIS_TIME_UNIT = {1:"seconds",2:"minutes",3:"hours",4:"days",5:"years"};
+const DIS_PERIOD_RE = /^\s*([0-9.]+(?:[eEdD][+-]?\d+)?)\s+(\d+)\s+([0-9.]+(?:[eEdD][+-]?\d+)?)\s+(SS|TR)\b/i;
+function disParse(text){        /* same reading of the DIS file as the periodAlign rule */
+  const lines = text.split(/\r?\n/);
+  const hdr = lines.find(l=>!l.trim().startsWith("#") && nums(l).length>=6);
+  if(!hdr) return null;
+  const h = nums(hdr);
+  const periods = [];
+  lines.forEach((l,i)=>{
+    const q = l.match(DIS_PERIOD_RE);
+    if(q) periods.push({line:i, tok:q[1], perlen:parseFloat(q[1].replace(/[dD]/,"e")), ss:/^ss$/i.test(q[4])});
+  });
+  return {nper:h[3], unit:h[4], toDays:{1:1/86400,2:1/1440,3:1/24,4:1,5:365.25}[h[4]], periods, total:periods.reduce((s,p)=>s+p.perlen,0)};
+}
+function swatDaysOf(cio){
+  const m = cio.match(/^\s*(\d+)\s*\|\s*NBYR/m);
+  if(!m) return null;
+  const idaf = (cio.match(/^\s*(\d+)\s*\|\s*IDAF/m)||[])[1], idal = (cio.match(/^\s*(\d+)\s*\|\s*IDAL/m)||[])[1];
+  let d = (+m[1])*365;
+  if(idaf && idal) d = d - (+idaf - 1) - (365 - (+idal));
+  return d;
+}
+/* Write `value` in the same style as the token it replaces (plain decimals, or E / D exponent with the same width), never rounding down. */
+function formatLike(tok, value){
+  const m = tok.match(/^([0-9]*)(?:\.([0-9]*))?(?:([eEdD])([+-]?)(\d+))?$/);
+  if(!m) return null;
+  const dec0 = (m[2]||"").length;
+  for(let dec=dec0; dec<=15; dec++){
+    let out;
+    if(m[3]){
+      const q = value.toExponential(dec).match(/^([0-9.]+)e([+-])(\d+)$/);
+      out = q[1] + m[3] + (q[2]==="-" ? "-" : m[4]) + q[3].padStart(m[5].length,"0");
+    } else out = value.toFixed(dec);
+    if(parseFloat(out.replace(/[dD]/,"e")) >= value) return out;
+  }
+  return null;
+}
+function fixDisPerlen(text, cio){
+  if(!text || !cio || text.indexOf("�")>=0) return null;
+  const swat = swatDaysOf(cio); if(swat===null) return null;
+  const d = disParse(text);
+  if(!d || !d.toDays || d.periods.length!==d.nper || !d.nper) return null;       /* layout is not the plain one: abstain */
+  const totalDays = d.total*d.toDays;
+  if(!(totalDays < swat)) return null;
+  const last = d.periods[d.periods.length-1];
+  if(last.ss) return null;                                                      /* extending a steady-state period would be a guess */
+  const target = swat + 100;                                                    /* community practice: SWAT period + ~100 days */
+  let want = last.perlen + (target - totalDays)/d.toDays;
+  want = d.toDays===1 ? Math.ceil(want-1e-9) : Math.ceil(want*1000)/1000;
+  const tok = formatLike(last.tok, want);
+  if(!tok) return null;
+  const parts = splitKeep(text), li = last.line*2, line = parts[li], at = line.length - line.trimStart().length;
+  if(line.substr(at, last.tok.length)!==last.tok) return null;
+  parts[li] = line.slice(0,at) + tok + line.slice(at + last.tok.length);
+  const out = parts.join(""), d2 = disParse(out);
+  if(!d2 || d2.periods.length!==d.nper || d2.total*d2.toDays < target - 1e-6) return null;   /* self-check: abstain rather than guess */
+  const fmt = n => String(+n.toFixed(3)), u = DIS_TIME_UNIT[d.unit];
+  return {text: out, summary: `PERLEN ${fmt(last.perlen)} -> ${fmt(parseFloat(tok.replace(/[dD]/,"e")))} ${u}` +
+    (d.nper>1 ? ` in the last of ${d.nper} stress periods` : "") +
+    `; MODFLOW time ${fmt(totalDays)} -> ${fmt(d2.total*d2.toDays)} days (SWAT period ≈${swat} days + 100)`};
+}
+
+/* Package types whose file holds no unit numbers of its own. For every other package the first two data lines are checked for a reference. */
+const MFN_NO_UNIT_REFS = /^(DATA|DATA\(BINARY\)|LIST|DIS|BAS6?|NWT|PVAL|ZONE|MULT)$/;
+function fixMfnUnits(text, getFile){
+  if(!text || text.indexOf("�")>=0) return null;
+  const parts = splitKeep(text), rows = [];
+  for(let i=0;i<parts.length;i+=2){
+    if(/^\s*(#|$)/.test(parts[i])) continue;
+    const p = parts[i].trim().split(/\s+/);
+    if(p.length>=2 && /^\d+$/.test(p[1])) rows.push({i, type:p[0].toUpperCase(), unit:+p[1], file:p[2]||""});
+  }
+  const low = rows.filter(r=>r.unit>0 && r.unit<5000 && r.file && /\.\w+$/.test(r.file));
+  if(!low.length) return null;
+  const lowSet = new Set(low.map(r=>r.unit)), used = new Set(rows.map(r=>r.unit));
+  /* Other files may repeat a unit number (OC "HEAD SAVE UNIT n", the budget flag of RIV / RCH / UPW ...). Renumbering only the .mfn would break that link. */
+  const clash = new Set(), unread = [];
+  rows.forEach(r=>{
+    if(MFN_NO_UNIT_REFS.test(r.type) || !r.file) return;
+    const body = getFile(r.file.toLowerCase().split(/[\\/]/).pop());
+    if(body===null){ unread.push(r.file); return; }
+    const data = body.split(/\r?\n/).filter(l=>!/^\s*(#|$)/.test(l)).map(l=>l.split("#")[0]);
+    (r.type==="GAGE" ? data : data.slice(0,2)).join(" ").split(/\s+/).forEach(t=>{ if(/^\d+$/.test(t) && lowSet.has(+t)) clash.add(r.file+" (unit "+(+t)+")"); });
+    if(r.type==="OC") (body.match(/\bUNIT\s+\d+/gi)||[]).forEach(s=>{ const u = +s.split(/\s+/)[1]; used.add(u); if(lowSet.has(u)) clash.add(r.file+" (unit "+u+")"); });
+  });
+  if(unread.length) return {note: "No automatic fix: "+unread.slice(0,3).join(", ")+" could not be read, so it cannot be checked whether it repeats a unit number. Renumber by hand in every place the unit appears."};
+  if(clash.size) return {note: "No automatic fix: "+[...clash].slice(0,4).join(", ")+" repeats a unit number that is in the .mfn, so renumbering only the .mfn would break that link. Change both places to the same new number (5000 or more)."};
+  const map = {};
+  [...lowSet].sort((a,b)=>a-b).forEach(u=>{ let c = u + 5000; while(used.has(c)) c++; used.add(c); map[u] = c; });
+  low.forEach(r=>{ parts[r.i] = parts[r.i].replace(/^(\s*\S+\s+)(\d+)/, (m,a,b)=>a + map[+b]); });
+  const pairs = Object.keys(map).map(u=>u+"->"+map[u]);
+  return {text: parts.join(""), summary: `${pairs.length} unit${pairs.length===1?"":"s"} renumbered: ${pairs.slice(0,8).join(", ")}${pairs.length>8?" …":""}; package names and file names are unchanged`};
+}
+
 const RULES = {
 /* ─── SWAT+ ─────────────────────────────────────────── */
 swat_plus: [
@@ -1725,20 +1888,20 @@ swat_plus: [
   function cliSorted(out){
     /* SWAT+ finds a gage in these lists by name in sorted order. An unsorted list makes most stations "not found",
        and the run still finishes. Seen in three Pekin projects: 129 of 129 entries out of place, ~97% of stations ignored. */
-    const bad = [];
+    const bad = [], fx = [];
     ["pcp.cli","tmp.cli","slr.cli","hmd.cli","wnd.cli"].forEach(n=>{
       const t = grab(n); if(t===null) return;
       const lines = t.split(/\r?\n/).slice(2).map(l=>l.trim()).filter(Boolean);
       if(lines.length<2) return;
       const sorted = lines.slice().sort();
       const off = lines.filter((l,i)=>l!==sorted[i]).length;
-      if(off>0) bad.push(`${n}: ${off} of ${lines.length} entries out of order`);
+      if(off>0){ bad.push(`${n}: ${off} of ${lines.length} entries out of order`); fx.push({key:n, res:fixCliSorted(t)}); }
     });
     if(bad.length)
       out.push(finding("error","Station lists are not sorted", bad.join(" · "),
         "SWAT+ looks each gage up by name assuming the list is sorted. With an unsorted list most stations are reported as \"file not found\" in diagnostics.out and are ignored, and the run still ends with \"Execution successfully completed\". Seen on three Pekin projects where about 97% of the stations were ignored.",
         "Sort the file names in the list alphabetically (ASCII order), keep the two header lines, and run again.", ATTR.swatplus,
-        "pcp.cli", null));
+        "pcp.cli", null, autofixOf(fx)));
   },
   function diagLog(out){
     /* If the folder still holds the diagnostics.out of a finished run, the engine itself says what it could not find. */
@@ -1831,7 +1994,7 @@ swat_mf: [
       out.push(finding("warning","Low file-unit numbers in "+mfn, bad.slice(0,6).join(" · "),
         "Low Fortran unit numbers can collide with files that SWAT keeps open. Measured on the Middle Bosque model: of 9 values below 5000, 3 stopped the run (10, 11, 50) and 6 ran fine; every value of 5000 or more ran. It is a risk, not a certainty.",
         "Renumber the units in the .mfn to values &gt; 5000.", ATTR.swatmf,
-        mfn, null));
+        mfn, null, autofixOf([{key:mfn, res:fixMfnUnits(grab(mfn)||"", grab)}])));
   },
   function periodAlign(out){
     const dis = Object.keys(FILES).find(n=>n.endsWith(".dis"));
@@ -1860,7 +2023,8 @@ swat_mf: [
       out.push(finding("error","MODFLOW time is shorter than the SWAT period", dis,
         `The stress periods in the DIS file add up to ${Math.round(totalDays)} days (${nper} period${nper===1?"":"s"}, PERLEN summed), but SWAT simulates ≈${swatDays} days. SWAT-MODFLOW advances MODFLOW one day at a time through the stress periods, so when they run out the coupled run stops.`,
         "Make the total PERLEN at least as long as the SWAT period (community practice: SWAT period + ~100 days).", ATTR.swatmf,
-        dis, hitLine.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"\\s+")));
+        dis, hitLine.trim().replace(/[.*+?^${}()|[\]\\]/g,"\\$&").replace(/\s+/g,"\\s+"),
+        autofixOf([{key:dis, res:fixDisPerlen(grab(dis), cio)}])));
   },
   function mfnRefs(out){
     const mfn = Object.keys(FILES).find(n=>n.endsWith(".mfn"));
