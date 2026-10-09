@@ -21,6 +21,7 @@ function load(rel, optional) {
 }
 
 load('../src/characterize.js');
+load('../src/advice.js');
 load('../src/char_ui.js');
 const haveFixtures = load('fixtures.js', true);
 load('synthetic.js');
