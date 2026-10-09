@@ -1215,7 +1215,7 @@
       swat2012: 'SWAT2012 rule set.',
       swat_mf: 'SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).',
       modflow: 'MODFLOW-2005/NWT/USG rule set. There are no MODFLOW 6 rules yet.',
-      modflow6: 'Two MODFLOW 6 checks: that every file named in the name files exists, and that NPER matches the stress periods defined. Nothing else is checked yet (not convergence, not packages, not units).',
+      modflow6: 'Six MODFLOW 6 checks: that every file named in the name files exists, that NPER matches the stress periods defined, whether a listing in the folder (mfsim.lst) records a convergence failure, and three IMS settings that made test models fail to converge in MODFLOW 6.7.0 runs (OUTER_MAXIMUM 1, OUTER_DVCLOSE of 1e-15 or smaller, INNER_RCLOSE of 1e-16 or smaller). Nothing else is checked yet (not packages, not units, not the other solver or time-step settings).',
       apex: 'Basic APEX checks only: empty control files (APEXCONT, APEXRUN, APEXFILE) and the APEX-MODFLOW link file. Nothing else in APEX is checked yet.'
     }[ruleKey] || 'No model-specific rules apply; only the generic file checks ran.';
     var extra = '';
@@ -1984,6 +1984,72 @@ const RULES_MF6 = [
       out.push(finding("error","NPER does not match the stress periods defined", tdis,
         `The dimensions block says NPER = ${dim[1]} but the perioddata block defines ${rows} period(s). MODFLOW 6 stops when they disagree (checked by running MODFLOW 6 with NPER changed).`,
         "Make NPER equal to the number of rows in perioddata.", ATTR.modflow, tdis, "NPER"));
+  },
+  /* Evidence after a run. Checked with MODFLOW 6.7.0: with OUTER_MAXIMUM 1 the listing contains, per failed time step,
+     "Solution 1 did not converge for stress period 1 and time step 1" and ends with "Simulation convergence failure occurred 1 time(s)."
+     under ERROR REPORT plus "Premature termination of simulation." With the CONTINUE option the same count line sits under WARNING REPORT
+     and the run still ends with "Normal termination of simulation." */
+  function mf6ListingConvergence(out){
+    Object.keys(FILES).filter(n=>/\.(lst|list)$/.test(n)).forEach(n=>{
+      const t = FILES[n]||"";
+      const count = t.match(/Simulation convergence failure occurred\s+(\d+)\s+time/i);
+      const stepRe = /^\s*Solution\s+\d+\s+did not converge for stress period\s+(\d+)\s+and time step\s+(\d+)/gim;
+      const first = stepRe.exec(t);
+      const nSteps = first ? 1 + (t.slice(stepRe.lastIndex).match(/^\s*Solution\s+\d+\s+did not converge for stress period/gim)||[]).length : 0;
+      if(!count && !nSteps) return;
+      const nFail = count ? +count[1] : nSteps;
+      const stopped = /Premature termination of simulation/i.test(t);
+      out.push(finding("error","MODFLOW 6 solver did not converge", n,
+        `The listing records “Simulation convergence failure occurred ${nFail} time(s)”` + (first ? `; the first failure is at stress period ${first[1]}, time step ${first[2]}` : "") + ". "
+          + (stopped ? "The run was stopped early (“Premature termination of simulation”), so there are no results after that point. "
+                     : "The run was allowed to continue past the failures, so it can still end with “Normal termination of simulation” even though the heads of the failed time steps are not converged solutions. ")
+          + "The IMS solver could not bring the head change (OUTER_DVCLOSE) and the residual (INNER_RCLOSE) within their limits in OUTER_MAXIMUM outer iterations of INNER_MAXIMUM inner iterations each.",
+        "Raise OUTER_MAXIMUM and INNER_MAXIMUM in the IMS file. Loosen OUTER_DVCLOSE / INNER_RCLOSE only if you can justify the larger error. Look for the cause in the model: dry cells, a boundary (CHD, WEL, RIV, DRN) that removes or adds more water than the cell holds, a very large time step. Consider the Newton formulation (NEWTON in the model name file, with the NPF option) for unconfined problems.",
+        ATTR.doc, n, "convergence failure|did not converge"));
+    });
+  },
+  /* Settings that make MODFLOW 6 stop with a convergence failure. Everything below was reproduced with MODFLOW 6.7.0 on groundwater-flow models:
+     a confined linear model, an unconfined model, and an unconfined model with recharge and transport. Not a rule, because the runs did not fail:
+     INNER_MAXIMUM alone (1 to 10), TDIS settings, pumping rates up to 1e7, OUTER_MAXIMUM 1 on a transport (GWT) solution with zero concentrations. */
+  function mf6SolverSettings(out){
+    const base = f => f.toLowerCase().split(/[\\/]/).pop();
+    const typeOf = {}, serves = {};
+    let blk = "";
+    (FILES["mfsim.nam"]||"").split(/\r?\n/).forEach(l=>{
+      const t = l.replace(/[#!].*$/,"").trim();
+      if(!t) return;
+      const b = t.match(/^BEGIN\s+(\w+)/i);
+      if(b){ blk = b[1].toLowerCase(); return; }
+      if(/^END\s+/i.test(t)){ blk = ""; return; }
+      const p = t.split(/\s+/);
+      if(blk==="models" && p[1]) typeOf[(p[2]||p[1]).toLowerCase()] = p[0].toLowerCase();
+      if(blk==="solutiongroup" && /^ims6$/i.test(p[0]) && p[1]) (serves[base(p[1])] = serves[base(p[1])]||[]).push(...p.slice(2).map(m=>m.toLowerCase()));
+    });
+    Object.keys(serves).forEach(ims=>{
+      if(!serves[ims].some(m=>typeOf[m]==="gwf6") || FILES[ims]==null) return;
+      let b = "";
+      FILES[ims].split(/\r?\n/).forEach(l=>{
+        const t = l.replace(/[#!].*$/,"").trim();
+        if(!t) return;
+        const bb = t.match(/^BEGIN\s+(\w+)/i);
+        if(bb){ b = bb[1].toLowerCase(); return; }
+        if(/^END\s+/i.test(t)){ b = ""; return; }
+        const p = t.split(/\s+/), key = p[0].toLowerCase();
+        const val = parseFloat((p[1]||"").replace(/d/i,"e"));
+        if(b==="nonlinear" && key==="outer_maximum" && p.length===2 && val===1)
+          out.push(finding("warning","IMS allows only 1 outer iteration (OUTER_MAXIMUM 1)", ims,
+            "With OUTER_MAXIMUM 1 the solver gets a single outer iteration per time step. In MODFLOW 6.7.0 test runs this stopped with “Simulation convergence failure” in every groundwater-flow model tried (confined linear, unconfined, unconfined with recharge and transport), while 2 or more converged. The only model that converged with 1 was one that did not change at all (starting heads already equal to the answer, no stresses), so a real model will almost certainly fail.",
+            "Remove OUTER_MAXIMUM or set it to a normal value (the MODERATE complexity default is 50).", ATTR.doc, ims, "OUTER_MAXIMUM"));
+        if(b==="nonlinear" && /^outer_(dv|h)close$/.test(key) && p.length===2 && val>0 && val<=1e-15)
+          out.push(finding("warning","IMS head-change closure is tighter than double precision allows (OUTER_DVCLOSE "+p[1]+")", ims,
+            "In MODFLOW 6.7.0 test runs an OUTER_DVCLOSE of 1e-15 or smaller made every groundwater-flow model fail with “Simulation convergence failure” (heads from about 0.05 to 1000 length units; 1e-10 converged in all of them). The only model that converged was one that did not change at all. Head changes below rounding error cannot be reached by an iterative solver.",
+            "Use a looser closure (the MODERATE complexity default is 0.01) and check the water-budget error in the listing.", ATTR.doc, ims, "OUTER_[DH]CLOSE"));
+        if(b==="linear" && key==="inner_rclose" && val>0 && val<=1e-16 && (p.length===2 || (p.length===3 && /^strict$/i.test(p[2]))))
+          out.push(finding("warning","IMS residual closure is tighter than double precision allows (INNER_RCLOSE "+p[1]+")", ims,
+            "In MODFLOW 6.7.0 test runs an INNER_RCLOSE of 1e-16 or smaller made every groundwater-flow model fail with “Simulation convergence failure”, also when the hydraulic conductivity was changed from 0.0005 to 5000. The only model that converged was one that did not change at all.",
+            "Use a residual closure that fits your flows (the MODERATE complexity default is 0.1) and tighten it only if the budget error needs it.", ATTR.doc, ims, "INNER_RCLOSE"));
+      });
+    });
   }
 ];
 RULES.modflow6 = RULES_MF6;

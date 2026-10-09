@@ -28,7 +28,7 @@
       swat2012: 'SWAT2012 rule set.',
       swat_mf: 'SWAT-MODFLOW rule set (linkage, unit numbers, period alignment).',
       modflow: 'MODFLOW-2005/NWT/USG rule set. There are no MODFLOW 6 rules yet.',
-      modflow6: 'Two MODFLOW 6 checks: that every file named in the name files exists, and that NPER matches the stress periods defined. Nothing else is checked yet (not convergence, not packages, not units).',
+      modflow6: 'Six MODFLOW 6 checks: that every file named in the name files exists, that NPER matches the stress periods defined, whether a listing in the folder (mfsim.lst) records a convergence failure, and three IMS settings that made test models fail to converge in MODFLOW 6.7.0 runs (OUTER_MAXIMUM 1, OUTER_DVCLOSE of 1e-15 or smaller, INNER_RCLOSE of 1e-16 or smaller). Nothing else is checked yet (not packages, not units, not the other solver or time-step settings).',
       apex: 'Basic APEX checks only: empty control files (APEXCONT, APEXRUN, APEXFILE) and the APEX-MODFLOW link file. Nothing else in APEX is checked yet.'
     }[ruleKey] || 'No model-specific rules apply; only the generic file checks ran.';
     var extra = '';
