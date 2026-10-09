@@ -102,7 +102,7 @@ function runRules(files, fw, filenames) {
   return out;
 }
 
-module.exports = { runRules, loadFolder, loadFolderFull, RULES, HDA };
+module.exports = { runRules, loadFolder, loadFolderFull, RULES, HDA, ctx };
 
 if (require.main === module) {
   const dir = process.argv[2];
