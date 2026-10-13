@@ -13,8 +13,8 @@ authors:
     affiliation: "Texas Tech University"
 date-released: "2026-07-10"
 license: MIT
-repository-code: "https://github.com/JosephAuresy/check"
-url: "https://josephauresy.github.io/check/"
+repository-code: "https://github.com/iHydroLab/check"
+url: "https://ihydrolab.github.io/check/"
 keywords:
   - hydrology
   - SWAT

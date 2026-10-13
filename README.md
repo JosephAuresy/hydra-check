@@ -8,9 +8,9 @@ A free, private, in-browser pre-run checker. It first works out **what you gave 
 Ask a question or paste an error message, or drop your model folder, and get a diagnosis — no upload,
 no account, no server.
 
-**Live tool:** https://JosephAuresy.github.io/check/
+**Live tool:** https://ihydrolab.github.io/check/
 
-**How it got here (tests, results, corrections, milestones):** https://JosephAuresy.github.io/check/evolution/ ; benchmark method and limits in [`bench/README.md`](bench/README.md); blind-test protocol in [`docs/BLIND_TEST_PROTOCOL.md`](docs/BLIND_TEST_PROTOCOL.md).
+**How it got here (tests, results, corrections, milestones):** https://ihydrolab.github.io/check/evolution/ ; benchmark method and limits in [`bench/README.md`](bench/README.md); blind-test protocol in [`docs/BLIND_TEST_PROTOCOL.md`](docs/BLIND_TEST_PROTOCOL.md).
 
 ## What this is
 
@@ -60,7 +60,7 @@ No build step. Open [`index.html`](index.html) directly in any browser, or visit
 GitHub Pages link above. To run it locally instead of via the web:
 
 ```bash
-git clone https://github.com/JosephAuresy/check.git
+git clone https://github.com/iHydroLab/check.git
 cd check
 # then just open index.html in your browser — no server required
 ```
@@ -89,7 +89,7 @@ deliberately excluded from automation by design — see the paper for the ration
 
 If you use the tool, please cite the software:
 
-> Serrano, D., & Park, S. (2026). *iHydroLab Check* (version 0.1.0) [Computer software]. https://github.com/JosephAuresy/check
+> Serrano, D., & Park, S. (2026). *iHydroLab Check* (version 0.1.0) [Computer software]. https://github.com/iHydroLab/check
 
 A DOI will be added here when the first release is archived. `CITATION.cff` is included for GitHub's "Cite this repository" button.
 
