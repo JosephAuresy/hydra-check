@@ -275,7 +275,26 @@
   .cmp-item.diff { border-color:var(--amber); background:var(--amber-bg); }
   .cmp-item .txt { font-size:12.5px; line-height:1.5; }
   .cmp-tag { display:inline-block; font-size:10.5px; color:var(--faint); margin-top:3px; }
+  .hero { margin-bottom:12px; }
+  .hero h1 { font-size:26px; margin:0 0 6px; }
+  .hero .eyebrow { margin-bottom:8px; }
+  .hero .tagline { margin:0 0 6px; }
+  .about-tool { max-width:760px; margin:6px auto 0; text-align:center; }
+  .about-tool > summary { cursor:pointer; list-style:none; color:var(--accent-text); font-size:13px; padding:2px 0; }
+  .about-tool > summary::-webkit-details-marker { display:none; }
+  .about-tool > summary::after { content:" \25BE"; }
+  .about-tool[open] > summary::after { content:" \25B4"; }
+  .picker-card { padding:12px 16px; }
+  .picker-card.active { padding:11px 15px; }
+  .picker-card i.picon { display:inline-block; margin:0 8px 0 0; font-size:18px; vertical-align:middle; }
+  .picker-card .pt { display:inline; margin:0; }
+  .picker-card .pd { display:none; }
   .ask-hero textarea { font-size:15px; }
+  .more-examples { margin:6px 0 0; font-size:12.5px; }
+  .more-examples > summary { cursor:pointer; color:var(--accent-text); padding:2px 0; }
+  .known-lbl { font-size:11px; text-transform:uppercase; letter-spacing:.3px; color:var(--amber); font-weight:500; margin:0 0 4px; }
+  .known-wrap { margin-bottom:10px; }
+  .also-lbl { font-size:12.5px; color:var(--muted); margin:12px 0 4px; }
   .hero-examples { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px; }
   .qchip { text-align:left; font-size:12.5px; line-height:1.4; padding:6px 12px; border:0.5px solid var(--border-strong); background:var(--surface-1);
            border-radius:999px; cursor:pointer; color:var(--text); font-family:inherit; }
@@ -375,8 +394,11 @@
   <header class="top hero">
     <div class="eyebrow">Free &middot; private &middot; no upload</div>
     <h1>Hydra Check</h1>
-    <div class="tagline">Understand and validate hydrologic models</div>
-    <p class="lead">Drop your model folder. It works out <b>what it is</b> &mdash; the model, its version, the groundwater module and how they are coupled &mdash; and checks it <b>before you run</b>.</p>
+    <div class="tagline">Ask a question, paste an error, or check your model files &mdash; before you run.</div>
+
+    <details class="about-tool">
+    <summary>What it recognizes and how it was built</summary>
+    <p class="lead" style="margin-top:14px;">Drop your model folder and it works out <b>what it is</b> &mdash; the model, its version, the groundwater module and how they are coupled &mdash; and checks it <b>before you run</b>.</p>
 
     <div class="recog">
       <div class="rleft">
@@ -414,70 +436,22 @@
       <div><b>It reads versions too.</b> SWAT+ <b>rev 60 &rarr; 61 &rarr; 62</b> and the older pre-Editor files, the SWAT+ Editor version, folders that mix revisions, the rev 61 / rev 62 <code>codes.bsn</code> layout, the gwflow grid (structured or unstructured) and file generation, the SWAT2012 revision, MODFLOW 6 version and APEX build.</div>
     </div>
 
-    <p class="proof">Rules built from ~9,100 community-reported issues (2009&ndash;2026), then audited on 141 real models that ran.</p>
+    <p class="proof">Rules built from ~9,100 community-reported issues (2009&ndash;2026), then checked for false alarms on 141 model folders that ran (from 6 watersheds).</p>
     <span class="privacy"><i class="ti ti-lock" aria-hidden="true"></i> Runs in your browser &mdash; your files never leave your computer.</span>
+    </details>
   </header>
 
   <div class="picker-grid">
-    <button class="picker-card tab active" data-mode="error" type="button">
+    <button class="picker-card tab active" data-mode="docs" type="button">
       <i class="ti ti-message-2 picon" aria-hidden="true"></i>
-      <p class="pt">Paste an error message</p>
-      <p class="pd">Match it against known causes and fixes.</p>
+      <p class="pt">Ask a question or paste an error <span style="font-size:10px;font-weight:500;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:8px;vertical-align:middle;">beta</span></p>
+      <p class="pd">Get the likely cause, the fix and the sources behind it.</p>
     </button>
     <button class="picker-card tab" data-mode="files" type="button">
       <i class="ti ti-folder picon" aria-hidden="true"></i>
       <p class="pt">Check my model files</p>
       <p class="pd">Scan your TxtInOut folder for known issues.</p>
     </button>
-    <button class="picker-card tab" data-mode="docs" type="button">
-      <i class="ti ti-book picon" aria-hidden="true"></i>
-      <p class="pt">Ask the docs <span style="font-size:10px;font-weight:500;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:8px;vertical-align:middle;">beta</span></p>
-      <p class="pd">Ask a question. Uses your manuals and what forum users found.</p>
-    </button>
-  </div>
-
-  <!-- ── MODE: ERROR MESSAGE ─────────────────────────────────────── -->
-  <div id="mode-error">
-    <div class="card">
-      <h2>Not sure what to paste? Try a common one</h2>
-      <div id="exampleGallery" class="gallery"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="step">Step 1 ·</span> Paste your own error message</h2>
-      <textarea id="errText" rows="4" placeholder="e.g.  forrtl: severe (157): Program Exception - access violation"></textarea>
-      <div style="margin-top:10px;"><button class="action primary" id="diagnoseBtn">Diagnose</button></div>
-    </div>
-    <div class="card">
-      <h2>Diagnosis</h2>
-      <div id="errResults"><span class="muted">Paste an error above and press Diagnose.</span></div>
-    </div>
-
-    <div class="card" id="reportCard" style="display:none;">
-      <h2>Still stuck? Build a ready-to-post report</h2>
-      <p class="muted">Filled in the format the SWAT+ team's 2026 report template already asks for.
-      A well-formed post like this typically gets answered in one round instead of three.</p>
-      <div class="rgrid">
-        <label>Framework<select id="rFramework">
-          <option value="SWAT+">SWAT+</option>
-          <option value="SWAT2012">SWAT2012</option>
-          <option value="SWAT-MODFLOW">SWAT-MODFLOW</option>
-          <option value="MODFLOW">MODFLOW</option>
-        </select></label>
-        <label>Version<input id="rVersion" placeholder="e.g. SWAT+ 61.0 / Editor 3.0.4"></label>
-        <label>Operating system<input id="rOS" placeholder="e.g. Windows 11"></label>
-        <label>When it happens<input id="rWhen" placeholder="e.g. immediately on run / after N years"></label>
-      </div>
-      <label class="rfull">Simulation period<input id="rPeriod" placeholder="e.g. 2005-2015, warm-up 3 yr"></label>
-      <label class="rfull">Exact error text<textarea id="rError" rows="2" placeholder="Paste the exact error/log line"></textarea></label>
-      <label class="rfull">What you already tried<textarea id="rTried" rows="2" placeholder="e.g. checked soils.sol for nulls, re-wrote inputs — this tool found no known signature"></textarea></label>
-      <label class="rfull">Relevant input files involved<input id="rFiles" placeholder="e.g. soils.sol, time.sim, gwflow.input"></label>
-      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
-        <button class="action primary" id="genReportBtn">Generate report text</button>
-        <button class="action" id="copyReportBtn" style="display:none;">Copy to clipboard</button>
-      </div>
-      <textarea id="reportOut" rows="10" style="display:none; margin-top:12px; font-family:ui-monospace,Consolas,monospace; font-size:13px;" readonly></textarea>
-    </div>
   </div>
 
   <!-- ── MODE: FILES ─────────────────────────────────────────────── -->
@@ -707,12 +681,11 @@
   </div>
 
   <!-- ── MODE: ASK THE DOCS (Tier 2 RAG, client-side retrieval + local generation) ── -->
-  <div id="mode-docs" style="display:none;">
+  <div id="mode-docs">
     <div class="card ask-hero">
-      <h2>Ask a question about your model</h2>
-      <p class="muted" style="margin-bottom:10px;">Describe the problem or paste the error message. You get an answer together with the sources it is based on. Your PDFs stay on your computer.</p>
-      <textarea id="ragQuery" rows="3" placeholder="e.g. What does end-of-file during read (exit code 24) mean in SWAT-MODFLOW?"></textarea>
+      <textarea id="ragQuery" rows="3" placeholder="e.g. a question, or an error message such as: forrtl: severe (24): end-of-file during read, unit 30020"></textarea>
       <div id="heroExamples" class="hero-examples"></div>
+      <details class="more-examples"><summary>More examples (error messages)</summary><div id="exampleGallery" class="gallery"></div></details>
       <div class="hero-row">
         <button class="action primary" id="ragAskBtn">Ask</button>
         <button type="button" class="linkbtn" id="heroAddPdf"><i class="ti ti-file-plus" aria-hidden="true"></i> Optional: add your PDF manuals for a better answer</button>
@@ -722,11 +695,36 @@
         <div class="muted" style="margin-top:6px;" id="ragProgressText"></div>
       </div>
       <p class="muted hero-note" id="heroSources"></p>
-      <p class="muted hero-note">Early version: the answers have not been benchmarked yet, so check the evidence before relying on one.</p>
     </div>
 
     <div class="card" id="ragAnswerCard" style="display:none;">
       <div id="ragAnswer"></div>
+    </div>
+
+    <div class="card" id="reportCard" style="display:none;">
+      <h2>Still stuck? Build a ready-to-post report</h2>
+      <p class="muted">Filled in the format the SWAT+ team's 2026 report template already asks for.
+      A well-formed post like this typically gets answered in one round instead of three.</p>
+      <div class="rgrid">
+        <label>Framework<select id="rFramework">
+          <option value="SWAT+">SWAT+</option>
+          <option value="SWAT2012">SWAT2012</option>
+          <option value="SWAT-MODFLOW">SWAT-MODFLOW</option>
+          <option value="MODFLOW">MODFLOW</option>
+        </select></label>
+        <label>Version<input id="rVersion" placeholder="e.g. SWAT+ 61.0 / Editor 3.0.4"></label>
+        <label>Operating system<input id="rOS" placeholder="e.g. Windows 11"></label>
+        <label>When it happens<input id="rWhen" placeholder="e.g. immediately on run / after N years"></label>
+      </div>
+      <label class="rfull">Simulation period<input id="rPeriod" placeholder="e.g. 2005-2015, warm-up 3 yr"></label>
+      <label class="rfull">Exact error text<textarea id="rError" rows="2" placeholder="Paste the exact error/log line"></textarea></label>
+      <label class="rfull">What you already tried<textarea id="rTried" rows="2" placeholder="e.g. checked soils.sol for nulls, re-wrote inputs — this tool found no known signature"></textarea></label>
+      <label class="rfull">Relevant input files involved<input id="rFiles" placeholder="e.g. soils.sol, time.sim, gwflow.input"></label>
+      <div style="margin-top:12px; display:flex; gap:10px; flex-wrap:wrap;">
+        <button class="action primary" id="genReportBtn">Generate report text</button>
+        <button class="action" id="copyReportBtn" style="display:none;">Copy to clipboard</button>
+      </div>
+      <textarea id="reportOut" rows="10" style="display:none; margin-top:12px; font-family:ui-monospace,Consolas,monospace; font-size:13px;" readonly></textarea>
     </div>
 
     <details class="card adv" id="advPanel">
@@ -2342,7 +2340,7 @@ document.addEventListener("click", e=>{
 });
 
 /* ═════════════════════ mode switching (picker cards + method link) ═════════════════════ */
-const MODES = ["files","error","method","docs"];
+const MODES = ["files","method","docs"];
 document.querySelectorAll(".tab").forEach(t=>{
   t.onclick = ()=>{
     document.querySelectorAll(".tab").forEach(x=>x.classList.remove("active"));
@@ -3405,9 +3403,9 @@ function buildErrorGallery(){
     b.innerHTML = `<span class="fw">${esc(ex.fw)}</span><span class="et">${esc(ex.title)}</span>`;
     b.title = ex.text;
     b.onclick = ()=>{
-      $("errText").value = ex.text;
-      $("diagnoseBtn").click();
-      $("errResults").scrollIntoView({behavior:"smooth", block:"start"});
+      $("ragQuery").value = ex.text;
+      $("ragAskBtn").click();
+      $("ragAnswerCard").scrollIntoView({behavior:"smooth", block:"start"});
     };
     el.appendChild(b);
   });
@@ -3420,38 +3418,40 @@ function threadLinks(h){
     `<a href="https://groups.google.com/g/${THREAD_GROUP[t[0]]}/c/${encodeURIComponent(t[1])}" target="_blank" rel="noopener">${i+1}</a>`).join(" · ") + `</div>`;
 }
 
-$("diagnoseBtn").onclick = ()=>{
-  const txt = $("errText").value.trim();
-  const el = $("errResults");
-  if(!txt){ el.innerHTML='<span class="muted">Paste an error message first.</span>'; return; }
-  const hits = SIGNATURES.filter(s=>s.re.test(txt));
-  if(!hits.length){
-    el.innerHTML = `<div class="frontier"><i class="ti ti-compass" aria-hidden="true"></i><b>No known signature matched.</b> This may be a rare issue or a
-      <b>frontier-level</b> question. Post to the community with: exact framework + version, the full error text,
-      your simulation period, and the input files involved — that format typically gets answers in one round.</div>`;
-  } else {
-    el.innerHTML = hits.map(h=>`
+/* A pasted error and a question are the same box. The exact layer (known-error signatures) runs first and needs no model; the loose
+   signatures only apply when the text reads like an error, so an ordinary question is not matched by a stray word. */
+const ERRORISH = /error|fail|crash|stop|exception|terminat|forrtl|severe|cannot|could not|not found|missing|invalid|abort|hang|stuck|exit code|violation|converge|discrepancy|keyerror|peewee|does not|not in\b|\bnan\b|unknown|required block|unsupported|no active|already|day 1|period 1/i;
+/* the most specific signature first: the specific ones were added after the general ones */
+function knownErrorHits(txt){ return ERRORISH.test(txt) ? SIGNATURES.filter(s=>s.re.test(txt)).reverse() : []; }
+/* For the semantic search, a long pasted log is reduced to the line that carries the error. */
+function queryLine(q){
+  const lines = q.split(/\r?\n/).map(x=>x.trim()).filter(Boolean);
+  if(lines.length <= 1) return q.slice(0, 600);
+  const err = lines.find(l=>/error|forrtl|severe|fail|exception|stop|cannot|could not|missing/i.test(l));
+  return (err || lines[0]).slice(0, 400);
+}
+function renderKnownErrors(hits){
+  if(!hits.length) return "";
+  return `<div class="known-wrap"><p class="known-lbl">Matches a known error</p>` + hits.map(h=>`
       <div class="finding error">
         <span class="head">${esc(h.title)}</span><span class="badge warning">${esc(h.fw)}</span>
         <div style="margin-top:6px;"><b>Likely cause:</b> ${h.cause}</div>
         <div class="fix"><b>Recommended action:</b> ${h.fix}</div>
+        <button class="sol-act verify" data-goto="files" type="button"><i class="ti ti-search" aria-hidden="true"></i> Check my files for this</button>
         <div class="attr">${esc(h.attr)}</div>${threadLinks(h)}
-      </div>`).join("");
-  }
-  // Show the community solution set for the matched signature's problem class.
-  if(hits.length && hits[0].model && hits[0].cat){
-    const panel = renderSolutionSet(hits[0].model, hits[0].cat);
-    if(panel) el.insertAdjacentHTML("beforeend", panel);
-  }
-  // Always surface the report generator — even a match may not fix it,
-  // and the user should always have an easy path back to the community.
+      </div>`).join("") + `</div>`;
+}
+function prefillReport(txt, hits){
   $("reportCard").style.display = "";
-  $("rError").value = txt;
+  $("rError").value = txt.slice(0, 2000);
   if(hits.length){
-    $("rFramework").value = hits[0].fw.split(" / ")[0].replace("QSWAT+","SWAT+").replace("QSWATMOD","SWAT-MODFLOW");
-    $("rTried").value = `This tool matched the signature "${hits[0].title}" and suggested: ${hits[0].fix} — this did not resolve it.`;
+    const fw = hits[0].fw.split(" / ")[0].replace("QSWAT+","SWAT+").replace("QSWATMOD","SWAT-MODFLOW");
+    const sel = $("rFramework");
+    if([...sel.options].some(o=>o.value===fw)) sel.value = fw;
+    $("rTried").value = `This tool matched the known error "${hits[0].title}" and suggested: ${hits[0].fix} — this did not resolve it.`;
   }
-};
+  $("reportCard").scrollIntoView({behavior:"smooth", block:"start"});
+}
 
 /* ═════════════════════ community solution sets (real data, Phase 2) ═════════════════════ */
 const SOL_ICON = {
@@ -3769,7 +3769,7 @@ async function ensureCommunityCorpus(){
   }
   const plain = t => String(t).replace(/<[^>]+>/g, '');
   for(const sg of SIGNATURES){
-    const text = `Known error signature: ${sg.title} (${sg.fw}). Likely cause: ${plain(sg.cause)} Recommended action: ${plain(sg.fix)}`;
+    const text = `Known error: ${sg.title} (${sg.fw}). Likely cause: ${plain(sg.cause)} Recommended action: ${plain(sg.fix)}`;
     SIG_CHUNKS.push({ type:'signature', title:sg.title, fw:sg.fw, nthreads:(sg.threads||[]).length, text, vec: await embed(text) });
   }
   communityBuilt = true;
@@ -3903,7 +3903,7 @@ function ctxLine(r, i){
   const c = r.c;
   const src = c.type==='pdf' ? `${c.source} p.${c.page}`
             : c.type==='community' ? `Community knowledge — ${c.fwLabel}, ${c.category}, ${c.n_threads} threads (${c.resolution_pct}% resolved)`
-            : c.type==='signature' ? `Known error signature — ${c.title}`
+            : c.type==='signature' ? `Known error — ${c.title}`
             : `User note (unverified)`;
   return `[${i+1}] (${src}) ${c.text}`;
 }
@@ -3912,18 +3912,20 @@ $('ragAskBtn').onclick = async ()=>{
   const q = $('ragQuery').value.trim();
   const el = $('ragAnswer');
   $('ragAnswerCard').style.display = '';
-  if(!q){ el.innerHTML='<span class="muted">Type a question first.</span>'; return; }
-  el.innerHTML='<span class="muted">Searching…</span>';
+  if(!q){ el.innerHTML='<span class="muted">Type a question, or paste an error message.</span>'; return; }
+  const hits = knownErrorHits(q);
+  const knownHtml = renderKnownErrors(hits);
+  el.innerHTML = knownHtml + '<span class="muted">Searching…</span>';
   let qv;
   try{
     await ensureCommunityCorpus();
-    qv = await embed(q);
+    qv = await embed(queryLine(q));
   }catch(_){
-    el.innerHTML='<span class="muted">The search model could not be loaded. It is about 25 MB and is downloaded the first time, so check your connection and try again.</span>';
+    el.innerHTML = knownHtml + '<span class="muted">The search model could not be loaded. It is about 25 MB and is downloaded the first time, so check your connection and try again.</span>';
     return;
   }
   if(!CHUNKS.length && !COMMUNITY_CHUNKS.length && !USER_CHUNKS.length && !SIG_CHUNKS.length){
-    el.innerHTML='<span class="muted">Still getting ready. Try again in a moment.</span>';
+    el.innerHTML = knownHtml + '<span class="muted">Still getting ready. Try again in a moment.</span>';
     return;
   }
   const rankPool = pool => pool.map(c=>({c, s:cosine(qv, c.vec)})).sort((a,b)=>b.s-a.s);
@@ -3939,9 +3941,9 @@ $('ragAskBtn').onclick = async ()=>{
     sel.sort((a,b)=>b.s-a.s);
     return { selected: sel, ranked: sel.slice(0, 6) };
   };
-  if(!SRC.docs && !SRC.community && !SRC.signatures){ el.innerHTML = '<span class="muted">All sources are switched off. Turn at least one on under "Where answers come from" in Advanced settings.</span>'; return; }
+  if(!SRC.docs && !SRC.community && !SRC.signatures){ el.innerHTML = knownHtml + '<span class="muted">All sources are switched off. Turn at least one on under "Where answers come from" in Advanced settings.</span>'; return; }
   const { selected, ranked } = pick(SRC);
-  if(!selected.length){ el.innerHTML = '<span class="muted">Nothing to search with the sources that are on (add a PDF, or switch another source on).</span>'; return; }
+  if(!selected.length){ el.innerHTML = knownHtml + '<span class="muted">Nothing to search with the sources that are on (add a PDF, or switch another source on).</span>'; return; }
   const bestScore = ranked[0].s;
   const frontier = FRONTIER_RE.test(q);
 
@@ -3980,6 +3982,8 @@ $('ragAskBtn').onclick = async ()=>{
   }
 
   const evi = evidenceLevel(q, ranked, communityRanked, frontier);
+  const solHit = hits.find(h => h.model && h.cat);
+  if(solHit) html += renderSolutionSet(solHit.model, solHit.cat) || '';
   html += renderEvidence(evi);
   html += `<div class="src-badges"><b>Built with</b> ` + Object.keys(SRC).map(k => SRC[k]
     ? `<span class="src-badge on">${esc(SRC_NAMES[k])} · ${ranked.filter(r=>srcOf(r.c)===k).length} of ${ranked.length} passages</span>`
@@ -3997,11 +4001,14 @@ $('ragAskBtn').onclick = async ()=>{
     html += `<button class="kb-toggle" id="kbCovToggle">Show which forum topics were considered (${communityRanked.length} categories reviewed, ${usedCats.size} used) ▾</button>
       <div id="kbCovPanel" style="display:none;">${renderKbCoverage(communityRanked, usedCats)}</div>`;
   }
-  el.innerHTML = `<div class="ans-primary">${answerBlock}${confidenceSimple(evi)}`
-    + `<div class="ans-actions"><button type="button" class="action" id="evBtn">See evidence</button> <button type="button" class="action" id="advBtn">Advanced settings</button></div></div>`
+  const stuck = !hits.length || ['low','none','judg'].includes(evi.level);
+  el.innerHTML = `<div class="ans-primary">${knownHtml}${hits.length ? '<p class="also-lbl">Also found in the documents and forum findings:</p>' : ''}${answerBlock}${confidenceSimple(evi)}`
+    + `<div class="ans-actions"><button type="button" class="action" id="evBtn">See evidence</button> <button type="button" class="action" id="advBtn">Advanced settings</button>`
+    + (stuck ? ` <button type="button" class="action" id="stuckBtn">Still stuck? Draft a post</button>` : '') + `</div></div>`
     + `<div id="evPanel" class="ev-panel" hidden>${html}</div>`;
   $('evBtn').onclick = ()=>{ const pn = $('evPanel'); pn.hidden = !pn.hidden; $('evBtn').textContent = pn.hidden ? 'See evidence' : 'Hide evidence'; };
   $('advBtn').onclick = ()=>openAdvanced();
+  if($('stuckBtn')) $('stuckBtn').onclick = ()=>prefillReport(q, hits);
   el.querySelectorAll('.cmp-btn').forEach(b => { b.onclick = ()=>{
     const k = b.dataset.src;
     $('cmpPanel').innerHTML = renderCompare(k, ranked, pick({ ...SRC, [k]: false }).ranked);
@@ -4149,7 +4156,7 @@ const QUESTION_TYPES = [
     ex:['What are the units and the allowed range of ESCO in SWAT2012?', 'What does the CN2 parameter control in SWAT+?'] },
   { k:'B', name:'File format', src:'Input/output reference', good:'The right fields in the right order, with the version stated.',
     ex:['Which fields does a row of hru-data.hru contain in SWAT+, in order?', 'What does PERLEN mean in a MODFLOW DIS file?'] },
-  { k:'C', name:'Error diagnosis', src:'Error signatures and the community knowledge base', good:'The likely file or step to check and how to verify it.',
+  { k:'C', name:'Error diagnosis', src:'Known errors and the forum findings', good:'The likely file or step to check and how to verify it.',
     ex:['forrtl: severe (24): end-of-file during read, unit 30020. What should I check?', 'MODFLOW 6 says "Model does not have any active nodes". What causes it?'] },
   { k:'D', name:'Workflow', src:'Tutorials and guides', good:'Ordered steps taken from the cited document.',
     ex:['What are the steps to couple a SWAT+ model with MODFLOW?', 'How do I run a MODFLOW 6 model from a Python script with FloPy?'] },
@@ -4187,7 +4194,7 @@ function renderSources(){
     community: { name:'Forum findings', meta:`${n.cats} categories summarizing ${n.threads.toLocaleString('en-US')} coded forum threads (SWAT2012, SWAT+, SWAT-MODFLOW, MODFLOW; APEX not included)`,
             note:'Each summary keeps its real support count. Not benchmarked yet.' },
     signatures: { name:'Known errors', meta:`${n.sigs} error messages with a known cause and action, with links to ${n.linked} forum threads where they were reported`,
-            note:'Checked against 75 real stopped runs; the newest signatures were written from those same messages (development evidence).' }
+            note:'Checked against 75 real stopped runs; the newest known errors were written from those same messages (development evidence).' }
   };
   rows.innerHTML = Object.keys(info).map(k => `<label class="src-row"><input type="checkbox" data-src="${k}" ${SRC[k]?'checked':''}>
       <span><span class="src-name">${esc(info[k].name)}</span><span class="src-meta">${esc(info[k].meta)}</span><span class="src-note">${esc(info[k].note)}</span></span></label>`).join('');
@@ -4195,7 +4202,8 @@ function renderSources(){
   const hs = $('heroSources');
   if(hs){
     const on = [SRC.community && 'forum findings', SRC.signatures && 'known errors', SRC.docs && (n.pdfs ? `${n.pdfs} PDF${n.pdfs>1?'s':''}` : null)].filter(Boolean);
-    hs.innerHTML = on.length ? `Answers use: ${esc(on.join(', '))}. <a href="#" id="heroAdvLink">Change in Advanced settings</a>.` : 'All sources are switched off. <a href="#" id="heroAdvLink">Turn some on in Advanced settings</a>.';
+    hs.innerHTML = (on.length ? `Answers use: ${esc(on.join(', '))}. <a href="#" id="heroAdvLink">Change in Advanced settings</a>.` : 'All sources are switched off. <a href="#" id="heroAdvLink">Turn some on in Advanced settings</a>.')
+      + ' Early version: check the evidence before relying on an answer.';
     const l = $('heroAdvLink'); if(l) l.onclick = ev => { ev.preventDefault(); openAdvanced('srcCard'); };
   }
   const sum = $('srcSummary');
@@ -4220,9 +4228,9 @@ const COMPLEMENT = [
   { re:/management|decision table/i, docs:['Input/output reference', 'Theoretical documentation'] },
   { re:/sediment|nutrient|pathogen|gwflow|advanced/i, docs:['Theoretical documentation', 'The gwflow section of the SWAT+ documentation'] },
   { re:/boundary condition/i, docs:['USGS MODFLOW documentation', 'Anderson, Woessner and Hunt (2015)'] },
-  { re:/convergence|numerical/i, docs:['MODFLOW solver documentation (NWT, MODFLOW 6 IMS)', 'Known error signatures'] },
+  { re:/convergence|numerical/i, docs:['MODFLOW solver documentation (NWT, MODFLOW 6 IMS)', 'Known errors'] },
   { re:/recharge|sw-gw|exchange/i, docs:['Kim et al. (2008); Guzman et al. (2015); Bailey et al. (2020)'] },
-  { re:/runtime|crash|file config|input data|weather|climate|temporal/i, docs:['Input/output reference', 'Known error signatures'] },
+  { re:/runtime|crash|file config|input data|weather|climate|temporal/i, docs:['Input/output reference', 'Known errors'] },
   { re:/setup|delineation|linking|coupling|discretis|grid/i, docs:['Tutorials and the input/output reference'] },
   { re:/gui|plugin|editor|toolbox|flopy|modelmuse/i, docs:['Release notes and tutorials of the interface'] },
   { re:/reservoir|wetland|water bod/i, docs:['Input/output reference', 'Theoretical documentation'] }
@@ -4271,7 +4279,7 @@ function evidenceLevel(q, ranked, communityRanked, frontier){
   const k = [strongDocs, strongSig, strongCom].filter(Boolean).length;
   const reasons = [];
   if(strongDocs) reasons.push('A passage from your documents is a close match.');
-  if(strongSig) reasons.push('A known error signature is a close match.');
+  if(strongSig) reasons.push('A known error is a close match.');
   if(strongCom) reasons.push('The community knowledge for this topic is mostly steps and fixes.');
   if(judgement) reasons.push(frontier ? 'The question looks like a judgement or conceptual question.' : 'The closest community topic is mostly judgement, with few and varied answers.');
   if(!ranked.length || best < GROWTH_THRESHOLD) reasons.push('No passage is a close match.');
@@ -4298,8 +4306,8 @@ function renderEvidence(e){
 
 /* ---- First screen of "Ask the docs": one question box, four examples, plain-language confidence ---- */
 const HERO_EXAMPLES = [
-  'What does end-of-file during read (exit code 24) mean in SWAT-MODFLOW?',
-  'Which fields does a row of hru-data.hru contain in SWAT+, in order?',
+  'forrtl: severe (24): end-of-file during read, unit 30020',
+  'ERROR REPORT: 1. Model does not have any active nodes.',
   'What are the steps to couple a SWAT+ model with MODFLOW?',
   'What NSE value is considered acceptable for monthly streamflow calibration?'
 ];

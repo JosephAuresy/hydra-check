@@ -3,7 +3,7 @@
 **Hydra Check** — understand and validate existing hydrologic models. It is the first of a planned family: *Hydra Build* (construct models automatically from specifications) and *Hydra Hybrid* (combine physics-based and data-driven components).
 
 A free, private, in-browser pre-run checker. It first works out **what you gave it** (SWAT2012, SWAT+ rev 61/62 and older formats, SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 2005/NWT/USG/6, APEX, APEX-MODFLOW, and the groundwater module or coupling in use), then checks it. Full rule sets exist for SWAT2012, SWAT+, SWAT-MODFLOW and MODFLOW; MODFLOW 6 has six checks (name-file references, NPER, convergence failures recorded in a run's listing, and three IMS settings that made test models fail to converge); APEX has basic checks (empty control files, the APEX-MODFLOW link file).
-Paste an error message or drop your model folder, and get an instant diagnosis — no upload,
+Ask a question or paste an error message, or drop your model folder, and get a diagnosis — no upload,
 no account, no server.
 
 **Live tool:** https://JosephAuresy.github.io/hydra-check/
@@ -15,17 +15,20 @@ no account, no server.
 Two tiers, built from a taxonomy of thousands of user-reported implementation issues mined
 from the official SWAT, SWAT+, SWAT-MODFLOW, and MODFLOW communities (2009–2026):
 
-- **Check my model files / Paste an error** — a deterministic, rule-based checker. Instant,
-  offline, zero hallucination risk: every finding names the exact file/line or error pattern
-  that triggered it. Answers the **documentable majority** of setup, crash, and configuration
-  questions, and tells you when a question is *not* documentable so you don't get a
-  false-confidence answer.
-- **Ask the docs** — a retrieval-grounded prototype. Drop your own PDF manuals; the tool
-  searches them **and** a community-knowledge index built from the coded corpus, where every
-  suggested solution carries its real support count (how many independent forum threads
-  proposed it, and how often it was followed by a resolution) — not a paraphrase. A written
-  answer is generated only if you have a local model running (via [Ollama](https://ollama.com)),
-  entirely on your machine.
+Two doors, one rule: if you type, everything goes in the same box; if you bring files, they go to the file check.
+
+- **Ask a question or paste an error** — one box. A pasted error is first matched, instantly and
+  without a model, against known error messages with a documented cause and fix (each links to the
+  forum threads where it was reported). Then the same question searches your own PDF manuals, a
+  community-knowledge index built from the coded corpus (every suggested solution carries its real
+  support count) and those known errors, and says how much evidence stands behind the result.
+  A written answer is generated only if you have a local model running (via
+  [Ollama](https://ollama.com)), entirely on your machine. This door is a beta and has not been
+  benchmarked yet.
+- **Check my model files** — a deterministic, rule-based checker. Instant, offline, zero hallucination
+  risk: every finding names the exact file/line or pattern that triggered it. Answers the
+  **documentable majority** of setup, crash, and configuration questions, and tells you when a
+  question is *not* documentable so you don't get a false-confidence answer.
 
 It does not replace the official Google Groups. It is a triage layer in front of them: it
 resolves the same procedural questions that get asked hundreds of times, and it drafts a

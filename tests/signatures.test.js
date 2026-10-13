@@ -42,5 +42,18 @@ expectNot('Nandini wrote that the finance numbers look fine', 'NaN', 'the letter
 expect('gwflow: aquifer head returned NaN at cell 1043', 'NaN', 'NaN still matches');
 expect('lum.dtl: decision table does not fire', 'Decision-table', 'decision table still matches');
 
+
+/* the single box: a text is matched against the signatures only when it reads like an error */
+const e0 = html.indexOf('const ERRORISH = ');
+const ERRORISH = eval(html.slice(e0 + 'const ERRORISH = '.length, html.indexOf(';', html.indexOf('/i', e0))));
+const hitsFor = txt => ERRORISH.test(txt) ? SIGNATURES.filter(s => s.re.test(txt)).map(s => s.title) : [];
+ok(hitsFor('How do I set the projection of my DEM?').length === 0, 'an ordinary question about projections is not a known error');
+ok(hitsFor('What is the coordinate system used by SWAT+?').length === 0, 'an ordinary question about coordinates is not a known error');
+ok(hitsFor('forrtl: severe (24): end-of-file during read, unit 30020').length > 0, 'a pasted forrtl error is matched');
+ok(hitsFor('File A48309.DLY IS MISSING.').some(t => t.includes('file named')), 'APEX missing file is matched through the guard');
+const g0 = html.indexOf('const EXAMPLE_ERRORS = [');
+const EXAMPLE_ERRORS = eval(html.slice(g0 + 'const EXAMPLE_ERRORS = '.length, html.indexOf('\n];', g0) + 3));
+EXAMPLE_ERRORS.forEach(x => ok(hitsFor(x.text).length > 0, 'gallery example "' + x.title + '" is matched by some known error'));
+
 console.log(pass + '/' + (pass + fail) + ' passed' + ' (' + SIGNATURES.length + ' signatures)');
 process.exit(fail ? 1 : 0);
