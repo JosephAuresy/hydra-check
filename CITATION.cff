@@ -1,6 +1,6 @@
 cff-version: 1.2.0
 message: "If you use this software, please cite it as below. For the study behind its rules, please also cite the manuscript listed under references."
-title: "iHydroLab Check"
+title: "iHydro Check"
 abstract: "A free, private, in-browser checker for hydrologic model inputs and errors (SWAT, SWAT+, MODFLOW, APEX and their couplings). It reads a model folder before a run, matches pasted error messages to known causes, and answers questions from community findings and documentation, showing the evidence behind each answer."
 type: software
 version: 0.1.0

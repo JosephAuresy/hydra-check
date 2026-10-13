@@ -1,8 +1,8 @@
-<p align="center"><img src="assets/ihydro-check-logo.png" alt="iHydroLab Check" width="320"></p>
+<p align="center"><img src="assets/ihydro-check-logo.png" alt="iHydro Check" width="320"></p>
 
-# iHydroLab Check
+# iHydro Check
 
-**iHydroLab Check** (formerly *Hydra Check*) — understand and validate existing hydrologic models. It is the first of a planned family from the iHydroLab research group: *iHydroLab Build* (construct models automatically from specifications) and *iHydroLab Hybrid* (combine physics-based and data-driven components).
+**iHydro Check** (formerly *Hydra Check*) — understand and validate existing hydrologic models. It is the first of a planned family from the iHydroLab research group: *iHydro Build* (construct models automatically from specifications) and *iHydro Hybrid* (combine physics-based and data-driven components).
 
 A free, private, in-browser pre-run checker. It first works out **what you gave it** (SWAT2012, SWAT+ rev 61/62 and older formats, SWAT-MODFLOW, SWAT+MODFLOW, MODFLOW 2005/NWT/USG/6, APEX, APEX-MODFLOW, and the groundwater module or coupling in use), then checks it. Full rule sets exist for SWAT2012, SWAT+, SWAT-MODFLOW and MODFLOW; MODFLOW 6 has six checks (name-file references, NPER, convergence failures recorded in a run's listing, and three IMS settings that made test models fail to converge); APEX has basic checks (empty control files, the APEX-MODFLOW link file).
 Ask a question or paste an error message, or drop your model folder, and get a diagnosis — no upload,
@@ -89,7 +89,7 @@ deliberately excluded from automation by design — see the paper for the ration
 
 If you use the tool, please cite the software:
 
-> Serrano, D., & Park, S. (2026). *iHydroLab Check* (version 0.1.0) [Computer software]. https://github.com/dauresy/check
+> Serrano, D., & Park, S. (2026). *iHydro Check* (version 0.1.0) [Computer software]. https://github.com/dauresy/check
 
 A DOI will be added here when the first release is archived. `CITATION.cff` is included for GitHub's "Cite this repository" button.
 

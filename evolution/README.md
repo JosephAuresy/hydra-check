@@ -1,4 +1,4 @@
-# iHydroLab Check (formerly Hydra Check): evolution record
+# iHydro Check (formerly Hydra Check): evolution record
 
 The historical record of the tool: what was tested, what was found, what was corrected, and how the numbers moved.
 

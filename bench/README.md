@@ -1,6 +1,6 @@
-# iHydroLab Check benchmark: injected faults, real engines
+# iHydro Check benchmark: injected faults, real engines
 
-iHydroLab Check (formerly Hydra Check) reads the input files of a SWAT, SWAT+, MODFLOW, APEX or coupled model **before** you run it and tells you what it thinks is wrong. This folder is the evidence for how well it does that.
+iHydro Check (formerly Hydra Check) reads the input files of a SWAT, SWAT+, MODFLOW, APEX or coupled model **before** you run it and tells you what it thinks is wrong. This folder is the evidence for how well it does that.
 
 The idea is simple:
 
