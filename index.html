@@ -562,82 +562,49 @@
     </div>
 
     <div class="card">
-      <h2>Why you can trust a free tool</h2>
-      <div class="finding ok"><span class="head">Your files never leave your computer</span>
-        <div class="fix">Everything is analyzed in your browser with JavaScript. Nothing is
-        uploaded — safe for proprietary or client basin models.</div></div>
-      <div class="finding ok"><span class="head">Every finding is traceable</span>
-        <div class="fix">Each rule maps to a taxonomy category derived from real, coded community
-        threads — not a black-box guess. You can see <i>why</i> a finding fired and which
-        community it comes from.</div></div>
+      <h2>What the tests show &mdash; and what they do not</h2>
+      <div class="finding ok"><span class="head">Your files stay on your computer</span>
+        <div class="fix">Model files and pasted text are analysed in your browser and are not uploaded. The first time you ask a question,
+        the search model (about 25 MB) and a few libraries are downloaded from a public content network; nothing you typed or dropped is sent with those requests.</div></div>
+      <div class="finding warning"><span class="head">Measured on injected faults: quiet, but it misses many</span>
+        <div class="fix">We broke working models on purpose and ran the real programs to see what happened. On the 22 cases the rules were tuned on, the tool named the cause of all of
+        them &mdash; that is a development result, not proof. On a blind test of 111 new cases, written without running the tool and scored with rules frozen beforehand, it named the cause
+        for <strong>5 of 60</strong> faults that stop the program and <strong>0 of 19</strong> that silently change the results, and it raised <strong>no false alarm on 20 harmless edits</strong>.
+        So a finding is usually worth reading, but a clean report does not mean the model is fine.
+        <a href="evolution/" target="_blank" rel="noopener">Full record, numbers and limits</a>.</div></div>
+      <div class="finding ok"><span class="head">Findings say where they come from</span>
+        <div class="fix">Rules and known-error entries are tied to coded community threads, official manuals or an engine&rsquo;s own messages, and an answer shows which kind of source supports it
+        (same error in a forum thread, same kind of error, our own bug log, engine source, or our own guess).</div></div>
+      <div class="finding ok"><span class="head">It tells you when it is guessing</span>
+        <div class="fix">Every answer carries an evidence level. It is a rule-based label, not a probability, and its thresholds have not been calibrated yet. Questions at the limits of what documentation can settle
+        (boundary conditions, SW&ndash;GW exchange, calibration judgement) are marked for an expert instead of answered.</div></div>
       <div class="finding ok"><span class="head">Community knowledge is attributed, never copied</span>
-        <div class="fix">Recurring solutions are re-expressed in the authors' own words and
-        attributed at the community level (e.g. "as commonly advised in the SWAT-MODFLOW group").
-        No verbatim posts are reproduced — contributors are acknowledged, not appropriated.</div></div>
-      <div class="finding ok"><span class="head">It admits what it doesn't know</span>
-        <div class="fix">Frontier questions are flagged for expert review instead of answered
-        with confident-sounding but unreliable advice.</div></div>
+        <div class="fix">Recurring solutions are re-expressed in the authors&rsquo; own words and attributed at the community level. No verbatim posts are reproduced.</div></div>
     </div>
 
     <div class="card">
-      <h2>Where this is going — and why it will beat a generic AI notebook</h2>
-      <p class="muted" style="margin-bottom:4px;">This diagnostic tool is <b>Tier 1</b> of a
-      two-tier design. Tier 2 adds a retrieval-grounded assistant on top, without weakening what
-      Tier 1 already guarantees.</p>
-
+      <h2>Where it stands today</h2>
       <div class="tier">
         <div class="tier-badge done"><i class="ti ti-check" aria-hidden="true"></i></div>
         <div>
-          <p class="tier-title">Tier 1 — deterministic rules (live today)</p>
-          <p class="tier-sub">File/error signatures extracted from the high-frequency
-          procedural &amp; configuration categories of the taxonomy. Zero hallucination risk —
-          every rule is a fixed pattern match, and every finding names the exact file/line that
-          triggered it.</p>
+          <p class="tier-title">Check my files and known errors &mdash; live</p>
+          <p class="tier-sub">Fixed rules per model family and a list of error messages with documented causes. Every finding names the file or the message that triggered it. No model is involved, so it cannot invent an answer.</p>
+        </div>
+      </div>
+      <div class="tier">
+        <div class="tier-badge done"><i class="ti ti-check" aria-hidden="true"></i></div>
+        <div>
+          <p class="tier-title">Ask or paste an error &mdash; live, early version</p>
+          <p class="tier-sub">Searches the forum findings, the known errors, official manuals and any PDFs you add, and shows the evidence next to each answer. Its answers have <strong>not been benchmarked yet</strong>, so read the evidence before relying on one.</p>
         </div>
       </div>
       <div class="tier">
         <div class="tier-badge"><i class="ti ti-clock" aria-hidden="true"></i></div>
         <div>
-          <p class="tier-title">Tier 2 — grounded assistant (planned)</p>
-          <p class="tier-sub">A retrieval-augmented layer over (a) official documentation and
-          manuals (SWAT+, MODFLOW 6/USGS PDFs) and (b) the synthesized, attributed experiential
-          knowledge mined from these same communities — for the long tail of questions Tier 1's
-          fixed rules don't cover. It answers from that grounded knowledge base only, cites its
-          source, and explicitly defers when a question falls at the complexity frontier instead
-          of improvising an answer.</p>
+          <p class="tier-title">Next</p>
+          <p class="tier-sub">Scoring the tool on faults taken from real forum threads, more known errors, trials with students, and checking whether the evidence level matches how often answers are right.</p>
         </div>
       </div>
-
-      <p style="margin:16px 0 8px; font-weight:500; font-size:14px;">Why that will be more useful
-      than pointing a general tool (e.g. NotebookLM) at the same PDFs and forum exports:</p>
-      <table class="compare-table">
-        <tr><th>Dimension</th><th>Generic AI notebook over the same documents</th><th>This project's Tier 2</th></tr>
-        <tr><td>Scope of what it will answer</td>
-            <td>Answers anything asked, with similar-sounding confidence regardless of whether
-            the source material actually settles the question.</td>
-            <td>Routes each question through the taxonomy first; procedural/config questions get
-            a grounded answer, frontier questions get an explicit deferral — the
-            complexity-frontier boundary is a first-class part of the design, not an
-            afterthought.</td></tr>
-        <tr><td>What "grounded" means</td>
-            <td>Summarizes and paraphrases whatever text is in the notebook, including one-off or
-            unverified forum posts, with no notion of how often a claim recurs across the
-            community.</td>
-            <td>Every community-sourced claim is backed by a real support count — how many
-            independent threads proposed it and how often it correlated with a resolved
-            problem — visible right in the answer, the same evidence shown in this tool's
-            solution-set panels today.</td></tr>
-        <tr><td>Attribution &amp; ethics</td>
-            <td>Typically reproduces or closely paraphrases source passages without a policy on
-            verbatim reuse.</td>
-            <td>Community solutions are synthesized and attributed at the community level by
-            design (Section 3.1 of the underlying study) — never reproduced verbatim.</td></tr>
-        <tr><td>Auditability</td>
-            <td>A black-box summary — hard to tell which source claim it came from.</td>
-            <td>Every answer traces back to a taxonomy category with a known nature, frequency,
-            and (for Tier 1) an inspectable rule — consistent with how this tool already shows
-            its work.</td></tr>
-      </table>
     </div>
 
     <div class="card">
@@ -835,7 +802,8 @@
     attributed at the community level and never reproduce verbatim posts. Frontier-level questions
     (boundary-condition conceptualization, SW–GW exchange behavior, joint-calibration judgment)
     are flagged for expert consultation rather than answered automatically.<br>
-    Part of the <i>SWAT Issue Atlas</i> project — D. Serrano &amp; S. Park, Texas Tech University.
+    Part of the <i>SWAT Issue Atlas</i> project — D. Serrano &amp; S. Park, Texas Tech University.<br>
+    <a href="https://github.com/JosephAuresy/check/issues/new/choose" target="_blank" rel="noopener">Report a problem or a wrong answer</a>
   </footer>
 </div>
 

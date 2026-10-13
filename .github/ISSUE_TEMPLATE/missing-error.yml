@@ -1,0 +1,24 @@
+name: An error the tool does not know
+description: An error message or a model problem that should be recognized and is not.
+labels: ["known-error"]
+body:
+  - type: textarea
+    id: message
+    attributes:
+      label: The error message (or what you saw)
+      description: Paste the line or lines that matter, not the whole log.
+      render: text
+    validations:
+      required: true
+  - type: textarea
+    id: cause
+    attributes:
+      label: What was the cause and what fixed it?
+      description: If you found out, this is the most useful part. A link to a forum thread or manual page also helps.
+  - type: input
+    id: model
+    attributes:
+      label: Model and version
+      placeholder: "SWAT+ rev 61, MODFLOW 6.4, SWAT-MODFLOW, APEX ..."
+    validations:
+      required: true

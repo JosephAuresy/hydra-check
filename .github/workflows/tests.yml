@@ -1,0 +1,26 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  node:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      # the real-sample cases need tests/fixtures.js (built from private model folders), so they are skipped here
+      - run: node tests/run_node.js
+      - run: node tests/run_rules_node.js
+      - run: node tests/run_fix_node.js
+      - run: node tests/signatures.test.js
+      - run: node tests/evidence.test.js
+      # index.html must be what build.py produces from src/
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - run: python build.py --check

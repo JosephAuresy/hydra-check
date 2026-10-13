@@ -1,0 +1,30 @@
+name: The answer was wrong or unhelpful
+description: You asked a question or pasted an error and the answer did not fit.
+labels: ["answer-quality"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you. Please do not paste proprietary data, file paths with names of people, or whole model files. A few lines of the error are enough.
+  - type: textarea
+    id: asked
+    attributes:
+      label: What did you type or paste?
+    validations:
+      required: true
+  - type: textarea
+    id: got
+    attributes:
+      label: What did the tool answer?
+      description: The headline of the answer and the evidence label you saw (for example "Strong match" or "Judgement call").
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What was the real cause or the fix, if you know it?
+  - type: input
+    id: model
+    attributes:
+      label: Model and version
+      placeholder: "SWAT+ rev 61, MODFLOW 6.4, SWAT-MODFLOW, APEX ..."
