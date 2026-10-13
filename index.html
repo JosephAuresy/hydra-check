@@ -230,6 +230,23 @@
                  border-top:0.5px solid var(--border); text-decoration:none; color:var(--text); }
   .manuals-group .manual-link:first-of-type { border-top:none; }
   .manual-link i { color:var(--accent); font-size:16px; margin-top:1px; flex-shrink:0; }
+  /* recipe + question types (ask the docs) */
+  .recipe-list { margin:6px 0 0; padding-left:18px; font-size:13px; line-height:1.55; }
+  .recipe-list li { margin-bottom:4px; }
+  .recipe-topic { padding:10px 0; border-top:0.5px solid var(--border); }
+  .recipe-topic:first-of-type { border-top:none; }
+  .recipe-topic .rt-name { font-size:13px; font-weight:500; margin-bottom:3px; }
+  .recipe-topic ul { font-size:12.5px; color:var(--muted); line-height:1.5; margin:0; padding-left:16px; }
+  .recipe-topic a { color:var(--accent-text); }
+  .qtype { padding:12px 0; border-top:0.5px solid var(--border); }
+  .qtype:first-of-type { border-top:none; }
+  .qtype .qt-head { display:flex; gap:8px; align-items:baseline; flex-wrap:wrap; }
+  .qtype .qt-letter { font-size:11px; font-weight:600; background:var(--accent-bg); color:var(--accent-text); padding:1px 8px; border-radius:999px; }
+  .qtype .qt-name { font-size:13.5px; font-weight:500; }
+  .qtype .qt-meta { font-size:12px; color:var(--muted); margin:4px 0 7px; line-height:1.5; }
+  .qex { display:inline-block; text-align:left; font-size:12.5px; padding:5px 10px; margin:0 6px 6px 0; border:0.5px solid var(--border-strong);
+         background:var(--surface-1); border-radius:8px; cursor:pointer; color:var(--text); font-family:inherit; }
+  .qex:hover { border-color:var(--accent); background:var(--accent-bg); }
   .manual-link:hover .ml-title { color:var(--accent-text); text-decoration:underline; }
   .ml-title { font-size:13px; font-weight:500; }
   .ml-src { font-size:11.5px; color:var(--faint); margin-top:1px; }
@@ -237,6 +254,71 @@
                  border-radius:0 9px 9px 0; padding:11px 14px; margin:8px 0; }
   .rag-cite { font-family:ui-monospace,Consolas,monospace; font-size:11.5px; color:var(--accent-text);
               margin-bottom:4px; }
+  .src-card > summary { cursor:pointer; list-style:none; font-size:14px; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .src-card > summary::-webkit-details-marker { display:none; }
+  .src-card > summary .src-title { font-weight:500; font-size:15px; margin-right:4px; }
+  .src-card[open] > summary { margin-bottom:6px; }
+  .src-row { display:flex; gap:10px; align-items:flex-start; padding:10px 0; border-top:0.5px solid var(--border); cursor:pointer; }
+  .src-row input { margin-top:3px; flex-shrink:0; }
+  .src-name { display:block; font-size:13.5px; font-weight:500; }
+  .src-meta { display:block; font-size:12.5px; color:var(--muted); margin-top:1px; line-height:1.45; }
+  .src-note { display:block; font-size:11.5px; color:var(--faint); margin-top:2px; }
+  .src-badge { display:inline-block; font-size:11.5px; padding:2px 10px; border-radius:999px; white-space:nowrap; }
+  .src-badge.on { background:var(--green-bg); color:var(--green); }
+  .src-badge.off { background:var(--surface-1); color:var(--faint); text-decoration:line-through; }
+  .src-badges { display:flex; flex-wrap:wrap; gap:6px; align-items:center; margin:10px 0 2px; font-size:12px; color:var(--muted); }
+  .cmp-bar { margin:12px 0 4px; font-size:12.5px; color:var(--muted); display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .cmp-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:760px){ .cmp-grid { grid-template-columns:1fr; } }
+  .cmp-h { font-size:12.5px; font-weight:500; margin-bottom:4px; }
+  .cmp-item { border:0.5px solid var(--border); border-radius:9px; padding:8px 10px; margin:6px 0; background:var(--surface); position:relative; }
+  .cmp-item.diff { border-color:var(--amber); background:var(--amber-bg); }
+  .cmp-item .txt { font-size:12.5px; line-height:1.5; }
+  .cmp-tag { display:inline-block; font-size:10.5px; color:var(--faint); margin-top:3px; }
+  .ask-hero textarea { font-size:15px; }
+  .hero-examples { display:flex; flex-wrap:wrap; gap:8px; margin:10px 0 4px; }
+  .qchip { text-align:left; font-size:12.5px; line-height:1.4; padding:6px 12px; border:0.5px solid var(--border-strong); background:var(--surface-1);
+           border-radius:999px; cursor:pointer; color:var(--text); font-family:inherit; }
+  .qchip:hover { border-color:var(--accent); background:var(--accent-bg); }
+  .hero-row { display:flex; flex-wrap:wrap; gap:12px; align-items:center; margin-top:10px; }
+  .linkbtn { background:none; border:none; color:var(--accent-text); font-size:12.5px; cursor:pointer; padding:4px 0; font-family:inherit; }
+  .linkbtn:hover { text-decoration:underline; }
+  .hero-note { font-size:11.5px; margin:8px 0 0; }
+  .conf { display:flex; flex-wrap:wrap; gap:6px 8px; align-items:center; font-size:13px; margin:10px 0 4px; }
+  .conf-dot { width:10px; height:10px; border-radius:50%; background:var(--faint); flex-shrink:0; }
+  .conf-high .conf-dot { background:var(--green); }
+  .conf-med .conf-dot { background:var(--accent); }
+  .conf-low .conf-dot, .conf-judg .conf-dot { background:var(--amber); }
+  .conf-none .conf-dot { background:var(--red); }
+  .ans-actions { display:flex; flex-wrap:wrap; gap:8px; margin:8px 0 2px; }
+  .ev-panel { margin-top:12px; padding-top:6px; border-top:0.5px solid var(--border); }
+  .adv > summary { cursor:pointer; list-style:none; display:flex; flex-wrap:wrap; gap:8px; align-items:center; }
+  .adv > summary::-webkit-details-marker { display:none; }
+  .adv[open] > summary { margin-bottom:8px; }
+  .adv-sec { border-top:0.5px solid var(--border); padding:8px 0; }
+  .adv-sec > summary { cursor:pointer; font-size:13.5px; font-weight:500; padding:4px 0; }
+  .adv-sec[open] > summary { margin-bottom:6px; }
+  .in-row { padding:10px 0; border-top:0.5px solid var(--border); }
+  .in-top { display:flex; flex-wrap:wrap; gap:8px; align-items:baseline; justify-content:space-between; }
+  .in-name { font-size:13px; font-weight:500; }
+  .in-tag { font-size:11px; padding:1px 9px; border-radius:999px; white-space:nowrap; }
+  .in-tag.steps { background:var(--green-bg); color:var(--green); }
+  .in-tag.judg { background:var(--amber-bg); color:var(--amber); }
+  .in-tag.mixed { background:var(--surface-1); color:var(--muted); }
+  .in-bar { height:9px; background:var(--surface-1); border-radius:5px; margin:6px 0 3px; overflow:hidden; }
+  .in-bar-n { display:block; height:100%; background:var(--accent-bg); border-right:1px solid var(--accent); }
+  .in-bar-r { display:block; height:100%; background:var(--green); }
+  .in-meta { font-size:12px; color:var(--muted); }
+  .in-comp { font-size:12px; color:var(--faint); margin-top:2px; line-height:1.45; }
+  .evi { border-radius:10px; padding:11px 14px; margin:10px 0; border:0.5px solid var(--border-strong); background:var(--surface-1); }
+  .evi-title { font-size:13.5px; font-weight:500; }
+  .evi-reasons { margin:6px 0 4px; padding-left:18px; font-size:12.5px; color:var(--muted); line-height:1.5; }
+  .evi-note { font-size:11.5px; color:var(--faint); }
+  .evi-high { background:var(--green-bg); border-color:var(--green); }
+  .evi-med { background:var(--accent-bg); border-color:var(--accent); }
+  .evi-low, .evi-judg { background:var(--amber-bg); border-color:var(--amber); }
+  .evi-none { background:var(--red-bg); border-color:var(--red); }
+  .evi-comp { font-size:12.5px; line-height:1.5; margin:8px 0; }
   .rag-passage .txt { font-size:13px; color:var(--text); line-height:1.55; }
   .rag-gen { background:var(--green-bg); border-radius:10px; padding:14px 16px; margin-bottom:12px;
              font-size:14px; line-height:1.6; white-space:pre-wrap; }
@@ -350,7 +432,7 @@
     <button class="picker-card tab" data-mode="docs" type="button">
       <i class="ti ti-book picon" aria-hidden="true"></i>
       <p class="pt">Ask the docs <span style="font-size:10px;font-weight:500;background:var(--amber-bg);color:var(--amber);padding:1px 6px;border-radius:8px;vertical-align:middle;">beta</span></p>
-      <p class="pd">Search your manuals + community knowledge.</p>
+      <p class="pd">Ask a question. Uses your manuals and what forum users found.</p>
     </button>
   </div>
 
@@ -626,71 +708,106 @@
 
   <!-- ── MODE: ASK THE DOCS (Tier 2 RAG, client-side retrieval + local generation) ── -->
   <div id="mode-docs" style="display:none;">
-    <div class="card">
-      <h2>Ask your documentation — grounded, private, on your machine</h2>
-      <p class="muted">Retrieval runs entirely in your browser: your PDFs are read and searched
-      locally and never uploaded. A written answer is generated only if a local model (Ollama)
-      is detected; otherwise you get the exact cited passages to read yourself. Every answer also
-      draws on the <b>community knowledge base</b> — real solutions from ~9,100 coded forum
-      threads, each shown with its real support count, alongside your manuals.</p>
-      <div id="ragStatus" class="frontier" style="margin-top:6px;">
-        <i class="ti ti-info-circle" aria-hidden="true"></i> Checking environment…
+    <div class="card ask-hero">
+      <h2>Ask a question about your model</h2>
+      <p class="muted" style="margin-bottom:10px;">Describe the problem or paste the error message. You get an answer together with the sources it is based on. Your PDFs stay on your computer.</p>
+      <textarea id="ragQuery" rows="3" placeholder="e.g. What does end-of-file during read (exit code 24) mean in SWAT-MODFLOW?"></textarea>
+      <div id="heroExamples" class="hero-examples"></div>
+      <div class="hero-row">
+        <button class="action primary" id="ragAskBtn">Ask</button>
+        <button type="button" class="linkbtn" id="heroAddPdf"><i class="ti ti-file-plus" aria-hidden="true"></i> Optional: add your PDF manuals for a better answer</button>
       </div>
-      <div id="ragModelPicker" style="display:none; margin-top:10px;">
-        <label class="muted" style="display:block; margin-bottom:4px;">Model for written answers</label>
-        <select id="ragModelSelect"></select>
-      </div>
-      <div id="ragManualModel" style="display:none; margin-top:10px;">
-        <label class="muted" style="display:block; margin-bottom:4px;">Couldn't list your models automatically —
-        type the exact name of one you have installed (e.g. <code>llama3:latest</code>):</label>
-        <div style="display:flex; gap:8px; flex-wrap:wrap;">
-          <input id="ragManualModelInput" placeholder="model:tag" style="flex:1; min-width:160px;">
-          <button class="action" id="ragManualModelBtn">Use this model</button>
-        </div>
-      </div>
-      <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
-        <button class="action" id="ragRetryBtn"><i class="ti ti-refresh" aria-hidden="true"></i> Retry detection</button>
-        <button class="action" id="exportNotesBtn" style="display:none;">
-          <i class="ti ti-download" aria-hidden="true"></i> Export my notes
-        </button>
-      </div>
-    </div>
-
-    <div class="card">
-      <h2>Start here — the official manuals</h2>
-      <p class="muted" style="margin-bottom:10px;">The minimum documentation set to answer most questions,
-      linked directly from each framework's official source. Browsers block sites from fetching PDFs across
-      domains automatically, so: click to open/download from the publisher, then drag the downloaded file
-      into the box below to index it locally. Nothing is uploaded — the click only reaches the official
-      site, never this tool.</p>
-      <div id="manualsList"></div>
-    </div>
-
-    <div class="card">
-      <h2><span class="step">Step 1 ·</span> Add your documents (PDF manuals)</h2>
-      <label class="drop" id="ragDrop">
-        <i class="ti ti-file-text" aria-hidden="true"></i>
-        <div>Drag and drop PDF manuals here (SWAT+, MODFLOW 6, USGS…), or click to select</div>
-        <div class="muted" style="margin-top:6px;">First use downloads a small embedding model (~25 MB, cached afterwards). Text is extracted and indexed locally.</div>
-        <input type="file" id="ragInput" accept="application/pdf" multiple>
-      </label>
       <div id="ragProgressWrap" style="display:none; margin-top:12px;">
         <div class="bar"><div class="bar-fill" id="ragProgressFill"></div></div>
         <div class="muted" style="margin-top:6px;" id="ragProgressText"></div>
       </div>
-      <div id="ragDocList" style="margin-top:10px;"></div>
+      <p class="muted hero-note" id="heroSources"></p>
+      <p class="muted hero-note">Early version: the answers have not been benchmarked yet, so check the evidence before relying on one.</p>
     </div>
 
-    <div class="card">
-      <h2><span class="step">Step 2 ·</span> Ask a question</h2>
-      <textarea id="ragQuery" rows="3" placeholder="e.g. How is groundwater recharge computed in SWAT+ gwflow?"></textarea>
-      <div style="margin-top:10px;"><button class="action primary" id="ragAskBtn" disabled>Add documents first</button></div>
+    <div class="card" id="ragAnswerCard" style="display:none;">
+      <div id="ragAnswer"></div>
     </div>
 
-    <div class="card">
-      <h2>Answer</h2>
-      <div id="ragAnswer"><span class="muted">Add a manual and ask a question. Frontier questions are flagged before any answer.</span></div>
-    </div>
+    <details class="card adv" id="advPanel">
+      <summary><span class="src-title">Advanced settings</span><span class="muted" style="font-size:12px;">documents, where answers come from, local model, manuals and more</span></summary>
+
+      <details class="adv-sec" id="advDocs">
+        <summary>Your documents (PDF)</summary>
+        <label class="drop" id="ragDrop">
+          <i class="ti ti-file-text" aria-hidden="true"></i>
+          <div>Drag and drop PDF manuals here (SWAT+, MODFLOW 6, USGS…), or click to select</div>
+          <div class="muted" style="margin-top:6px;">First use downloads a small search model (~25 MB, cached afterwards). Text is extracted and indexed on this computer.</div>
+          <input type="file" id="ragInput" accept="application/pdf" multiple>
+        </label>
+        <div id="ragDocList" style="margin-top:10px;"></div>
+        <button class="action" id="exportNotesBtn" style="display:none; margin-top:8px;">
+          <i class="ti ti-download" aria-hidden="true"></i> Export my notes
+        </button>
+      </details>
+
+      <details class="adv-sec" id="srcCard">
+        <summary>Where answers come from <span id="srcSummary"></span></summary>
+        <p class="muted" style="margin-bottom:4px;">Answers draw on three sources. All are on by default. Turn one off to see how the answer changes; each answer says which sources it was built with.</p>
+        <div id="srcRows"></div>
+      </details>
+
+      <details class="adv-sec" id="insideCard">
+        <summary>What the forum findings cover</summary>
+        <p class="muted" style="margin-bottom:6px;">Which problems the forum threads cover, how many of them ended with a confirmed fix, and which documents complement each topic.</p>
+        <div id="insideChips"></div>
+        <div id="insideBody"></div>
+      </details>
+
+      <details class="adv-sec">
+        <summary>Official manuals</summary>
+        <p class="muted" style="margin-bottom:10px;">The minimum documentation set to answer most questions,
+        linked directly from each framework's official source. Browsers block sites from fetching PDFs across
+        domains automatically, so: click to open/download from the publisher, then add the downloaded file under
+        "Your documents". Nothing is uploaded: the click only reaches the official site, never this tool.</p>
+        <div id="manualsList"></div>
+      </details>
+
+      <details class="adv-sec">
+        <summary>Which documents to add for better answers</summary>
+        <p class="muted" style="margin-bottom:6px;">Answers can only be as good as the documents behind them. Six habits that help:</p>
+        <ol class="recipe-list" id="recipeRules"></ol>
+        <p class="muted" style="margin:12px 0 4px;">Suggested reading by topic (official manuals are listed under "Official manuals"; papers link to the publisher through their DOI):</p>
+        <div id="recipeTopics"></div>
+        <div class="frontier" style="margin-top:10px;"><i class="ti ti-info-circle" aria-hidden="true"></i>
+          This part has not been benchmarked yet: the file checks have (see the <a href="evolution/">evolution record</a>), the document search has not.
+          Treat every answer as a pointer to the cited passage, and read that passage.</div>
+      </details>
+
+      <details class="adv-sec">
+        <summary>Kinds of questions it handles</summary>
+        <p class="muted" style="margin-bottom:6px;">Click an example to put it in the question box. The best source says which kind of document to add first.</p>
+        <div id="qtypesList"></div>
+      </details>
+
+      <details class="adv-sec" id="advModel">
+        <summary>Local model (for written answers)</summary>
+        <p class="muted">A written answer is generated only if a local model (Ollama) is running on this computer; otherwise you get the closest passages to read yourself.</p>
+        <div id="ragStatus" class="frontier" style="margin-top:6px;">
+          <i class="ti ti-info-circle" aria-hidden="true"></i> Checking environment…
+        </div>
+        <div id="ragModelPicker" style="display:none; margin-top:10px;">
+          <label class="muted" style="display:block; margin-bottom:4px;">Model for written answers</label>
+          <select id="ragModelSelect"></select>
+        </div>
+        <div id="ragManualModel" style="display:none; margin-top:10px;">
+          <label class="muted" style="display:block; margin-bottom:4px;">Couldn't list your models automatically —
+          type the exact name of one you have installed (e.g. <code>llama3:latest</code>):</label>
+          <div style="display:flex; gap:8px; flex-wrap:wrap;">
+            <input id="ragManualModelInput" placeholder="model:tag" style="flex:1; min-width:160px;">
+            <button class="action" id="ragManualModelBtn">Use this model</button>
+          </div>
+        </div>
+        <div style="margin-top:10px; display:flex; gap:8px; flex-wrap:wrap;">
+          <button class="action" id="ragRetryBtn"><i class="ti ti-refresh" aria-hidden="true"></i> Retry detection</button>
+        </div>
+      </details>
+    </details>
   </div>
 
   <footer class="site-footer">
@@ -2416,7 +2533,8 @@ const ATTR = {
   swat     : "As commonly advised in the SWAT-user community.",
   swatmf   : "As commonly advised in the SWAT-MODFLOW user group.",
   modflow  : "As commonly advised in the MODFLOW users community.",
-  doc      : "From official documentation."
+  doc      : "From official documentation.",
+  apex     : "As commonly reported in the EPIC / APEX modeling forum."
 };
 
 function grab(name){ return FILES[name] ?? null; }
@@ -3176,7 +3294,7 @@ const SIGNATURES = [
     title:"Run hangs at period 1 / day 1",
     cause:"Classic coupling-startup failure: file-unit conflicts in modflow.mfn or period misalignment between SWAT and MODFLOW.",
     fix:"Renumber .mfn units > 5000 and verify MODFLOW covers the whole SWAT period.", attr:ATTR.swatmf },
-  { re:/nan|not a number/i, fw:"SWAT+ (incl. gwflow)", model:"swat_plus", cat:"CAT-09",
+  { re:/\bnan\b|not a number/i, fw:"SWAT+ (incl. gwflow)", model:"swat_plus", cat:"CAT-09",
     title:"NaN in outputs or heads",
     cause:"A division by zero or undefined property during initialization — zero aquifer thickness (gwflow), zero soil layer values, or corrupted parameters.",
     fix:"Enforce positive thickness/density everywhere; check the first NaN's location in the output to trace the module.", attr:ATTR.swatplus },
@@ -3184,10 +3302,77 @@ const SIGNATURES = [
     title:"Projection / CRS mismatch",
     cause:"DEM, soils, and land-use rasters are not in the same projected CRS (delineation fails or produces 0 HRUs).",
     fix:"Reproject every raster to one projected CRS (meters) before starting the project.", attr:ATTR.swat },
-  { re:/decision table|d_table|dtl/i, fw:"SWAT+", model:"swat_plus", cat:"CAT-04",
+  { re:/decision[ _-]?table|d_table|\.dtl\b|\bdtl\b/i, fw:"SWAT+", model:"swat_plus", cat:"CAT-04",
     title:"Decision-table logic question",
     cause:"Management triggering in SWAT+ is controlled by decision tables — behavior questions here are commonly conceptual rather than file errors.",
     fix:"Check lum.dtl syntax against the documented examples; if the question is about *why* a rule fires, it may need conceptual review — consider a community post with your table attached.", attr:ATTR.swatplus },
+  /* ---- signatures added 2026-10-13 from real forum threads (modflow group, EPIC/APEX forum) and the engines' own messages.
+     `threads` = [group, thread id] pairs, shown as links; they are where the same message was reported. ---- */
+  { re:/could not open\s+["'][^"']+["']|error opening file\s+["'][^"']+["']|specified file status:?\s*old/i, fw:"MODFLOW (all versions) / SWAT-MODFLOW", model:"modflow", cat:"CAT-05",
+    title:"A file named in the name file cannot be opened",
+    cause:"The simulation or model name file lists a file that is not at that path: a typo, a wrong extension, a relative path that does not match the folder the program runs from, or a file that was deleted or never written. In MODFLOW 6 the simulation name file must be called mfsim.nam.",
+    fix:"Compare every file name in the name file with the folder, character by character; check the relative paths and that the program is run from the folder you expect. In MODFLOW-NWT and MODFLOW-2005 also check that every unit number is used once.",
+    attr:ATTR.modflow, threads:[["modflow","pbOnmnesTTY"],["modflow","3bGd9hIilDY"],["modflow","DNs6BbDyPuY"],["modflow","Opg_1smGYDk"]] },
+  { re:/required block\s+["']?\w+["']?\s+not found|must be used to end|detected before/i, fw:"MODFLOW 6", model:"modflow", cat:"CAT-05",
+    title:"MODFLOW 6: a required block is missing or not closed correctly",
+    cause:"An input file lacks a block the package needs (for example DIMENSIONS, GRIDDATA or PERIODDATA), the block name is misspelled, or a block was closed with the wrong END line so the next block is not found.",
+    fix:"Open the file named in the error report and compare its blocks with the MODFLOW 6 input description of your version: every BEGIN needs an END with the same name, and each required block must be present.",
+    attr:ATTR.modflow, threads:[["modflow","DNs6BbDyPuY"],["modflow","whie8epkb28"]] },
+  { re:/unknown\s+(?:\w+\s+)?option|input file tag not found/i, fw:"MODFLOW 6", model:"modflow", cat:"CAT-05",
+    title:"MODFLOW 6: option or keyword not recognized",
+    cause:"A keyword in an OPTIONS block is misspelled, or belongs to a different MODFLOW 6 version than the executable (a newer interface or script can write keywords that an older program does not know).",
+    fix:"Check the spelling against the input description of the exact version you run. If the file was written by another program (ModelMuse, FloPy), make the executable and the writer the same version.",
+    attr:ATTR.modflow, threads:[["modflow","e-yk8R0CRRA"],["modflow","3HZTIZSPLuk"],["modflow","9ep0zKorzL8"]] },
+  { re:/does not have any active nodes/i, fw:"MODFLOW 6", model:"modflow", cat:"CAT-01",
+    title:"MODFLOW 6: the model has no active cell",
+    cause:"The IDOMAIN array makes every cell inactive (all zero or negative), or the grid arrays were read in a shifted way so that no cell has a positive value.",
+    fix:"Check IDOMAIN in the discretization file: active cells must be greater than zero, and the numbers of layers, rows and columns must match the other arrays.",
+    attr:ATTR.modflow, threads:[["modflow","Ug4Eejt__q4"]] },
+  { re:/already a constant head/i, fw:"MODFLOW 6", model:"modflow", cat:"CAT-03",
+    title:"MODFLOW 6: a cell is listed twice as constant head",
+    cause:"The same cell appears twice in the constant-head package, or two constant-head packages list the same cell.",
+    fix:"Remove the duplicate row, and check that the list of cells in each period has no repeated cell.",
+    attr:ATTR.modflow, threads:[["modflow","Oc_EEfoCyvs"]] },
+  { re:/could not find flow package/i, fw:"MODFLOW 6 (transport)", model:"modflow", cat:"CAT-05",
+    title:"MODFLOW 6: a transport package names a flow package that does not exist",
+    cause:"A transport package (for example UZT, SFT or MWT) points to a flow package by name, and that name is not the one used in the flow model's name file.",
+    fix:"Use exactly the package name from the third column of the flow model's name file (for example uzf-1), and make sure that flow package is listed there.",
+    attr:ATTR.modflow, threads:[["modflow","hNiRhsj7ofI"]] },
+  { re:/model package type not supported/i, fw:"MODFLOW 6", model:"modflow", cat:"CAT-05",
+    title:"MODFLOW 6: package type not supported by this model",
+    cause:"The model name file lists a package type that this model type or this version does not support, or the type is misspelled.",
+    fix:"Check the type name against the input description of your version (the type includes the number, for example CHD6) and that your MODFLOW 6 version has the package.",
+    attr:ATTR.modflow, threads:[["modflow","GC6YwZVaprs"]] },
+  { re:/error reading array control record|error converting\s+["'][^"']*["']\s+to a real number|input conversion error|list-directed i\/o syntax error|could not read variable of type double/i, fw:"MODFLOW (all versions) / APEX / EPIC", model:"modflow", cat:"CAT-05",
+    title:"A number or an array header cannot be read",
+    cause:"A numeric field holds text (for example the letter O instead of zero, a comma as the decimal mark, a stray character), or the control record that precedes an array (INTERNAL, CONSTANT, OPEN/CLOSE) is malformed or missing.",
+    fix:"Find the line named in the message (or the first array of the file) and look for letters, commas or missing values in the numeric fields; check the array control record against the input description of your version.",
+    attr:ATTR.modflow, threads:[["modflow","r4fwcasvhlI"],["modflow","6hD67Hpe1Ks"],["modflow","9BjiVDWTq4E"],["modflow","EU6JLDRKB1o"],["modflow","afCjktqWlmQ"],["apex","ne0wwZ_0bpg"]] },
+  { re:/formatted i\/o to unit open for unformatted|unformatted i\/o to unit open for formatted/i, fw:"MODFLOW (all versions)", model:"modflow", cat:"CAT-05",
+    title:"A text file is read as binary, or the reverse",
+    cause:"A file opened as text is being read as binary (or the reverse). Usual reasons: one unit number used for two files, or a binary file (heads, budget) declared with the wrong type in the name file.",
+    fix:"Check the name file: binary files are declared as DATA(BINARY), text files as DATA, and each unit number is used once. Declaring a file with the wrong type does not always stop the run, so also check which program wrote the file.",
+    attr:ATTR.modflow, threads:[["modflow","jdoZMK0pA68"],["modflow","Ji4Yg1J5Wt8"]] },
+  { re:/\bnot in\s+[a-z ]*list file/i, fw:"APEX / EPIC",
+    title:"APEX: an ID is not in its list file",
+    cause:"A number used in the run, subarea or operation files (weather station, wind station, site, crop, fertilizer, tillage and so on) is not defined in the matching list or database file, so APEX cannot find it. The number in the message is the ID it looked for.",
+    fix:"Open the list file named in the message (for example WPM1.DAT, WIND.DAT, SITECOM.DAT, CROPCOM.DAT, FERTCOM.DAT) and check that the ID exists, or correct the ID in the file that uses it. The ID is the number in the list, not the file name.",
+    attr:ATTR.apex, threads:[["apex","uRsllcxAU-4"],["apex","UHq7cqCdUu8"]] },
+  { re:/file\s+[\w.\\\/:-]+\s+is\s+missing/i, fw:"APEX / EPIC",
+    title:"APEX: a file named in the run files is missing",
+    cause:"One of the files listed in APEXFILE.DAT, SOILCOM.DAT, SUBACOM.DAT, WDLSTCOM.DAT or OPSCCOM.DAT (or the run file) is not in the folder where the program runs. APEX stops at the start and, in the tests we ran, exits without an error code.",
+    fix:"Put every input file in the same folder as the executable and compare the names (spelling and extension) with the list files. Do not rely on the exit code: read the last lines the program printed.",
+    attr:ATTR.apex, threads:[["apex","MRl547rwZec"],["apex","Q0qX4S0ph3c"],["apex","niW9-BIQ1E0"]] },
+  { re:/forrtl.{0,40}\(408\)|subscript\s+#\d+\s+of\s+the\s+array/i, fw:"APEX / EPIC / SWAT+ (debug builds)",
+    title:"Fortran subscript out of range (408)",
+    cause:"A debug build of the program stopped because an index fell outside an array: an ID or a count in the input is zero, negative or larger than the table it points to. The array named in the message points to the input involved.",
+    fix:"Find out what the named array holds (the model documentation or source say), then check the matching IDs and counts in the input files: zero, negative, or beyond the length of the list.",
+    attr:ATTR.apex, threads:[["apex","cJ00PrqsfpE"],["apex","s6AXC-j5xck"],["apex","XG_QTgPy7Sc"],["apex","zIOj_YAOIoM"],["swatplus","r6XuDjpUpQg"]] },
+  { re:/end-of-file during read[^\n]*\b(?:parms|apexcont|apexrun|apexfile|prnt\d*)\.dat/i, fw:"APEX / EPIC",
+    title:"APEX: a control or parameter file ends too early",
+    cause:"A control or parameter file (for example APEXCONT.DAT or PARMS.DAT) is empty, truncated, or was rewritten with fewer lines than the program reads, for example by a calibration script that stopped half way.",
+    fix:"Restore the file from a working copy or regenerate it, and compare its number of lines with the original. If a script writes it, make sure the script finishes writing before the model starts.",
+    attr:ATTR.apex, threads:[["apex","w2uMVaAa51U"]] },
 ];
 
 /* ═════════════════════ example-error gallery (one click = paste + diagnose) ═════════════════════ */
@@ -3203,6 +3388,12 @@ const EXAMPLE_ERRORS = [
   { fw:"MODFLOW",       title:"Solver non-convergence",      text:"FAILED TO MEET SOLVER CONVERGENCE CRITERIA IN 500 OUTER ITERATIONS" },
   { fw:"MODFLOW",       title:"Water-budget discrepancy",    text:"PERCENT DISCREPANCY = 4.87 — budget error exceeds tolerance" },
   { fw:"MODFLOW",       title:"GeoPackage conflict",         text:"QGIS plugin error: gpkg layer 'dhru' already exists" },
+  { fw:"MODFLOW 6",     title:"File cannot be opened",       text:'ERROR REPORT: 1. Could not open "gwf_solver.ims" on unit 1026. Specified file status OLD.' },
+  { fw:"MODFLOW 6",     title:"Model has no active cell",    text:"ERROR REPORT: 1. Model does not have any active nodes. Ensure IDOMAIN array has some values greater than zero." },
+  { fw:"MODFLOW 6",     title:"Required block missing",      text:'ERROR: Required block "DIMENSIONS" not found. Found block "GRIDDATA" instead.' },
+  { fw:"MODFLOW-NWT",   title:"Array header unreadable",     text:"ERROR READING ARRAY CONTROL RECORD FOR TOP ELEVATION OF LAYER 1" },
+  { fw:"APEX",          title:"ID not in its list",          text:"FERT NO = 99 NOT IN FERT LIST FILE SAID = 4" },
+  { fw:"APEX",          title:"File missing",                text:"File A48309.DLY IS MISSING." },
 ];
 
 function buildErrorGallery(){
@@ -3222,6 +3413,13 @@ function buildErrorGallery(){
   });
 }
 
+const THREAD_GROUP = {modflow:"modflow", apex:"agriliferesearchmodeling", swatplus:"swatplus", swat2012:"swatuser", swatmf:"swat-modflow"};
+function threadLinks(h){
+  if(!h.threads || !h.threads.length) return "";
+  return `<div class="attr">Reported in forum threads: ` + h.threads.map((t,i)=>
+    `<a href="https://groups.google.com/g/${THREAD_GROUP[t[0]]}/c/${encodeURIComponent(t[1])}" target="_blank" rel="noopener">${i+1}</a>`).join(" · ") + `</div>`;
+}
+
 $("diagnoseBtn").onclick = ()=>{
   const txt = $("errText").value.trim();
   const el = $("errResults");
@@ -3237,7 +3435,7 @@ $("diagnoseBtn").onclick = ()=>{
         <span class="head">${esc(h.title)}</span><span class="badge warning">${esc(h.fw)}</span>
         <div style="margin-top:6px;"><b>Likely cause:</b> ${h.cause}</div>
         <div class="fix"><b>Recommended action:</b> ${h.fix}</div>
-        <div class="attr">${esc(h.attr)}</div>
+        <div class="attr">${esc(h.attr)}</div>${threadLinks(h)}
       </div>`).join("");
   }
   // Show the community solution set for the matched signature's problem class.
@@ -3434,6 +3632,7 @@ function renderManualsList(){
 
 let TF = null, embedder = null, pdfjsLib = null;
 let CHUNKS = [];             // PDF passages: {type:'pdf', source, page, text, vec}
+let SIG_CHUNKS = [];       // known error signatures: {type:'signature', title, fw, nthreads, text, vec}
 let COMMUNITY_CHUNKS = [];   // corpus-derived: {type:'community', model, cat, category, fwLabel, n_threads, resolution_pct, text, vec}
 let USER_CHUNKS = [];        // growth-loop, local only: {type:'user', question, note, text, ts, vec}
 let ollamaModel = null;
@@ -3568,6 +3767,11 @@ async function ensureCommunityCorpus(){
       });
     }
   }
+  const plain = t => String(t).replace(/<[^>]+>/g, '');
+  for(const sg of SIGNATURES){
+    const text = `Known error signature: ${sg.title} (${sg.fw}). Likely cause: ${plain(sg.cause)} Recommended action: ${plain(sg.fix)}`;
+    SIG_CHUNKS.push({ type:'signature', title:sg.title, fw:sg.fw, nthreads:(sg.threads||[]).length, text, vec: await embed(text) });
+  }
   communityBuilt = true;
   renderEnvStatus(false);
 }
@@ -3642,7 +3846,7 @@ async function ingest(files){
     }
     renderDocList();
   }
-  if(!opened.length){ $('ragAskBtn').disabled = CHUNKS.length+COMMUNITY_CHUNKS.length===0; $('ragAskBtn').textContent='Ask'; return; }
+  if(!opened.length){ $('ragAskBtn').disabled = false; $('ragAskBtn').textContent='Ask'; return; }
 
   const totalPages = opened.reduce((s,o)=>s+o.pdf.numPages, 0);
   let pagesDone = 0;
@@ -3678,7 +3882,8 @@ async function ingest(files){
   }
 
   showProgress(false);
-  $('ragAskBtn').disabled = (CHUNKS.length + COMMUNITY_CHUNKS.length) === 0;
+  renderSources();
+  $('ragAskBtn').disabled = false;
   $('ragAskBtn').textContent = 'Ask';
 }
 
@@ -3687,14 +3892,18 @@ function citeLine(r, i){
   if(c.type==='pdf')
     return `[${i+1}] ${esc(c.source)} · page ${c.page} · similarity ${r.s.toFixed(2)}`;
   if(c.type==='community')
-    return `[${i+1}] Community knowledge · ${esc(c.fwLabel)} · ${esc(c.category)} · `
+    return `[${i+1}] Forum findings · ${esc(c.fwLabel)} · ${esc(c.category)} · `
       + `${c.n_threads} threads, ${c.resolution_pct}% resolved · similarity ${r.s.toFixed(2)}`;
+  if(c.type==='signature')
+    return `[${i+1}] Known error · ${esc(c.title)} · ${esc(c.fw)}`
+      + (c.nthreads ? ` · ${c.nthreads} forum thread${c.nthreads>1?'s':''} linked in the error diagnosis` : '') + ` · similarity ${r.s.toFixed(2)}`;
   return `[${i+1}] Your note (user-added, unverified) · similarity ${r.s.toFixed(2)}`;
 }
 function ctxLine(r, i){
   const c = r.c;
   const src = c.type==='pdf' ? `${c.source} p.${c.page}`
             : c.type==='community' ? `Community knowledge — ${c.fwLabel}, ${c.category}, ${c.n_threads} threads (${c.resolution_pct}% resolved)`
+            : c.type==='signature' ? `Known error signature — ${c.title}`
             : `User note (unverified)`;
   return `[${i+1}] (${src}) ${c.text}`;
 }
@@ -3702,15 +3911,21 @@ function ctxLine(r, i){
 $('ragAskBtn').onclick = async ()=>{
   const q = $('ragQuery').value.trim();
   const el = $('ragAnswer');
+  $('ragAnswerCard').style.display = '';
   if(!q){ el.innerHTML='<span class="muted">Type a question first.</span>'; return; }
-  if(!CHUNKS.length && !COMMUNITY_CHUNKS.length && !USER_CHUNKS.length){
-    el.innerHTML='<span class="muted">Add a PDF manual first (or wait a moment for community knowledge to index).</span>';
+  el.innerHTML='<span class="muted">Searching…</span>';
+  let qv;
+  try{
+    await ensureCommunityCorpus();
+    qv = await embed(q);
+  }catch(_){
+    el.innerHTML='<span class="muted">The search model could not be loaded. It is about 25 MB and is downloaded the first time, so check your connection and try again.</span>';
     return;
   }
-  el.innerHTML='<span class="muted">Searching your documents and the community knowledge base…</span>';
-  await ensureCommunityCorpus();
-
-  const qv = await embed(q);
+  if(!CHUNKS.length && !COMMUNITY_CHUNKS.length && !USER_CHUNKS.length && !SIG_CHUNKS.length){
+    el.innerHTML='<span class="muted">Still getting ready. Try again in a moment.</span>';
+    return;
+  }
   const rankPool = pool => pool.map(c=>({c, s:cosine(qv, c.vec)})).sort((a,b)=>b.s-a.s);
   const topPool = (pool, n) => rankPool(pool).slice(0, n);
   /* Fusion: guarantee a slot per source pool rather than one global ranking, so a manual
@@ -3718,14 +3933,20 @@ $('ragAskBtn').onclick = async ()=>{
      this is the paper's "official docs + tacit community knowledge are complementary" claim,
      built into the retrieval mechanics rather than left as a design note. */
   const communityRanked = rankPool(COMMUNITY_CHUNKS);   // full ranking, kept for the coverage panel
-  const selected = [...topPool(CHUNKS, 3), ...communityRanked.slice(0, 3), ...topPool(USER_CHUNKS, 2)];
-  if(!selected.length){ el.innerHTML = '<span class="muted">Nothing indexed yet.</span>'; return; }
-  selected.sort((a,b)=>b.s-a.s);
-  const ranked = selected.slice(0, 6);
+  const pick = f => {
+    const sel = [...(f.docs ? topPool(CHUNKS, 3) : []), ...(f.community ? communityRanked.slice(0, 3) : []),
+                 ...(f.docs ? topPool(USER_CHUNKS, 2) : []), ...(f.signatures ? topPool(SIG_CHUNKS, 2) : [])];
+    sel.sort((a,b)=>b.s-a.s);
+    return { selected: sel, ranked: sel.slice(0, 6) };
+  };
+  if(!SRC.docs && !SRC.community && !SRC.signatures){ el.innerHTML = '<span class="muted">All sources are switched off. Turn at least one on under "Where answers come from" in Advanced settings.</span>'; return; }
+  const { selected, ranked } = pick(SRC);
+  if(!selected.length){ el.innerHTML = '<span class="muted">Nothing to search with the sources that are on (add a PDF, or switch another source on).</span>'; return; }
   const bestScore = ranked[0].s;
   const frontier = FRONTIER_RE.test(q);
 
   let html = '';
+  let answerBlock = '';
   if(frontier){
     html += `<div class="frontier"><i class="ti ti-compass" aria-hidden="true"></i> <b>This looks like a frontier-level question.</b> Documentation and community threads often describe the mechanism but not a case-specific answer. Treat any generated text as a starting point and verify against the passages or an expert.</div>`;
   }
@@ -3738,7 +3959,7 @@ $('ragAskBtn').onclick = async ()=>{
   }
 
   if(ollamaModel){
-    el.innerHTML = html + '<span class="muted">Generating a grounded answer locally…</span>';
+    el.innerHTML = '<span class="muted">Writing an answer on this computer…</span>';
     const ctx = ranked.map(ctxLine).join('\n\n');
     const prompt = `You are a hydrology-modeling documentation assistant. Answer the QUESTION using ONLY the PASSAGES below, citing them as [n]. Passages marked "Community knowledge" carry a real support count (how many independent forum threads proposed that approach and what fraction were resolved) — weigh higher-support approaches more, and mention the support count when it strengthens your answer. If the passages do not contain the answer, say so plainly and do not invent one.${frontier?' This is a frontier question: if the passages only describe the mechanism without a definitive case-specific answer, say that explicitly and recommend consulting an expert.':''}\n\nPASSAGES:\n${ctx}\n\nQUESTION: ${q}\n\nANSWER:`;
     let gen='';
@@ -3747,22 +3968,44 @@ $('ragAskBtn').onclick = async ()=>{
         body: JSON.stringify({model:ollamaModel, prompt, stream:false, options:{temperature:0.2, num_predict:450}})});
       gen = ((await r.json()).response||'').trim();
     }catch(_){ gen=''; }
-    html += gen
-      ? `<div class="rag-gen"><div class="lbl">Grounded answer · ${esc(ollamaModel)} · generated locally</div>${esc(gen)}</div>`
-      : `<div class="frontier"><i class="ti ti-info-circle" aria-hidden="true"></i> Local generation failed (Ollama reachable but the request errored). Showing the cited passages instead.</div>`;
-  } else {
-    html += `<div class="frontier"><i class="ti ti-info-circle" aria-hidden="true"></i> No local model — showing the most relevant passages to read yourself. Enable Ollama for a written answer.</div>`;
+    answerBlock = gen
+      ? `<div class="rag-gen"><div class="lbl">Answer · written on this computer by ${esc(ollamaModel)} from the sources below</div>${esc(gen)}</div>`
+      : '';
+  }
+  if(!answerBlock){
+    const top = ranked[0];
+    answerBlock = `<div class="rag-gen"><div class="lbl">Closest match</div>${esc(top.c.text.length > 700 ? top.c.text.slice(0, 700) + '…' : top.c.text)}`
+      + `<div class="rag-cite" style="margin-top:8px;"><i class="ti ${srcIcon(top.c)}" aria-hidden="true"></i> ${citeLine(top, 0)}</div></div>`
+      + `<p class="muted" style="font-size:12px;margin:4px 0 6px;">This is the closest passage, not a written answer. A written answer needs a local model (see Advanced settings).</p>`;
   }
 
-  html += `<p style="font-size:13px;font-weight:500;margin:12px 0 4px;">Sources — manuals, community knowledge, and your notes</p>`;
-  html += ranked.map((r,i)=>`<div class="rag-passage"><div class="rag-cite">${citeLine(r,i)}</div><div class="txt">${esc(r.c.text)}</div></div>`).join('');
+  const evi = evidenceLevel(q, ranked, communityRanked, frontier);
+  html += renderEvidence(evi);
+  html += `<div class="src-badges"><b>Built with</b> ` + Object.keys(SRC).map(k => SRC[k]
+    ? `<span class="src-badge on">${esc(SRC_NAMES[k])} · ${ranked.filter(r=>srcOf(r.c)===k).length} of ${ranked.length} passages</span>`
+    : `<span class="src-badge off">${esc(SRC_NAMES[k])} off</span>`).join(' ') + `</div>`;
+  html += `<p style="font-size:13px;font-weight:500;margin:12px 0 4px;">Passages used: your manuals, forum findings, known errors and your notes</p>`;
+  html += ranked.map((r,i)=>`<div class="rag-passage"><div class="rag-cite"><i class="ti ${srcIcon(r.c)}" aria-hidden="true"></i> ${citeLine(r,i)}</div><div class="txt">${esc(r.c.text)}</div></div>`).join('');
+  const activeSrc = Object.keys(SRC).filter(k => SRC[k] && (k==='docs' ? (CHUNKS.length + USER_CHUNKS.length) : k==='community' ? COMMUNITY_CHUNKS.length : SIG_CHUNKS.length));
+  if(activeSrc.length > 1){
+    html += `<div class="cmp-bar">See what changes without: ` + activeSrc.map(k=>`<button type="button" class="action cmp-btn" data-src="${k}">${esc(SRC_NAMES[k])}</button>`).join(' ')
+      + `</div><div id="cmpPanel"></div>`;
+  }
 
   if(communityRanked.length){
     const usedCats = new Set(selected.filter(r=>r.c.type==='community').map(r=>r.c.model+'|'+r.c.cat));
-    html += `<button class="kb-toggle" id="kbCovToggle">Show community-knowledge coverage for this question (${communityRanked.length} categories reviewed, ${usedCats.size} used) ▾</button>
+    html += `<button class="kb-toggle" id="kbCovToggle">Show which forum topics were considered (${communityRanked.length} categories reviewed, ${usedCats.size} used) ▾</button>
       <div id="kbCovPanel" style="display:none;">${renderKbCoverage(communityRanked, usedCats)}</div>`;
   }
-  el.innerHTML = html;
+  el.innerHTML = `<div class="ans-primary">${answerBlock}${confidenceSimple(evi)}`
+    + `<div class="ans-actions"><button type="button" class="action" id="evBtn">See evidence</button> <button type="button" class="action" id="advBtn">Advanced settings</button></div></div>`
+    + `<div id="evPanel" class="ev-panel" hidden>${html}</div>`;
+  $('evBtn').onclick = ()=>{ const pn = $('evPanel'); pn.hidden = !pn.hidden; $('evBtn').textContent = pn.hidden ? 'See evidence' : 'Hide evidence'; };
+  $('advBtn').onclick = ()=>openAdvanced();
+  el.querySelectorAll('.cmp-btn').forEach(b => { b.onclick = ()=>{
+    const k = b.dataset.src;
+    $('cmpPanel').innerHTML = renderCompare(k, ranked, pick({ ...SRC, [k]: false }).ranked);
+  }; });
   const toggleBtn = $('kbCovToggle');
   if(toggleBtn) toggleBtn.onclick = ()=>{
     const p = $('kbCovPanel');
@@ -3809,7 +4052,7 @@ function renderGrowthLoop(bestScore, q){
     verified against documentation, unlike the community-knowledge entries above.</p>
     <textarea id="growthNote" rows="3" placeholder="What did you find? A short note is enough."></textarea>
     <div style="margin-top:8px;"><button class="action primary" id="growthSaveBtn">Save my note (local only)</button></div>`;
-  $('ragAnswer').appendChild(wrap);
+  ($('evPanel') || $('ragAnswer')).appendChild(wrap);
   wrap.querySelector('#growthSaveBtn').onclick = async (e)=>{
     const note = wrap.querySelector('#growthNote').value.trim();
     if(!note) return;
@@ -3863,7 +4106,254 @@ $('ragManualModelBtn').onclick = ()=>{
 document.querySelector('.picker-card[data-mode="docs"]').addEventListener('click', ()=>{
   if(!probed){ probed = true; boot(); }
 });
+/* Recipe (documents to add) and question types for the "Ask the docs" mode. Citations were checked against Crossref (title, authors,
+   year, volume, pages, DOI) or the USGS publications warehouse; reports without a verified DOI are listed without a link. */
+const RECIPE_RULES = [
+  'Match the version. File layouts and options differ between SWAT2012 (rev. 664), SWAT+ (rev. 61 and 62), MODFLOW-2005/NWT and MODFLOW 6. Add the manual of the version you run, and say the version in your question.',
+  'Use the input/output reference for file and parameter questions, the theoretical documentation for concepts, and a tutorial for workflow.',
+  'Name your files with model, version and type (for example SWATplus_rev61_IO.pdf) so you can see where an answer came from.',
+  'Use PDFs with selectable text. Scanned pages give nothing to search.',
+  'Add a few relevant documents rather than a whole folder.',
+  'Check the cited passage. If no passage supports the answer, treat the question as unanswered.'
+];
+const RECIPE_TOPICS = [
+  { name:'SWAT2012', items:[
+    { t:'Official: SWAT Theoretical Documentation and Input/Output Documentation (swat.tamu.edu)' },
+    { t:'Arnold et al. (2012). SWAT: Model use, calibration, and validation. Trans. ASABE 55(4), 1491–1508.', doi:'10.13031/2013.42256' }]},
+  { name:'SWAT+', items:[
+    { t:'Official: SWAT+ Inputs Documentation and release notes for the revision you run (swat.tamu.edu, swatplus.gitbook.io)' },
+    { t:'Bieger et al. (2017). Introduction to SWAT+, a completely restructured version of the Soil and Water Assessment Tool. JAWRA 53(1), 115–130.', doi:'10.1111/1752-1688.12482' }]},
+  { name:'SWAT-MODFLOW and SWAT+MODFLOW', items:[
+    { t:'Kim et al. (2008). Development and application of the integrated SWAT–MODFLOW model. J. Hydrol. 356(1–2), 1–16.', doi:'10.1016/j.jhydrol.2008.02.024' },
+    { t:'Guzman et al. (2015). A model integration framework for linking SWAT and MODFLOW. Environ. Model. Softw. 73, 103–116.', doi:'10.1016/j.envsoft.2015.08.011' },
+    { t:'Park et al. (2019). A QGIS-based graphical user interface for application and evaluation of SWAT-MODFLOW models. Environ. Model. Softw. 111, 493–497.', doi:'10.1016/j.envsoft.2018.10.017' },
+    { t:'Bailey et al. (2020). Enhancing SWAT+ simulation of groundwater flow and groundwater-surface water interactions using MODFLOW routines. Environ. Model. Softw. 126, 104660.', doi:'10.1016/j.envsoft.2020.104660' }]},
+  { name:'MODFLOW (2005, NWT, USG) and MODFLOW 6', items:[
+    { t:'Official: MODFLOW 6 Description of Input and Output (mf6io) of the version you run' },
+    { t:'Langevin et al. (2017). Documentation for the MODFLOW 6 Groundwater Flow Model. USGS Techniques and Methods 6-A55.' },
+    { t:'Hughes et al. (2017). Documentation for the MODFLOW 6 framework. USGS Techniques and Methods 6-A57.' },
+    { t:'Langevin et al. (2022). Documentation for the MODFLOW 6 Groundwater Transport Model. USGS Techniques and Methods 6-A61.' },
+    { t:'Panday et al. (2013). MODFLOW-USG version 1: an unstructured grid version of MODFLOW. USGS Techniques and Methods 6-A45.' },
+    { t:'Bakker et al. (2016). Scripting MODFLOW model development using Python and FloPy. Groundwater 54(5), 733–739.', doi:'10.1111/gwat.12413' }]},
+  { name:'APEX and APEX-MODFLOW', items:[
+    { t:'Official: APEX theoretical documentation and the user guide for the version you run (EPIC and APEX site, Texas A&M AgriLife Research)' },
+    { t:'Gassman et al. (2010). The Agricultural Policy/Environmental EXtender (APEX) model: an emerging tool for landscape and watershed environmental analyses. Trans. ASABE 53(3), 711–740.', doi:'10.13031/2013.30078' },
+    { t:'The community knowledge base does not cover APEX yet: only your own PDFs are searched.' }]},
+  { name:'Calibration and model evaluation (all models)', items:[
+    { t:'Moriasi et al. (2007). Model evaluation guidelines for systematic quantification of accuracy in watershed simulations. Trans. ASABE 50(3), 885–900.', doi:'10.13031/2013.23153' },
+    { t:'Moriasi et al. (2015). Hydrologic and water quality models: performance measures and evaluation criteria. Trans. ASABE 58(6), 1763–1785.', doi:'10.13031/trans.58.10715' },
+    { t:'The manuals of the calibration software you use (SWAT-CUP, PEST)' }]}
+];
+const QUESTION_TYPES = [
+  { k:'A', name:'Parameter or option lookup', src:'Input/output reference', good:'The exact value, unit or range, with a citation.',
+    ex:['What are the units and the allowed range of ESCO in SWAT2012?', 'What does the CN2 parameter control in SWAT+?'] },
+  { k:'B', name:'File format', src:'Input/output reference', good:'The right fields in the right order, with the version stated.',
+    ex:['Which fields does a row of hru-data.hru contain in SWAT+, in order?', 'What does PERLEN mean in a MODFLOW DIS file?'] },
+  { k:'C', name:'Error diagnosis', src:'Error signatures and the community knowledge base', good:'The likely file or step to check and how to verify it.',
+    ex:['forrtl: severe (24): end-of-file during read, unit 30020. What should I check?', 'MODFLOW 6 says "Model does not have any active nodes". What causes it?'] },
+  { k:'D', name:'Workflow', src:'Tutorials and guides', good:'Ordered steps taken from the cited document.',
+    ex:['What are the steps to couple a SWAT+ model with MODFLOW?', 'How do I run a MODFLOW 6 model from a Python script with FloPy?'] },
+  { k:'E', name:'Concept or choice', src:'Theoretical documentation and papers', good:'What the literature says, with citations, and a note that the choice is yours.',
+    ex:['Which PET method is suitable for an arid watershed in SWAT2012?', 'When is gwflow preferable to a MODFLOW coupling in SWAT+?'] },
+  { k:'F', name:'Evaluation criteria', src:'Moriasi et al. (2007, 2015)', good:'The thresholds quoted from the paper, with the conditions the paper gives.',
+    ex:['What NSE value is considered acceptable for monthly streamflow calibration?', 'Which performance measures are recommended to evaluate a SWAT model?'] },
+  { k:'G', name:'Version-specific', src:'Release notes', good:'The change with its version, or a statement that the loaded documents do not cover it.',
+    ex:['What changed in codes.bsn between SWAT+ rev. 61 and rev. 62?', 'Which MODFLOW 6 options exist only in recent versions?'] },
+  { k:'H', name:'Out of scope or false premise', src:'None', good:'It declines or flags the limit. It does not invent an answer.',
+    ex:['Which of these two basins should I model?', 'What is the best calibration parameter set for my basin?'] }
+];
+/* ---- Knowledge sources: switch each source on or off, see which ones built an answer, compare without one ---- */
+const SRC_KEY = 'hdaSources';
+const SRC = { docs:true, community:true, signatures:true };
+try{ const sv = JSON.parse(localStorage.getItem(SRC_KEY) || 'null'); if(sv) Object.keys(SRC).forEach(k=>{ if(typeof sv[k]==='boolean') SRC[k]=sv[k]; }); }catch(_){}
+function saveSrc(){ try{ localStorage.setItem(SRC_KEY, JSON.stringify(SRC)); }catch(_){} }
+const SRC_NAMES = { docs:'your documents', community:'forum findings', signatures:'known errors' };
+function srcIcon(c){ return c.type==='pdf' ? 'ti-file-text' : c.type==='community' ? 'ti-users' : c.type==='signature' ? 'ti-alert-triangle' : 'ti-note'; }
+function srcOf(c){ return (c.type==='community') ? 'community' : (c.type==='signature') ? 'signatures' : 'docs'; }
+function srcCounts(){
+  const kb = window.__COMMUNITY_KB__ || {};
+  let cats = 0, threads = 0;
+  Object.values(kb).forEach(m => Object.values(m).forEach(d => { cats++; threads += d.n_threads || 0; }));
+  const linked = SIGNATURES.reduce((n,s)=>n+((s.threads||[]).length), 0);
+  const pdfs = new Set(CHUNKS.map(c=>c.source)).size;
+  return { cats, threads, sigs: SIGNATURES.length, linked, pdfs, passages: CHUNKS.length, notes: USER_CHUNKS.length };
+}
+function renderSources(){
+  const rows = $('srcRows'); if(!rows) return;
+  const n = srcCounts();
+  const info = {
+    docs: { name:'Your documents', meta: n.passages ? `${n.passages} passages from ${n.pdfs} PDF${n.pdfs>1?'s':''}${n.notes?` and ${n.notes} of your notes`:''}` : 'No PDF added yet. Add the manuals you use below.',
+            note:'Not benchmarked yet.' },
+    community: { name:'Forum findings', meta:`${n.cats} categories summarizing ${n.threads.toLocaleString('en-US')} coded forum threads (SWAT2012, SWAT+, SWAT-MODFLOW, MODFLOW; APEX not included)`,
+            note:'Each summary keeps its real support count. Not benchmarked yet.' },
+    signatures: { name:'Known errors', meta:`${n.sigs} error messages with a known cause and action, with links to ${n.linked} forum threads where they were reported`,
+            note:'Checked against 75 real stopped runs; the newest signatures were written from those same messages (development evidence).' }
+  };
+  rows.innerHTML = Object.keys(info).map(k => `<label class="src-row"><input type="checkbox" data-src="${k}" ${SRC[k]?'checked':''}>
+      <span><span class="src-name">${esc(info[k].name)}</span><span class="src-meta">${esc(info[k].meta)}</span><span class="src-note">${esc(info[k].note)}</span></span></label>`).join('');
+  rows.querySelectorAll('input[data-src]').forEach(cb => { cb.onchange = ()=>{ SRC[cb.dataset.src] = cb.checked; saveSrc(); renderSources(); }; });
+  const hs = $('heroSources');
+  if(hs){
+    const on = [SRC.community && 'forum findings', SRC.signatures && 'known errors', SRC.docs && (n.pdfs ? `${n.pdfs} PDF${n.pdfs>1?'s':''}` : null)].filter(Boolean);
+    hs.innerHTML = on.length ? `Answers use: ${esc(on.join(', '))}. <a href="#" id="heroAdvLink">Change in Advanced settings</a>.` : 'All sources are switched off. <a href="#" id="heroAdvLink">Turn some on in Advanced settings</a>.';
+    const l = $('heroAdvLink'); if(l) l.onclick = ev => { ev.preventDefault(); openAdvanced('srcCard'); };
+  }
+  const sum = $('srcSummary');
+  if(sum) sum.innerHTML = Object.keys(SRC).map(k => `<span class="src-badge ${SRC[k]?'on':'off'}">${esc(info[k].name)} ${SRC[k]?'on':'off'}</span>`).join(' ');
+}
+function renderCompare(k, cur, alt){
+  const name = SRC_NAMES[k];
+  const inAlt = new Set(alt.map(r=>r.c)), inCur = new Set(cur.map(r=>r.c));
+  const col = (title, list, other) => `<div><div class="cmp-h">${esc(title)}</div>`
+    + (list.length ? list.map((r,i)=>`<div class="cmp-item ${other.has(r.c)?'same':'diff'}"><div class="rag-cite"><i class="ti ${srcIcon(r.c)}" aria-hidden="true"></i> ${citeLine(r,i)}</div>`
+      + `<div class="txt">${esc(r.c.text.length>170 ? r.c.text.slice(0,170)+'…' : r.c.text)}</div><span class="cmp-tag">${other.has(r.c)?'in both':'only in this list'}</span></div>`).join('')
+      : '<span class="muted">Nothing left to search.</span>') + `</div>`;
+  const same = [...inCur].filter(c=>inAlt.has(c)).length;
+  return `<p class="muted" style="margin:8px 0 4px;">Without ${esc(name)}, ${cur.length - same} of ${cur.length} cited passages change.</p>`
+    + `<div class="cmp-grid">${col('With ' + name + ' (current answer)', cur, inAlt)}${col('Without ' + name, alt, inCur)}</div>`;
+}
+
+/* ---- What is inside the community knowledge, how documents complement it, and how much evidence stands behind an answer ---- */
+const COMPLEMENT = [
+  { re:/calibrat|sensitiv|parameter estimation/i, docs:['Moriasi et al. (2007, 2015): performance criteria', 'Arnold et al. (2012): calibration procedure', 'SWAT-CUP / PEST manuals'] },
+  { re:/output interpretation|water balance|mass balance/i, docs:['Theoretical documentation of the model', 'Moriasi et al. (2015)'] },
+  { re:/management|decision table/i, docs:['Input/output reference', 'Theoretical documentation'] },
+  { re:/sediment|nutrient|pathogen|gwflow|advanced/i, docs:['Theoretical documentation', 'The gwflow section of the SWAT+ documentation'] },
+  { re:/boundary condition/i, docs:['USGS MODFLOW documentation', 'Anderson, Woessner and Hunt (2015)'] },
+  { re:/convergence|numerical/i, docs:['MODFLOW solver documentation (NWT, MODFLOW 6 IMS)', 'Known error signatures'] },
+  { re:/recharge|sw-gw|exchange/i, docs:['Kim et al. (2008); Guzman et al. (2015); Bailey et al. (2020)'] },
+  { re:/runtime|crash|file config|input data|weather|climate|temporal/i, docs:['Input/output reference', 'Known error signatures'] },
+  { re:/setup|delineation|linking|coupling|discretis|grid/i, docs:['Tutorials and the input/output reference'] },
+  { re:/gui|plugin|editor|toolbox|flopy|modelmuse/i, docs:['Release notes and tutorials of the interface'] },
+  { re:/reservoir|wetland|water bod/i, docs:['Input/output reference', 'Theoretical documentation'] }
+];
+function complementFor(catName){ const m = COMPLEMENT.find(c => c.re.test(catName || '')); return m ? m.docs : ['Input/output reference']; }
+const NATURE_TAG = {
+  resolved: { cls:'steps', text:'mostly steps and fixes' },
+  frontier: { cls:'judg',  text:'mostly judgement' },
+  mixed:    { cls:'mixed', text:'mixed' }
+};
+let INSIDE_FW = 'swat2012';
+function renderInside(){
+  const chips = $('insideChips'), body = $('insideBody'); if(!chips || !body || typeof COVERAGE_DATA === 'undefined') return;
+  const fws = Object.keys(COVERAGE_DATA);
+  chips.innerHTML = fws.map(f => `<button type="button" class="src-badge ${f===INSIDE_FW?'on':'off'} in-chip" data-fw="${f}" style="cursor:pointer;border:none;${f===INSIDE_FW?'':'text-decoration:none;'}">${esc(COVERAGE_DATA[f].label)}</button>`).join(' ');
+  chips.querySelectorAll('.in-chip').forEach(b => { b.onclick = ()=>{ INSIDE_FW = b.dataset.fw; renderInside(); }; });
+  const cats = COVERAGE_DATA[INSIDE_FW].categories.slice().sort((a,b)=>b.n_threads-a.n_threads);
+  const total = cats.reduce((n,c)=>n+c.n_threads, 0), maxN = Math.max(...cats.map(c=>c.n_threads), 1);
+  const judg = cats.filter(c=>c.verdict==='frontier').reduce((n,c)=>n+c.n_threads, 0);
+  body.innerHTML = `<p class="muted" style="margin:8px 0;">${total.toLocaleString('en-US')} coded threads. About ${Math.round(100*judg/total)}% are judgement questions, where community answers are few and varied. `
+    + `Documents give criteria, procedures and equations; they do not decide for you.</p>`
+    + cats.map(c => {
+      const tag = NATURE_TAG[c.verdict] || NATURE_TAG.mixed, r = (typeof c.resolution_pct === 'number') ? c.resolution_pct : null;
+      return `<div class="in-row"><div class="in-top"><span class="in-name">${esc(c.name)}</span><span class="in-tag ${tag.cls}">${tag.text}</span></div>`
+        + `<div class="in-bar" role="img" aria-label="${c.n_threads} threads, ${r===null?'resolution unknown':r+'% resolved'}"><span class="in-bar-n" style="width:${Math.max(3,Math.round(100*c.n_threads/maxN))}%"><span class="in-bar-r" style="width:${r===null?0:r}%"></span></span></div>`
+        + `<div class="in-meta">${c.n_threads.toLocaleString('en-US')} threads · ${r===null?'resolution not known':r+'% coded as resolved'}</div>`
+        + `<div class="in-comp">Documents that complement it: ${esc(complementFor(c.name).join('; '))}</div></div>`;
+    }).join('')
+    + `<p class="muted" style="font-size:11.5px;margin-top:8px;">Dark part of each bar: share of threads coded as resolved. It is low everywhere, so read it as how often a thread ends with a confirmed fix, not as how good the advice is. `
+    + `"Mostly steps and fixes" and "mostly judgement" come from the coding of each thread (procedural, configuration or bug versus theoretical).</p>`;
+}
+function topicNature(c){
+  if(!c || c.type !== 'community' || typeof COVERAGE_DATA === 'undefined') return null;
+  const f = COVERAGE_DATA[c.model]; if(!f) return null;
+  const k = f.categories.find(x => x.cat === c.cat); return k ? k.nature : null;
+}
+function evidenceLevel(q, ranked, communityRanked, frontier){
+  const STRONG = 0.50;
+  const best = ranked.length ? ranked[0].s : 0;
+  const topCom = SRC.community ? communityRanked[0] : null;
+  const nature = topCom && topCom.s >= GROWTH_THRESHOLD ? topicNature(topCom.c) : null;
+  const judgement = frontier || nature === 'Theoretical';
+  const strongDocs = ranked.some(r => r.c.type === 'pdf' && r.s >= STRONG);
+  const strongSig  = ranked.some(r => r.c.type === 'signature' && r.s >= STRONG);
+  const strongCom  = !!topCom && topCom.s >= STRONG && nature !== 'Theoretical';
+  const k = [strongDocs, strongSig, strongCom].filter(Boolean).length;
+  const reasons = [];
+  if(strongDocs) reasons.push('A passage from your documents is a close match.');
+  if(strongSig) reasons.push('A known error signature is a close match.');
+  if(strongCom) reasons.push('The community knowledge for this topic is mostly steps and fixes.');
+  if(judgement) reasons.push(frontier ? 'The question looks like a judgement or conceptual question.' : 'The closest community topic is mostly judgement, with few and varied answers.');
+  if(!ranked.length || best < GROWTH_THRESHOLD) reasons.push('No passage is a close match.');
+  reasons.push(`Best similarity ${best.toFixed(2)} (close match from ${STRONG.toFixed(2)}, weak below ${GROWTH_THRESHOLD.toFixed(2)}).`);
+  let level, label;
+  if(judgement){ level = 'judg'; label = 'Judgement question: evidence, not a single answer'; }
+  else if(k >= 2){ level = 'high'; label = 'Evidence: high'; }
+  else if(k === 1){ level = 'med'; label = 'Evidence: medium'; }
+  else if(best >= GROWTH_THRESHOLD){ level = 'low'; label = 'Evidence: low'; }
+  else { level = 'none'; label = 'Not covered by the sources that are on'; }
+  return { level, label, reasons, model: topCom && topCom.c.model, cat: topCom && topCom.c.cat, catName: topCom && topCom.c.category, show: judgement || level === 'low' || level === 'none' };
+}
+function renderEvidence(e){
+  let h = `<div class="evi evi-${e.level}"><div class="evi-title">${esc(e.label)}</div><ul class="evi-reasons">${e.reasons.map(r=>`<li>${esc(r)}</li>`).join('')}</ul>`
+    + `<div class="evi-note">A rule-based indicator, not a probability. Its thresholds are not calibrated yet; they will be checked against a bank of questions with known answers.</div></div>`;
+  if(e.show && e.model && e.cat){
+    h += renderSolutionSet(e.model, e.cat);
+    h += `<div class="evi-comp"><b>Documents that complement the community here:</b> ${esc(complementFor(e.catName).join('; '))}. The choice between approaches depends on your case.</div>`;
+  } else if(e.show){
+    h += `<div class="evi-comp"><b>Documents that may help:</b> the manuals and papers listed under "Recipe" above.</div>`;
+  }
+  return h;
+}
+
+/* ---- First screen of "Ask the docs": one question box, four examples, plain-language confidence ---- */
+const HERO_EXAMPLES = [
+  'What does end-of-file during read (exit code 24) mean in SWAT-MODFLOW?',
+  'Which fields does a row of hru-data.hru contain in SWAT+, in order?',
+  'What are the steps to couple a SWAT+ model with MODFLOW?',
+  'What NSE value is considered acceptable for monthly streamflow calibration?'
+];
+const CONF = {
+  high: ['Strong match', 'Several sources agree.'],
+  med:  ['Partial match', 'One source matches closely. Check the evidence.'],
+  low:  ['Weak match', 'Nothing matches closely. Treat it as a lead, not an answer.'],
+  judg: ['Judgement call', 'The sources are shown, but the decision depends on your case.'],
+  none: ['Nothing close found', 'Try rephrasing the question, or add a manual under Advanced settings.']
+};
+function confidenceSimple(e){
+  const c = CONF[e.level] || CONF.none;
+  return `<div class="conf conf-${e.level}"><span class="conf-dot" aria-hidden="true"></span><b>${esc(c[0])}</b> <span>${esc(c[1])}</span></div>`;
+}
+function renderHero(){
+  const box = $('heroExamples'); if(!box) return;
+  box.innerHTML = HERO_EXAMPLES.map(q => `<button type="button" class="qchip" data-q="${esc(q)}">${esc(q)}</button>`).join('');
+  box.querySelectorAll('.qchip').forEach(b => { b.onclick = ()=>{ $('ragQuery').value = b.getAttribute('data-q'); $('ragAskBtn').click(); }; });
+  $('heroAddPdf').onclick = ()=>$('ragInput').click();
+  $('ragQuery').addEventListener('keydown', ev => { if(ev.key === 'Enter' && !ev.shiftKey){ ev.preventDefault(); $('ragAskBtn').click(); } });
+}
+function openAdvanced(id){
+  const d = $('advPanel'); if(!d) return;
+  d.open = true;
+  const sec = id ? $(id) : null; if(sec) sec.open = true;
+  (sec || d).scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function renderRecipe(){
+  const r = $('recipeRules'); if(r) r.innerHTML = RECIPE_RULES.map(t=>'<li>'+esc(t)+'</li>').join('');
+  const el = $('recipeTopics'); if(!el) return;
+  el.innerHTML = RECIPE_TOPICS.map(tp => '<div class="recipe-topic"><div class="rt-name">'+esc(tp.name)+'</div><ul>'
+    + tp.items.map(it => '<li>'+esc(it.t)+(it.doi ? ' <a href="https://doi.org/'+esc(it.doi)+'" target="_blank" rel="noopener">DOI</a>' : '')+'</li>').join('')
+    + '</ul></div>').join('');
+}
+function renderQuestionTypes(){
+  const el = $('qtypesList'); if(!el) return;
+  el.innerHTML = QUESTION_TYPES.map(q => '<div class="qtype"><div class="qt-head"><span class="qt-letter">'+esc(q.k)+'</span><span class="qt-name">'+esc(q.name)+'</span></div>'
+    + '<div class="qt-meta">Best source: '+esc(q.src)+'. A good answer: '+esc(q.good)+'</div>'
+    + q.ex.map(e => '<button type="button" class="qex" data-q="'+esc(e).replace(/"/g,'&quot;')+'">'+esc(e)+'</button>').join('') + '</div>').join('');
+  el.addEventListener('click', ev => {
+    const b = ev.target.closest('.qex'); if(!b) return;
+    const box = $('ragQuery'); if(!box) return;
+    box.value = b.getAttribute('data-q'); box.focus();
+    box.scrollIntoView({behavior:'smooth', block:'center'});
+  });
+}
+
 renderManualsList();
+renderRecipe();
+renderQuestionTypes();
+renderSources();
+renderInside();
+renderHero();
 loadUserChunks();
 updateExportBtn();
 </script>
