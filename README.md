@@ -87,13 +87,17 @@ deliberately excluded from automation by design — see the paper for the ration
 
 ## Citation
 
-If you use this tool in research, please cite:
+If you use the tool, please cite the software:
+
+> Serrano, D., & Park, S. (2026). *iHydroLab Check* (version 0.1.0) [Computer software]. https://github.com/JosephAuresy/check
+
+A DOI will be added here when the first release is archived. `CITATION.cff` is included for GitHub's "Cite this repository" button.
+
+For the study behind the rules (the taxonomy of failures built from community threads), please also cite:
 
 > Serrano, D., & Park, S. (2026). *A Cross-Model Taxonomy of Implementation
 > Failures in Hydrological Modeling Frameworks: Empirical Foundations for a Knowledge-Grounded
 > Diagnostic Assistant.* [Manuscript in preparation].
-
-A `CITATION.cff` file is included for GitHub's built-in citation widget.
 
 ## Reproducing this for another modeling community
 

@@ -1,7 +1,9 @@
 cff-version: 1.2.0
-message: "If you use this tool, please cite the associated manuscript (in preparation)."
+message: "If you use this software, please cite it as below. For the study behind its rules, please also cite the manuscript listed under references."
 title: "iHydroLab Check"
+abstract: "A free, private, in-browser checker for hydrologic model inputs and errors (SWAT, SWAT+, MODFLOW, APEX and their couplings). It reads a model folder before a run, matches pasted error messages to known causes, and answers questions from community findings and documentation, showing the evidence behind each answer."
 type: software
+version: 0.1.0
 authors:
   - family-names: Serrano
     given-names: David
@@ -12,15 +14,24 @@ authors:
 date-released: "2026-07-10"
 license: MIT
 repository-code: "https://github.com/JosephAuresy/check"
-preferred-citation:
-  type: article
-  title: "A Cross-Model Taxonomy of Implementation Failures in Hydrological Modeling Frameworks: Empirical Foundations for a Knowledge-Grounded Diagnostic Assistant"
-  authors:
-    - family-names: Serrano
-      given-names: David
-      affiliation: "Texas Tech University"
-    - family-names: Park
-      given-names: Seonggyu
-      affiliation: "Texas Tech University"
-  status: in-preparation
-  year: 2026
+url: "https://josephauresy.github.io/check/"
+keywords:
+  - hydrology
+  - SWAT
+  - SWAT+
+  - MODFLOW
+  - APEX
+  - model validation
+# doi: add the Zenodo DOI here once the first release (v0.1.0) is archived
+references:
+  - type: article
+    title: "A Cross-Model Taxonomy of Implementation Failures in Hydrological Modeling Frameworks: Empirical Foundations for a Knowledge-Grounded Diagnostic Assistant"
+    authors:
+      - family-names: Serrano
+        given-names: David
+        affiliation: "Texas Tech University"
+      - family-names: Park
+        given-names: Seonggyu
+        affiliation: "Texas Tech University"
+    status: in-preparation
+    year: 2026
