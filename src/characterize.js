@@ -1,4 +1,4 @@
-/* Hydra Check: model characterization.
+/* iHydroLab Check: model characterization.
  *
  * Input : a list of entries {path, size, text}  (text is null for files that were not read as text)
  * Output: what the uploaded files are -- surface model, version, groundwater component, coupling --
