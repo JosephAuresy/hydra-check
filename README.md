@@ -1,4 +1,4 @@
-<p align="center"><img src="assets/ihydro-logo.png" alt="iHydro" width="260"></p>
+<p align="center"><img src="assets/ihydro-check-logo.png" alt="iHydroLab Check" width="320"></p>
 
 # iHydroLab Check
 
