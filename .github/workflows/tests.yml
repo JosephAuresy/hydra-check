@@ -19,6 +19,7 @@ jobs:
       - run: node tests/run_fix_node.js
       - run: node tests/signatures.test.js
       - run: node tests/evidence.test.js
+      - run: node tests/study.test.js
       # index.html must be what build.py produces from src/
       - uses: actions/setup-python@v5
         with:

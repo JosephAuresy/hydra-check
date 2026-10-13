@@ -61,9 +61,19 @@ GitHub Pages link above. To run it locally instead of via the web:
 
 ```bash
 git clone https://github.com/JosephAuresy/check.git
-cd hydra-check
+cd check
 # then just open index.html in your browser — no server required
 ```
+
+## Feedback mode (demonstrations and workshops)
+
+Open the page with `?study=1` at the end of the address (optionally `&cohort=agu-poster` to label a session, `&task=T07` to tag the task). Ordinary visitors see nothing of this.
+A thin bar offers **Download results** (JSON, or CSV) and **Send results**, and each answer is followed by *Was this useful? Yes / Somewhat / No* and an optional comment.
+
+Each answer adds one record: a random participant ID, the tool version, a timestamp, the task or a label of the question, the kind of answer, the evidence level shown, the rating and the comment.
+The text of a question is included only if the participant ticks a separate box, and files, logs and paths are never recorded. Records stay in the tab and disappear when it is closed.
+**Send results** is disabled until the participant ticks the consent box and an endpoint has been configured (`HDAStudy.configure({endpoint: ...})` in `src/study.js`); until then the results are shared by downloading the file.
+Tests: `node tests/study.test.js`.
 
 ## Scope
 
