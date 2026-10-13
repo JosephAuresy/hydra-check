@@ -19,7 +19,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0e1217; --surface: #161b22; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #5cc8e4; --accent-bg: #0f2f38;
+    --bg: #0b0c0e; --surface: #14161a; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #5cc8e4; --accent-bg: #0f2f38;
     --c1: #4aa8e6; --c2: #f0b429; --c3: #2ec99c; --c4: #f07d3c; --c5: #e39cc3; --c6: #7cc4f0; --c7: #98a1ad;
     --v-error-bg: #153322; --v-error-fg: #9fe3b9; --v-error-bd: #3aa66a;
     --v-warn-bg: #12303d; --v-warn-fg: #9fd6ea; --v-warn-bd: #3c9ec0;
@@ -30,7 +30,7 @@
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0e1217; --surface: #161b22; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #5cc8e4; --accent-bg: #0f2f38;
+  --bg: #0b0c0e; --surface: #14161a; --ink: #e8ebef; --ink2: #b9c1cc; --muted: #97a1ae; --line: #2a313b; --accent: #5cc8e4; --accent-bg: #0f2f38;
   --c1: #4aa8e6; --c2: #f0b429; --c3: #2ec99c; --c4: #f07d3c; --c5: #e39cc3; --c6: #7cc4f0; --c7: #98a1ad;
   --v-error-bg: #153322; --v-error-fg: #9fe3b9; --v-error-bd: #3aa66a;
   --v-warn-bg: #12303d; --v-warn-fg: #9fd6ea; --v-warn-bd: #3c9ec0;
@@ -277,8 +277,8 @@ function applyTheme(t) {
   if (t === "light" || t === "dark") document.documentElement.setAttribute("data-theme", t); else document.documentElement.removeAttribute("data-theme");
   themeBtn.textContent = "Theme: " + (t === "light" || t === "dark" ? t : "auto");
 }
-var theme = "auto";
-try { theme = localStorage.getItem("hc-evo-theme") || "auto"; } catch (e) {}
+var theme = "dark";
+try { theme = localStorage.getItem("hc-evo-theme") || "dark"; } catch (e) {}
 applyTheme(theme);
 themeBtn.addEventListener("click", function () {
   theme = theme === "auto" ? "light" : theme === "light" ? "dark" : "auto";

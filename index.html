@@ -7,11 +7,22 @@
 <link rel="icon" type="image/png" href="data:image/png;base64,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">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@2.47.0/dist/tabler-icons.min.css">
 <style>
+  /* dark is the default; the light set is kept under data-theme="light" for a later switch */
   :root {
+    color-scheme:dark;
+    --bg:#0b0c0e; --surface:#14161a; --surface-1:#1b1e23; --text:#e9ebee;
+    --muted:#b4bac2; --faint:#9ca2aa; --accent:#0a7f9d; --accent-bg:#0f2f38; --accent-text:#6fd3ec; --brand-pink:#d9628f;
+    --green:#4cc38a; --green-bg:#11291d; --amber:#e3b04b; --amber-bg:#33290f;
+    --red:#ff7b72; --red-bg:#3a1a18; --border:#2a2e34; --border-strong:#3b4048;
+    --on-signal:#0b0c0e;
+  }
+  :root[data-theme="light"] {
+    color-scheme:light;
     --bg:#f7f7f5; --surface:#ffffff; --surface-1:#f2f1ec; --text:#1a1a18;
-    --muted:#6b6b66; --faint:#8f8f89; --accent:#0a7f9d; --accent-bg:#e3f4f9; --accent-text:#07617a; --brand-pink:#d9628f;
+    --muted:#6b6b66; --faint:#8f8f89; --accent:#0a7f9d; --accent-bg:#e3f4f9; --accent-text:#07617a;
     --green:#1a7f4e; --green-bg:#e6f6ee; --amber:#966a10; --amber-bg:#fdf3df;
     --red:#c23434; --red-bg:#fdeaea; --border:#e6e5df; --border-strong:#d4d3cb;
+    --on-signal:#ffffff;
   }
   * { box-sizing:border-box; }
   body { margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
@@ -51,6 +62,8 @@
     border-radius:9px; padding:9px 13px; font-size:14px; font-family:inherit; }
   select:hover, textarea:hover { border-color:var(--faint); }
   textarea { width:100%; resize:vertical; }
+  textarea, select, input[type=text], input[type=search], input[type=number], input[type=password] { background:var(--surface-1); color:var(--text); border-color:var(--border-strong); }
+  ::placeholder { color:var(--faint); opacity:1; }
   button.action { cursor:pointer; }
   button.action:hover { background:var(--surface-1); }
   button.action.primary { background:var(--accent); border-color:var(--accent); color:#fff; font-weight:500; }
@@ -71,16 +84,16 @@
   .finding .attr { margin-top:6px; font-size:11.5px; color:var(--muted); font-style:italic; }
   .badge { display:inline-block; font-size:10.5px; font-weight:500; padding:2px 8px;
            border-radius:10px; margin-left:8px; vertical-align:middle; }
-  .badge.error { background:var(--red); color:#fff; }
-  .badge.warning { background:var(--amber); color:#fff; }
-  .badge.ok { background:var(--green); color:#fff; }
+  .badge.error { background:var(--red); color:var(--on-signal); }
+  .badge.warning { background:var(--amber); color:var(--on-signal); }
+  .badge.ok { background:var(--green); color:var(--on-signal); }
 
   .filelist { font-family:ui-monospace,Consolas,monospace; font-size:12px;
               color:var(--muted); max-height:100px; overflow:auto; margin-top:10px; }
   .muted { color:var(--muted); font-size:13px; }
   .frontier { background:var(--accent-bg); border:0.5px solid var(--border); border-radius:10px;
               padding:13px 16px; margin:10px 0; font-size:13.5px; color:var(--text); }
-  .frontier i { color:var(--accent); margin-right:4px; }
+  .frontier i.ti { color:var(--accent-text); margin-right:4px; }
   footer.site-footer { color:var(--faint); font-size:12px; margin-top:32px;
               border-top:0.5px solid var(--border); padding-top:14px; text-align:center; }
   code { background:var(--surface-1); padding:1px 6px; border-radius:5px; font-size:12.5px; }
