@@ -19,7 +19,7 @@ from the official SWAT, SWAT+, SWAT-MODFLOW, and MODFLOW communities (2009–202
 
 Two doors, one rule: if you type, everything goes in the same box; if you bring files, they go to the file check.
 
-- **Ask a question or paste an error** — one box. A pasted error is first matched, instantly and
+- **Ask or paste an error** — one box. A pasted error is first matched, instantly and
   without a model, against known error messages with a documented cause and fix (each links to the
   forum threads where it was reported). Then the same question searches your own PDF manuals, a
   community-knowledge index built from the coded corpus (every suggested solution carries its real
@@ -27,7 +27,7 @@ Two doors, one rule: if you type, everything goes in the same box; if you bring 
   A written answer is generated only if you have a local model running (via
   [Ollama](https://ollama.com)), entirely on your machine. This door is a beta and has not been
   benchmarked yet.
-- **Check my model files** — a deterministic, rule-based checker. Instant, offline, zero hallucination
+- **Check my files** — a deterministic, rule-based checker. Instant, offline, zero hallucination
   risk: every finding names the exact file/line or pattern that triggered it. Answers the
   **documentable majority** of setup, crash, and configuration questions, and tells you when a
   question is *not* documentable so you don't get a false-confidence answer.
